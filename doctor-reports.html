@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="assets/mada-logo.png">
+<title>Mada Care | Medical Reports</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #0b6b5c; --primary-soft: #e6f3ef; --teal: #12a37f; --navy: #0b3a55;
+    --ink: #10232b; --muted: #6b7a80; --border: #e3e8ea; --page: #f6f8f9;
+    --orange: #d97706; --orange-soft: #fef3e2;
+    --font: "Inter", "Tajawal", system-ui, sans-serif;
+  }
+  [dir="rtl"] { --font: "Tajawal", "Inter", system-ui, sans-serif; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--page); color: var(--ink); min-height: 100vh; }
+  button { font: inherit; color: inherit; }
+  [hidden] { display: none !important; }
+  .app { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 100vh; }
+
+  /* Sidebar */
+  .side { position: sticky; top: 0; height: 100vh; background: #fff; border-inline-end: 1px solid var(--border); padding: 18px 14px; display: flex; flex-direction: column; gap: 22px; overflow: hidden; }
+  .logo { display: flex; align-items: center; gap: 8px; padding: 0 6px; text-decoration: none; color: var(--ink); }
+  .logo img { height: 40px; width: auto; }
+  .logo b { display: block; font-size: 18px; font-weight: 600; line-height: 1.1; }
+  .logo small { font-size: 10.5px; color: var(--primary); }
+  .menu { display: grid; gap: 4px; }
+  .menu a { display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 14px; border-radius: 10px; text-decoration: none; color: #2c3d43; font-size: 14px; font-weight: 500; }
+  .menu a svg { width: 21px; height: 21px; flex: none; }
+  .menu a:hover { background: #f3f6f7; }
+  .menu a[aria-current="page"] { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
+  .menu a.soon { color: #8a979c; cursor: default; }
+  .menu a.soon:hover { background: none; }
+  .soon-tag { margin-inline-start: auto; height: 18px; padding: 0 7px; border-radius: 9px; background: var(--orange-soft); color: var(--orange); font-size: 10.5px; font-weight: 600; line-height: 18px; }
+  .support { order: 3; display: flex; align-items: center; gap: 12px; padding: 14px 8px 0; border-top: 1px solid var(--border); font-size: 13px; }
+  .support svg { width: 26px; height: 26px; color: #2c3d43; flex: none; }
+  .support b { display: block; font-weight: 600; }
+  .support a { color: var(--muted); text-decoration: none; }
+  .side-art { order: 2; margin-top: auto; margin-inline-start: -14px; width: 170px; color: #e3f2ee; }
+  [dir="rtl"] .side-art { transform: scaleX(-1); }
+
+  /* Top bar */
+  .top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: flex-end; gap: 14px; height: 76px; padding: 0 28px; background: rgba(246,248,249,.92); backdrop-filter: blur(6px); border-bottom: 1px solid var(--border); }
+  .lang-btn { display: flex; align-items: center; gap: 6px; background: none; border: 0; cursor: pointer; font-size: 13px; color: #44545a; padding: 8px; border-radius: 8px; }
+  .lang-btn:hover, .bell:hover { background: #eef2f3; }
+  .lang-btn svg { width: 16px; height: 16px; }
+  .bell { position: relative; width: 42px; height: 42px; border: 0; background: none; border-radius: 50%; cursor: pointer; display: grid; place-items: center; color: #2c3d43; }
+  .bell svg { width: 23px; height: 23px; }
+  .sep { width: 1px; height: 34px; background: var(--border); }
+  .user { position: relative; }
+  .user-btn { display: flex; align-items: center; gap: 12px; background: none; border: 0; cursor: pointer; padding: 4px 6px; border-radius: 12px; text-align: start; }
+  .user-btn:hover { background: #eef2f3; }
+  .ava { width: 50px; height: 50px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; font-weight: 700; font-size: 16px; overflow: hidden; flex: none; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--border); }
+  .ava img { width: 100%; height: 100%; object-fit: cover; }
+  .u-name { display: block; font-size: 14px; font-weight: 600; }
+  .u-spec { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .user-btn > svg { width: 16px; height: 16px; color: #44545a; }
+  .user-menu { position: absolute; top: 110%; inset-inline-end: 0; min-width: 180px; background: #fff; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 24px rgba(16,35,43,.08); padding: 6px; display: none; }
+  .user.open .user-menu { display: block; }
+  .user-menu a { display: block; padding: 9px 10px; border-radius: 6px; font-size: 13px; color: var(--ink); text-decoration: none; }
+  .user-menu a:hover { background: var(--primary-soft); color: var(--primary); }
+
+  /* Content */
+  main { padding: 22px 28px 32px; }
+  .stage { position: relative; overflow: hidden; min-height: calc(100vh - 76px - 54px); border-radius: 18px; border: 1px solid var(--border); background: radial-gradient(circle at 0 0, #e9f5f1 0, rgba(233,245,241,0) 220px), linear-gradient(160deg, #ffffff 55%, #fff3e8 100%); display: grid; place-items: center; padding: 40px 20px; }
+  .stage::after { content: ""; position: absolute; width: 360px; height: 360px; border-radius: 50%; inset-inline-end: -120px; bottom: -150px; background: rgba(253,214,180,.35); }
+  .empty { position: relative; z-index: 1; display: grid; justify-items: center; text-align: center; max-width: 560px; }
+  .empty-art { width: 330px; max-width: 100%; height: auto; margin-bottom: 18px; }
+  .empty h1 { font-size: 30px; font-weight: 700; color: #15304a; letter-spacing: -.3px; }
+  .empty p { margin-top: 10px; font-size: 16px; color: var(--muted); line-height: 1.6; }
+  .rule { width: 60px; height: 4px; border-radius: 2px; background: var(--teal); margin: 26px 0; }
+  .quote { display: flex; align-items: flex-start; gap: 12px; padding: 16px 22px; border-radius: 12px; background: rgba(230,243,239,.75); font-size: 17px; font-weight: 500; color: #15304a; line-height: 1.5; text-align: start; }
+  .quote span.q { font-size: 34px; line-height: .9; color: var(--teal); font-weight: 700; font-family: Georgia, serif; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 60; background: var(--ink); color: #fff; padding: 11px 18px; border-radius: 10px; font-size: 13px; max-width: calc(100% - 32px); }
+
+  .num { direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; }
+  .ov { position: fixed; inset: 0; z-index: 50; background: rgba(16,35,43,.42); display: grid; place-items: center; padding: 16px; overflow-y: auto; }
+  .dlg { position: relative; width: 100%; background: #fff; border-radius: 18px; box-shadow: 0 24px 60px rgba(0,0,0,.18); margin: auto; }
+  @media (max-width: 900px) {
+    .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; align-content: start; }
+    .side { position: static; height: auto; flex-direction: row; align-items: center; gap: 12px; padding: 10px 12px; border-inline-end: 0; border-bottom: 1px solid var(--border); }
+    .logo { flex: none; }
+    .logo img { height: 34px; }
+    .logo span { display: none; }
+    .menu { display: flex; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+    .menu::-webkit-scrollbar { display: none; }
+    .menu a { flex: none; height: 38px; padding: 0 12px; font-size: 13px; gap: 8px; }
+    .menu a svg { width: 18px; height: 18px; }
+    .side-art, .support { display: none; }
+    .top { height: 66px; padding: 0 12px; gap: 8px; }
+    .user-meta { display: none; }
+    .ava { width: 42px; height: 42px; }
+    main { padding: 14px 12px 24px; }
+  }
+
+  /* Medical Reports */
+  .rp { max-width: 1240px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 18px; }
+  .rp-head { display: flex; align-items: center; gap: 16px; padding: 22px 24px; flex-wrap: wrap; border-bottom: 1px solid #eef2f3; }
+  .rp-head .ic { width: 56px; height: 56px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; flex: none; }
+  .rp-head .ic svg { width: 26px; height: 26px; }
+  .rp-head h1 { font-size: 24px; font-weight: 700; color: #15304a; }
+  .rp-head p { font-size: 14px; color: var(--muted); margin-top: 2px; }
+  .rp-head > div { flex: 1; min-width: 220px; }
+  .cnt-tag { height: 32px; padding: 0 14px; border-radius: 16px; background: var(--primary-soft); color: var(--primary); font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; }
+  .tools { display: flex; gap: 12px; padding: 18px 22px 0; flex-wrap: wrap; }
+  .search { flex: 1; min-width: 240px; display: flex; align-items: center; gap: 10px; height: 50px; padding: 0 16px; border: 1px solid var(--border); border-radius: 10px; background: #fff; }
+  .search:focus-within { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(18,163,127,.12); }
+  .search svg { width: 20px; height: 20px; color: #3d4f57; flex: none; }
+  .search input { flex: 1; min-width: 0; border: 0; outline: 0; font: inherit; font-size: 14px; background: none; }
+  .rlist { display: grid; gap: 10px; padding: 16px 22px 22px; }
+  .rrow { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.5fr) minmax(0, .8fr) auto; align-items: center; gap: 16px; padding: 14px 16px; border: 1px solid #e7ecee; border-radius: 14px; }
+  .rrow:hover { border-color: #bfe3d3; background: #fbfefd; }
+  .who { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .pa { width: 44px; height: 44px; border-radius: 50%; background: #e8eefc; color: #3b5bdb; display: grid; place-items: center; font-size: 14px; font-weight: 700; flex: none; }
+  .who b, .dxc b, .vd b { display: block; font-size: 14.5px; color: #15304a; }
+  .who small, .dxc small, .vd small { display: block; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .dxc .code { font-size: 11.5px; font-weight: 700; color: #0f6b52; background: #e3f4ee; border-radius: 6px; padding: 1px 6px; direction: ltr; display: inline-block; margin-inline-end: 6px; }
+  .acts { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 42px; padding: 0 14px; border-radius: 10px; border: 1px solid transparent; font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; text-decoration: none; white-space: nowrap; }
+  .btn svg { width: 17px; height: 17px; }
+  .btn:disabled { opacity: .6; cursor: wait; }
+  .btn-dark { background: var(--navy); color: #fff; } .btn-dark:hover { background: #082d42; }
+  .btn-out { background: #fff; border-color: #cfd9dc; color: #15304a; } .btn-out:hover { background: #f6f8f9; }
+  .num { font-variant-numeric: tabular-nums; letter-spacing: .2px; }
+  .none-box { margin: 16px 22px 22px; padding: 30px 16px; text-align: center; color: var(--muted); font-size: 14px; border: 1px dashed #d5dde0; border-radius: 12px; }
+  .none-box b { display: block; color: #15304a; font-size: 15.5px; margin-bottom: 4px; }
+  .rp-note { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+  .rp-note svg { width: 16px; height: 16px; flex: none; }
+  /* report viewer */
+  .ov { position: fixed; inset: 0; z-index: 70; background: rgba(16,35,43,.6); display: grid; place-items: center; padding: 16px; }
+  .ov-box { width: min(880px, 100%); height: min(92vh, 1100px); background: #eef2f3; border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; }
+  .ov-h { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #fff; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .ov-h b { flex: 1; min-width: 160px; font-size: 15px; color: #15304a; }
+  .ov-b { flex: 1; min-height: 0; overflow: auto; padding: 18px; }
+  .ov-b .mr-doc { box-shadow: 0 6px 24px rgba(16,35,43,.12); border-radius: 0 0 12px 12px; padding-bottom: 4px; }
+  .px { width: 40px; height: 40px; border: 0; border-radius: 50%; background: #eef2f3; display: grid; place-items: center; cursor: pointer; }
+  .px svg { width: 18px; height: 18px; }
+  @media (max-width: 1100px) {
+    .rrow { grid-template-columns: minmax(0, 1fr) auto; }
+    .rrow .dxc { grid-column: 1 / -1; }
+    .rrow .acts { grid-column: 1 / -1; justify-content: flex-start; }
+  }
+  @media (max-width: 700px) {
+    .rp-head { padding: 16px; }
+    .tools, .rlist { padding-left: 12px; padding-right: 12px; }
+    .search { min-width: 0; }
+    .acts .btn { flex: 1; }
+    .ov { padding: 0; }
+    .ov-box { height: 100vh; border-radius: 0; }
+    .ov-b { padding: 8px; }
+    .ov-h .btn { flex: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <a class="logo" href="doctor-visits.html" aria-label="Mada care">
+      <img src="assets/mada-logo.png" alt="" width="301" height="320">
+      <span><b>Mada care</b><small data-i18n="tagline">Caring Like Family</small></span>
+    </a>
+    <nav class="menu" id="menu" aria-label="Doctor portal"></nav>
+    <div class="support" id="support"></div>
+    <svg class="side-art" viewBox="0 0 170 220" fill="none" stroke="currentColor" stroke-width="22" aria-hidden="true"><circle cx="40" cy="40" r="22" fill="currentColor" stroke="none"/><path d="M40 210c-50-40-60-90-30-110s60 0 60 30-40 40-60 20"/><path d="M60 120c30-40 90-30 95 10s-40 70-115 80"/></svg>
+  </aside>
+
+  <div>
+    <header class="top">
+      <button class="lang-btn" id="langToggle" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>
+        <span data-i18n="otherLang">العربية</span>
+      </button>
+      <button class="bell" type="button" id="bell" data-i18n-aria="notifications" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+      </button>
+      <span class="sep" aria-hidden="true"></span>
+      <div class="user" id="user">
+        <button class="user-btn" id="userBtn" type="button" aria-haspopup="menu" aria-expanded="false">
+          <span class="ava" id="avatar"></span>
+          <span class="user-meta"><span class="u-name" id="userName"></span><span class="u-spec" id="userSpec"></span></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="user-menu" role="menu">
+          <a href="doctor-account.html" role="menuitem" data-i18n="profile">My Account</a>
+          <a href="doctor-login.html" role="menuitem" id="logout" data-i18n="logout">Log out</a>
+        </div>
+      </div>
+    </header>
+    <main><div class="rp" id="vw"></div></main>
+  </div>
+</div>
+<div class="ov" id="repOv" hidden></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="auth.js"></script>
+<script src="orders.js"></script>
+<script src="patients.js"></script>
+<script src="medical.js"></script>
+<script src="doctor-history.js"></script>
+<script src="doctor-exam.js"></script>
+<script src="doctor-allergy.js"></script>
+<script src="doctor-plan.js"></script>
+<script src="doctor-orders.js"></script>
+<script src="medical-report.js"></script>
+<script src="doctor-portal.js"></script>
+<script>
+  const me = MadaAuth.requireAuth("doctor");
+  if (me && me.doctorId) MadaOrders.seedDoctorDemo(me.doctorId); // SAMPLE DATA ONLY
+  const $ = id => document.getElementById(id), esc = DrPortal.esc;
+  // Doctor Portal > Reports (doctor-reports.html): the medical report of every visit this doctor completed.
+  // The report is built from the patient file and the visit record (medical-report.js); nothing is typed here.
+  // doctor-reports.html?id=ORD-... opens that visit's report straight away (link from the visit and the patient file).
+  const docId = me && (me.doctorId || me.staffId);
+  const nm = v => v && typeof v === "object" ? v : { en: v || "", ar: v || "" };
+  const mine = () => MadaOrders.all().filter(o => o.booking && o.booking.doctorId === docId && MadaReport.ready(o));
+
+
+  const I18N = {
+    en: {
+      tagline: "Caring Like Family", otherLang: "العربية", profile: "My Account", logout: "Log out", notifications: "Notifications", soonMsg: "This section is coming soon.",
+      title: "Medical Reports", sub: "A medical report for every visit you completed, filled from the patient file and the visit record.", count1: "1 report", countN: "{n} reports",
+      searchPh: "Search by patient, file number, visit number or diagnosis", search: "Search", visit: "Visit {n}", noDx: "No diagnosis recorded",
+      view: "View Report", dl: "Download PDF", close: "Close", fileNo: "File {n}",
+      noneT: "No reports yet", noneS: "A report appears here once you complete a visit.", noMatchT: "No matching reports", noMatchS: "Try another name, file number or diagnosis.",
+      note: "The report is filled from what was written in the visit. To change it, update the visit record.", notFound: "This report was not found."
+    },
+    ar: {
+      tagline: "رعاية كالعائلة", otherLang: "English", profile: "حسابي", logout: "تسجيل الخروج", notifications: "الإشعارات", soonMsg: "هذا القسم بيتوفر قريباً.",
+      title: "التقارير الطبية", sub: "تقرير طبي لكل زيارة كملتها، يتعبى من ملف المريض واللي انكتب في الزيارة.", count1: "تقرير واحد", countN: "{n} تقارير",
+      searchPh: "ابحث باسم المريض أو رقم الملف أو رقم الزيارة أو التشخيص", search: "بحث", visit: "زيارة {n}", noDx: "ما فيه تشخيص مسجل",
+      view: "عرض التقرير", dl: "تحميل PDF", close: "إغلاق", fileNo: "ملف {n}",
+      noneT: "ما فيه تقارير للحين", noneS: "يظهر التقرير هنا أول ما تكمّل زيارة.", noMatchT: "ما فيه تقرير مطابق", noMatchS: "جرب اسم أو رقم ملف أو تشخيص ثاني.",
+      note: "التقرير يتعبى من اللي انكتب في الزيارة. لو تبي تغيّر فيه، عدّل سجل الزيارة.", notFound: "ما لقينا هذا التقرير."
+    }
+  };
+  let current = "en", q = "", open = null;
+  const t = () => I18N[current];
+  const tx = (k, v) => t()[k].replace(/\{(\w+)\}/g, (_, x) => v[x]);
+  const svg = (p, w) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 1.9}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+  const IC = { rep: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 12h6M9 16h4"/>', search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>', eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+    dl: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>', x: '<path d="M6 6l12 12M18 6 6 18"/>', info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>' };
+  const loc = () => current === "ar" ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB";
+  const fmtD = s => { const d = /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(s + "T00:00") : new Date(s); return d.toLocaleDateString(loc(), { day: "numeric", month: "short", year: "numeric" }); };
+  const initials = n => String(n || "").split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+  const dxOf = o => ((o.doctorVisit.steps || {}).assess || {}).primary || null;
+  const dateOf = o => (o.appointment && o.appointment.date) || o.doctorVisit.completedAt || o.createdAt;
+
+  function render() {
+    const all = mine().sort((a, b) => String(dateOf(b)).localeCompare(String(dateOf(a)))), ql = q.trim().toLowerCase();
+    const list = all.filter(o => { const dx = dxOf(o) || {}; return !ql || [nm(o.patient).en, nm(o.patient).ar, o.mrn, o.id, dx.code, dx.en, dx.ar].filter(Boolean).join(" ").toLowerCase().includes(ql); });
+    $("vw").innerHTML = `<section class="card">
+      <div class="rp-head"><span class="ic">${svg(IC.rep)}</span><div><h1>${t().title}</h1><p>${t().sub}</p></div><span class="cnt-tag">${all.length === 1 ? t().count1 : tx("countN", { n: all.length })}</span></div>
+      <div class="tools"><label class="search">${svg(IC.search, 2)}<input type="search" id="q" value="${esc(q)}" placeholder="${esc(t().searchPh)}" aria-label="${t().search}" autocomplete="off"></label></div>
+      ${list.length ? `<div class="rlist">${list.map(o => { const p = nm(o.patient), dx = dxOf(o);
+        return `<div class="rrow"><span class="who"><span class="pa">${esc(initials(p.en))}</span><span><b>${esc(p[current] || p.en)}</b><small class="num">${esc(tx("fileNo", { n: o.mrn || "—" }))}</small></span></span>
+          <span class="dxc">${dx ? `<b>${dx.code ? `<span class="code">${esc(dx.code)}</span>` : ""}${esc(dx[current] || dx.en)}</b>` : `<small>${t().noDx}</small>`}</span>
+          <span class="vd"><b>${esc(fmtD(dateOf(o)))}</b><small class="num">${esc(tx("visit", { n: o.id }))}</small></span>
+          <span class="acts"><button type="button" class="btn btn-out" data-view="${esc(o.id)}">${svg(IC.eye)}${t().view}</button><button type="button" class="btn btn-dark" data-dl="${esc(o.id)}">${svg(IC.dl, 2)}${t().dl}</button></span></div>`; }).join("")}</div>`
+        : `<div class="none-box">${all.length ? `<b>${t().noMatchT}</b>${t().noMatchS}` : `<b>${t().noneT}</b>${t().noneS}`}</div>`}
+      </section><p class="rp-note">${svg(IC.info, 2)}${t().note}</p>`;
+    if (open) view(open);
+  }
+  function view(id) {
+    const o = MadaOrders.get(id), ov = $("repOv");
+    if (!o || !MadaReport.ready(o) || o.booking.doctorId !== docId) { open = null; ov.hidden = true; return toast(t().notFound); }
+    open = id;
+    ov.innerHTML = `<div class="ov-box" role="dialog" aria-modal="true" aria-label="${esc(MadaReport.L[current].title)}"><div class="ov-h"><b>${esc(MadaReport.L[current].title)} · ${esc(nm(o.patient)[current])}</b>
+      <button type="button" class="btn btn-dark" data-dl="${esc(id)}">${svg(IC.dl, 2)}${t().dl}</button><button type="button" class="px" id="repX" aria-label="${t().close}">${svg(IC.x, 2.2)}</button></div>
+      <div class="ov-b">${MadaReport.html(o, current)}</div></div>`;
+    ov.hidden = false;
+  }
+  function closeView() { open = null; const ov = $("repOv"); ov.hidden = true; ov.innerHTML = ""; if (new URLSearchParams(location.search).get("id")) history.replaceState(null, "", location.pathname); }
+  async function dl(id, b) { const o = MadaOrders.get(id); if (!o) return; b.disabled = true; await MadaReport.download(o, current, toast); b.disabled = false; }
+  document.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) { if (e.target.id === "repOv") closeView(); return; }
+    if (b.dataset.view) return view(b.dataset.view);
+    if (b.dataset.dl) return dl(b.dataset.dl, b);
+    if (b.id === "repX") return closeView();
+  });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("repOv").hidden) closeView(); });
+  $("vw").addEventListener("input", e => { if (e.target.id !== "q") return; q = e.target.value; const pos = e.target.selectionStart; render(); const i = $("q"); i.focus(); i.setSelectionRange(pos, pos); });
+  window.addEventListener("storage", e => { if (!e.key || e.key === "mada-orders" || e.key === "mada-medical") render(); });
+
+  document.addEventListener("click", e => { if (e.target.closest("[data-soon]")) { e.preventDefault(); toast(t().soonMsg); } });
+  function toast(msg) { const el = $("toast"); el.textContent = msg; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 3200); }
+  function setLang(lang) {
+    current = lang;
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+    document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = t()[el.dataset.i18n]);
+    document.querySelectorAll("[data-i18n-aria]").forEach(el => el.setAttribute("aria-label", t()[el.dataset.i18nAria]));
+    document.title = lang === "ar" ? "مدى كير | التقارير الطبية" : "Mada Care | Medical Reports";
+    DrPortal.render(me, lang, "reports"); render();
+    try { localStorage.setItem("mada-lang", lang); } catch (e) {}
+  }
+  $("langToggle").addEventListener("click", () => setLang(current === "en" ? "ar" : "en"));
+  const user = $("user"), userBtn = $("userBtn");
+  userBtn.addEventListener("click", e => { e.stopPropagation(); userBtn.setAttribute("aria-expanded", user.classList.toggle("open")); });
+  document.addEventListener("click", () => { user.classList.remove("open"); userBtn.setAttribute("aria-expanded", false); });
+  $("logout").addEventListener("click", e => { e.preventDefault(); MadaAuth.logout(); });
+
+  let saved = "en";
+  try { saved = localStorage.getItem("mada-lang") || "en"; } catch (e) {}
+  open = new URLSearchParams(location.search).get("id");
+  setLang(saved);
+</script>
+</body>
+</html>

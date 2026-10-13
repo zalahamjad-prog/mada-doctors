@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="assets/mada-logo.png">
+<title>Mada Care | Patient File</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="doctor-patient.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #0b6b5c; --primary-soft: #e6f3ef; --teal: #12a37f; --navy: #0b3a55;
+    --ink: #10232b; --muted: #6b7a80; --border: #e3e8ea; --page: #f6f8f9;
+    --orange: #d97706; --orange-soft: #fef3e2;
+    --font: "Inter", "Tajawal", system-ui, sans-serif;
+  }
+  [dir="rtl"] { --font: "Tajawal", "Inter", system-ui, sans-serif; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--page); color: var(--ink); min-height: 100vh; }
+  button { font: inherit; color: inherit; }
+  [hidden] { display: none !important; }
+  .app { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 100vh; }
+
+  /* Sidebar */
+  .side { position: sticky; top: 0; height: 100vh; background: #fff; border-inline-end: 1px solid var(--border); padding: 18px 14px; display: flex; flex-direction: column; gap: 22px; overflow: hidden; }
+  .logo { display: flex; align-items: center; gap: 8px; padding: 0 6px; text-decoration: none; color: var(--ink); }
+  .logo img { height: 40px; width: auto; }
+  .logo b { display: block; font-size: 18px; font-weight: 600; line-height: 1.1; }
+  .logo small { font-size: 10.5px; color: var(--primary); }
+  .menu { display: grid; gap: 4px; }
+  .menu a { display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 14px; border-radius: 10px; text-decoration: none; color: #2c3d43; font-size: 14px; font-weight: 500; }
+  .menu a svg { width: 21px; height: 21px; flex: none; }
+  .menu a:hover { background: #f3f6f7; }
+  .menu a[aria-current="page"] { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
+  .menu a.soon { color: #8a979c; cursor: default; }
+  .menu a.soon:hover { background: none; }
+  .soon-tag { margin-inline-start: auto; height: 18px; padding: 0 7px; border-radius: 9px; background: var(--orange-soft); color: var(--orange); font-size: 10.5px; font-weight: 600; line-height: 18px; }
+  .support { order: 3; display: flex; align-items: center; gap: 12px; padding: 14px 8px 0; border-top: 1px solid var(--border); font-size: 13px; }
+  .support svg { width: 26px; height: 26px; color: #2c3d43; flex: none; }
+  .support b { display: block; font-weight: 600; }
+  .support a { color: var(--muted); text-decoration: none; }
+  .side-art { order: 2; margin-top: auto; margin-inline-start: -14px; width: 170px; color: #e3f2ee; }
+  [dir="rtl"] .side-art { transform: scaleX(-1); }
+
+  /* Top bar */
+  .top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: flex-end; gap: 14px; height: 76px; padding: 0 28px; background: rgba(246,248,249,.92); backdrop-filter: blur(6px); border-bottom: 1px solid var(--border); }
+  .lang-btn { display: flex; align-items: center; gap: 6px; background: none; border: 0; cursor: pointer; font-size: 13px; color: #44545a; padding: 8px; border-radius: 8px; }
+  .lang-btn:hover, .bell:hover { background: #eef2f3; }
+  .lang-btn svg { width: 16px; height: 16px; }
+  .bell { position: relative; width: 42px; height: 42px; border: 0; background: none; border-radius: 50%; cursor: pointer; display: grid; place-items: center; color: #2c3d43; }
+  .bell svg { width: 23px; height: 23px; }
+  .sep { width: 1px; height: 34px; background: var(--border); }
+  .user { position: relative; }
+  .user-btn { display: flex; align-items: center; gap: 12px; background: none; border: 0; cursor: pointer; padding: 4px 6px; border-radius: 12px; text-align: start; }
+  .user-btn:hover { background: #eef2f3; }
+  .ava { width: 50px; height: 50px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; font-weight: 700; font-size: 16px; overflow: hidden; flex: none; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--border); }
+  .ava img { width: 100%; height: 100%; object-fit: cover; }
+  .u-name { display: block; font-size: 14px; font-weight: 600; }
+  .u-spec { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .user-btn > svg { width: 16px; height: 16px; color: #44545a; }
+  .user-menu { position: absolute; top: 110%; inset-inline-end: 0; min-width: 180px; background: #fff; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 24px rgba(16,35,43,.08); padding: 6px; display: none; }
+  .user.open .user-menu { display: block; }
+  .user-menu a { display: block; padding: 9px 10px; border-radius: 6px; font-size: 13px; color: var(--ink); text-decoration: none; }
+  .user-menu a:hover { background: var(--primary-soft); color: var(--primary); }
+
+  /* Content */
+  main { padding: 22px 28px 32px; }
+  .stage { position: relative; overflow: hidden; min-height: calc(100vh - 76px - 54px); border-radius: 18px; border: 1px solid var(--border); background: radial-gradient(circle at 0 0, #e9f5f1 0, rgba(233,245,241,0) 220px), linear-gradient(160deg, #ffffff 55%, #fff3e8 100%); display: grid; place-items: center; padding: 40px 20px; }
+  .stage::after { content: ""; position: absolute; width: 360px; height: 360px; border-radius: 50%; inset-inline-end: -120px; bottom: -150px; background: rgba(253,214,180,.35); }
+  .empty { position: relative; z-index: 1; display: grid; justify-items: center; text-align: center; max-width: 560px; }
+  .empty-art { width: 330px; max-width: 100%; height: auto; margin-bottom: 18px; }
+  .empty h1 { font-size: 30px; font-weight: 700; color: #15304a; letter-spacing: -.3px; }
+  .empty p { margin-top: 10px; font-size: 16px; color: var(--muted); line-height: 1.6; }
+  .rule { width: 60px; height: 4px; border-radius: 2px; background: var(--teal); margin: 26px 0; }
+  .quote { display: flex; align-items: flex-start; gap: 12px; padding: 16px 22px; border-radius: 12px; background: rgba(230,243,239,.75); font-size: 17px; font-weight: 500; color: #15304a; line-height: 1.5; text-align: start; }
+  .quote span.q { font-size: 34px; line-height: .9; color: var(--teal); font-weight: 700; font-family: Georgia, serif; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 60; background: var(--ink); color: #fff; padding: 11px 18px; border-radius: 10px; font-size: 13px; max-width: calc(100% - 32px); }
+
+  .num { direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; }
+  .ov { position: fixed; inset: 0; z-index: 50; background: rgba(16,35,43,.42); display: grid; place-items: center; padding: 16px; overflow-y: auto; }
+  .dlg { position: relative; width: 100%; background: #fff; border-radius: 18px; box-shadow: 0 24px 60px rgba(0,0,0,.18); margin: auto; }
+  @media (max-width: 900px) {
+    .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; align-content: start; }
+    .side { position: static; height: auto; flex-direction: row; align-items: center; gap: 12px; padding: 10px 12px; border-inline-end: 0; border-bottom: 1px solid var(--border); }
+    .logo { flex: none; }
+    .logo img { height: 34px; }
+    .logo span { display: none; }
+    .menu { display: flex; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+    .menu::-webkit-scrollbar { display: none; }
+    .menu a { flex: none; height: 38px; padding: 0 12px; font-size: 13px; gap: 8px; }
+    .menu a svg { width: 18px; height: 18px; }
+    .side-art, .support { display: none; }
+    .top { height: 66px; padding: 0 12px; gap: 8px; }
+    .user-meta { display: none; }
+    .ava { width: 42px; height: 42px; }
+    main { padding: 14px 12px 24px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <a class="logo" href="doctor-visits.html" aria-label="Mada care">
+      <img src="assets/mada-logo.png" alt="" width="301" height="320">
+      <span><b>Mada care</b><small data-i18n="tagline">Caring Like Family</small></span>
+    </a>
+    <nav class="menu" id="menu" aria-label="Doctor portal"></nav>
+    <div class="support" id="support"></div>
+    <svg class="side-art" viewBox="0 0 170 220" fill="none" stroke="currentColor" stroke-width="22" aria-hidden="true"><circle cx="40" cy="40" r="22" fill="currentColor" stroke="none"/><path d="M40 210c-50-40-60-90-30-110s60 0 60 30-40 40-60 20"/><path d="M60 120c30-40 90-30 95 10s-40 70-115 80"/></svg>
+  </aside>
+
+  <div>
+    <header class="top">
+      <button class="lang-btn" id="langToggle" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>
+        <span data-i18n="otherLang">العربية</span>
+      </button>
+      <button class="bell" type="button" id="bell" data-i18n-aria="notifications" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+      </button>
+      <span class="sep" aria-hidden="true"></span>
+      <div class="user" id="user">
+        <button class="user-btn" id="userBtn" type="button" aria-haspopup="menu" aria-expanded="false">
+          <span class="ava" id="avatar"></span>
+          <span class="user-meta"><span class="u-name" id="userName"></span><span class="u-spec" id="userSpec"></span></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="user-menu" role="menu">
+          <a href="doctor-account.html" role="menuitem" data-i18n="profile">My Account</a>
+          <a href="doctor-login.html" role="menuitem" id="logout" data-i18n="logout">Log out</a>
+        </div>
+      </div>
+    </header>
+    <main><div id="vw"></div></main>
+  </div>
+</div>
+<div class="ov" id="nfOv" hidden role="dialog" aria-modal="true" aria-labelledby="nfT"></div>
+<div class="pv-ov" id="viewOv" hidden></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="auth.js"></script>
+<script src="orders.js"></script>
+<script src="patients.js"></script>
+<script src="labs.js"></script>
+<script src="medical.js"></script>
+<script src="doctor-portal.js"></script>
+<script src="doctor-allergy.js"></script>
+<script src="doctor-orders.js"></script>
+<script>
+  const me = MadaAuth.requireAuth("doctor");
+  if (me && me.doctorId) MadaOrders.seedDoctorDemo(me.doctorId); // SAMPLE DATA ONLY
+  const $ = id => document.getElementById(id), esc = DrPortal.esc;
+  // The patient's medical file (doctor-patient.html?mrn=MC-...&from=ORD-...).
+  // Header and family members come from the patient directory (patients.js); visits from MadaOrders.
+  // The medical file sections are kept per patient in MadaStore "mada-pmed-<file no.>":
+  //   emergency: { blood, chronic: { status: "yes"|"no"|"unknown", items: [keys], other }, contact: { name, mobile, rel }, at, by }
+  //   meds:      [{ id, name, status: "on"|"off", times: [keys], dose: "half"|"1"|"2"|"other", doseOther, photo (attachment id), at, by }]
+  //   labs:      [{ id, kind: "manual"|"upload", test, result, unit, range, date, notes, att, at, by }]   (entered here = unverified)
+  //   reports:   [{ id, title, type, facility, date, notes, att, at, by }]
+  //   lifestyle: { lang, langOther, contact, provider, providerName, time, assist: [keys], assistOther, notes, at, by }
+  // Uploaded files (photos, PDFs) are kept separately in "mada-patt-<id>" = { name, type, data (data URL) }.
+  // TODO: replace with the patient file API and real file storage. Browser storage only holds a few MB.
+  const qs = new URLSearchParams(location.search), mrn = qs.get("mrn"), from = qs.get("from"), fromList = !from && qs.get("back") === "patients";
+  // Keeps the way back (visit, or the Patients list) when moving between family files.
+  const keepBack = () => from ? "&from=" + encodeURIComponent(from) : fromList ? "&back=patients" : "";
+  const MEDKEY = "mada-pmed-" + mrn;
+  const IC = {
+    folder: '<path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2.5h8.5A1.5 1.5 0 0 1 21 9v9.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z"/>',
+    phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
+    back: '<path d="M15 18l-6-6 6-6"/>', chev: '<path d="m9 6 6 6-6 6"/>',
+    family: '<circle cx="8" cy="8" r="3.2"/><circle cx="17" cy="9" r="2.6"/><path d="M2.5 20c0-3.6 2.5-6 5.5-6s5.5 2.4 5.5 6M14 14.5c.9-.4 1.9-.6 3-.6 2.7 0 4.5 2 4.5 5"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>', check: '<path d="m5 12 5 5 9-10"/>', x: '<path d="M6 6l12 12M18 6 6 18"/>',
+    history: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    doctor: '<path d="M6 3v6a4 4 0 0 0 8 0V3"/><path d="M10 13v2a5 5 0 0 0 10 0v-2"/><circle cx="20" cy="11" r="2"/>',
+    nurse: '<path d="M7 7V4.5L12 3l5 1.5V7"/><path d="M7 7.5a5 5 0 0 0 10 0"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1z"/>',
+    lab: '<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4A2 2 0 0 0 19 18l-5-9V3"/><path d="M7.5 14h9"/>',
+    iv: '<path d="M8 3h8v9a4 4 0 0 1-8 0z"/><path d="M12 16v5M8 8h8"/>',
+    emerg: '<path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/><path d="M12 9v5M9.5 11.5h5"/>',
+    med: '<rect x="3" y="9" width="18" height="7" rx="3.5" transform="rotate(-45 12 12.5)"/><path d="m9 9.5 5.5 5.5"/>',
+    report: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/>',
+    life: '<circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/>',
+    camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+    pen: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/>', trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+    upload: '<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v4h16v-4"/>', eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+    warn: '<path d="M12 3 2.5 20h19z"/><path d="M12 10v4M12 17h.01"/>', shield: '<path d="M12 3 5 6v5c0 4.5 3 8.5 7 10 4-1.5 7-5.5 7-10V6z"/><path d="m9 12 2 2 4-4"/>',
+    id: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="11" r="2"/><path d="M5.5 16c.6-1.4 1.7-2 3-2s2.4.6 3 2M14 10h4M14 14h3"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>'
+  };
+  const svg = (p, w) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 1.8}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+  const BLOOD = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "unknown"];
+  const CHRONIC = ["diabetes", "htn", "heart", "asthma", "ckd", "other"];
+  const ERELS = ["spouse", "parent", "child", "sibling", "relative", "caregiver", "other"];
+  const TIMES = ["breakfast", "lunch", "dinner", "bed"];
+  const DOSES = ["half", "1", "2", "other"];
+  const RTYPES = ["discharge", "specialist", "radiology", "prescription", "other"];
+  const ASSIST = ["hearing", "visual", "moving", "wheelchair", "none", "other"];
+  const WRELS = ["father", "mother", "husband", "wife", "son", "daughter", "otherRel", "other"];
+  const NATS = ["SA", "EG", "YE", "SD", "JO", "SY", "PK", "IN", "BD", "PH", "OT"];
+  const CITIES = ["riyadh", "jeddah"];
+  const TABS = [["emergency", IC.emerg], ["meds", IC.med], ["labs", IC.lab], ["reports", IC.report], ["lifestyle", IC.life]];
+  const MAXFILE = 1.5 * 1024 * 1024;
+
+  const I18N = {
+    en: {
+      tagline: "Caring Like Family", otherLang: "العربية", profile: "My Account", logout: "Log out", notifications: "Notifications", soonMsg: "This section is coming next.", noNotes: "No notifications yet.",
+      backVisit: "Back to Visit", backVisits: "Back to My Visits", backPatients: "Back to Patients", fileTag: "Patient File", fileNo: "Medical File No.", mobile: "Mobile Number", g_m: "Male", g_f: "Female", years: "{n} Years",
+      alT: "Allergy", missN: "{n} missing details", missN1: "1 missing detail", editInfo: "Edit Personal Info", nf: "Patient file not found", nfS: "Check the file number and try again.",
+      famT: "Associated Family Members", famS: "People registered on the same mobile number.", openNew: "Open Patient File", cur: "Current file", holder: "Account holder", caller: "Mobile owner: {r}",
+      famNone: "No other people are registered on this mobile number.", openFile: "Open file",
+      medReport: "Medical Report", pvT: "Previous Visits", pvS: "Visit history for this patient.", bk: "Booking No.", ord: "Order No.", vdate: "Visit Date", status: "Status", viewVisit: "View Visit Details", curVisit: "This visit",
+      pvNone: "No visits yet on this file.", st_done: "Completed", st_on: "In progress", st_booked: "Scheduled", st_off: "Cancelled", st_open: "Open",
+      sv_doctor: "Doctor Visit", sv_nursing: "Nursing", sv_blood: "Lab Tests", sv_iv: "IV Therapy",
+      mfT: "Medical File", mfS: "Information kept on the patient's file for every visit.",
+      t_emergency: "Emergency Information", t_meds: "Medications", t_labs: "Laboratory Results", t_reports: "External Medical Reports", t_lifestyle: "Lifestyle",
+      save: "Save Changes", cancel: "Cancel", saved: "Saved.", updated: "Last updated {d} by {n}", storeErr: "Couldn't save. The browser storage is full.", fixErr: "Check the highlighted fields.",
+      optional: "(optional)", selectPh: "Select", other: "Other", specify: "Please specify",
+      bloodT: "Blood Type", b_unknown: "Unknown",
+      chrT: "Does the patient have any chronic conditions?", yes: "Yes", no: "No", unknown: "Unknown", chrPick: "Select the conditions", chrReq: "Choose at least one condition.",
+      c_diabetes: "Diabetes", c_htn: "Hypertension", c_heart: "Heart Disease", c_asthma: "Asthma", c_ckd: "Chronic Kidney Disease", c_other: "Other", chrOtherPh: "Write the condition",
+      ecT: "Emergency Contact", ecName: "Contact Name", ecNamePh: "Full name", ecMob: "Mobile Number", ecRel: "Relationship to Patient", mobErr: "Enter a mobile number like 05XXXXXXXX.", ecNeed: "Enter the contact's name and mobile number.",
+      e_spouse: "Spouse", e_parent: "Parent", e_child: "Child", e_sibling: "Sibling", e_relative: "Other Relative", e_caregiver: "Caregiver", e_other: "Other",
+      takePhoto: "Take Photo", takePhotoS: "Photo of the medication box or prescription", addManual: "Add Manually", addManualS: "Enter the medication name",
+      medNew: "New Medication", medEdit: "Edit Medication", medName: "Medication Name", medNamePh: "e.g. Metformin 500 mg", medNameReq: "Enter the medication name.",
+      photoNote: "Read the name from the photo and write it below.", confirmName: "I confirm the medication name matches the photo.", confirmReq: "Confirm the medication name before saving.",
+      stillT: "Is the patient still taking it?", on: "Yes – Ongoing", off: "No – Discontinued", whenT: "When does the patient take it?",
+      tm_breakfast: "After Breakfast", tm_lunch: "After Lunch", tm_dinner: "After Dinner", tm_bed: "Before Bedtime", doseT: "Amount per Dose",
+      d_half: "Half a Tablet", d_1: "1 Tablet", d_2: "2 Tablets", d_other: "Other", doseOtherPh: "e.g. 5 ml", needAnswer: "Choose an answer.",
+      saveMed: "Save Medication", saveAnother: "Save & Add Another", medAdded: "Medication saved.", medsNone: "No medications recorded yet.", medsNoneS: "Take a photo or add a medication manually.",
+      edit: "Edit", remove: "Remove", removeQ: "Remove this item from the patient's file?", removed: "Removed.", photo: "Photo", viewPhoto: "View photo",
+      upReport: "Upload Report", upReportS: "Image or PDF of a lab report", labManual: "Add Manually", labManualS: "Enter a test result",
+      labNew: "Add Result Manually", labUp: "Upload Laboratory Report", labEdit: "Edit Result", testName: "Test Name", testNamePh: "Search by test name or code", testCode: "Test Code", testCodePh: "e.g. LAB-102", pickNone: "No matching test. You can type the name and code yourself.", drOnly: "Visible to doctors only", result: "Result", resultPh: "e.g. 6.8",
+      unit: "Unit", unitPh: "e.g. %", range: "Reference Range", rangePh: "e.g. 4.0 - 5.6", tdate: "Test Date", notes: "Notes", notesPh: "Anything else to note",
+      reqF: "Required.", dateErr: "Choose a date that is not in the future.", file: "Report File", fileReq: "Attach the report file.", fileBig: "The file is too large. Use a file under 1.5 MB.", fileType: "Use an image or a PDF file.",
+      chooseFile: "Choose file", repTitle: "Report Title", repTitlePh: "e.g. Lipid profile – Al Borg Lab",
+      madaLabs: "MADA CARE Laboratory Tests", madaLabsS: "Tests done through MADA CARE and linked to this file.", recLabs: "Recorded Results", recLabsS: "From external labs or entered by the care team.",
+      src_mada: "MADA CARE", src_ext: "External Report", src_manual: "Manual entry", verified: "Verified", unverified: "Unverified", pending: "Awaiting result", ml_code: "Code", ml_inRep: "See the lab report", ml_test: "Test", ml_result: "Result", ml_range: "Reference Range", ml_flag: "Status", ml_by: "Ordered by {n}", ml_note: "Doctor's note", critical: "Critical", ml_auto: "Linked automatically. Results arrive from the MADA CARE lab, no entry needed.",
+      ms_ordered: "Ordered · waiting for sample", ms_collected: "Sample collected", ms_received: "Sample at the lab", ms_resulted: "Results out · waiting for doctor approval", ms_reviewed: "Approved by {n}",
+      high: "High", low: "Low", normal: "Normal", viewReport: "View Report", labsNone: "No laboratory results recorded yet.", madaNone: "No MADA CARE laboratory tests on this file yet.",
+      repUp: "Upload Medical Report", repType: "Report Type", facility: "Hospital / Clinic", facilityPh: "Where the report is from", repDate: "Report Date",
+      r_discharge: "Discharge Summary", r_specialist: "Specialist Report", r_radiology: "Radiology Report", r_prescription: "Prescription", r_other: "Other",
+      repsNone: "No external reports uploaded yet.", repsNoneS: "Upload hospital or clinic reports so the care team can see them.", saveReport: "Save Report", saveResult: "Save Result",
+      lgT: "Preferred Language", lg_ar: "Arabic", lg_en: "English", lg_other: "Other",
+      ctT: "Preferred Contact Method", ct_call: "Phone Call", ct_wa: "WhatsApp", ct_sms: "SMS",
+      prT: "Preferred Care Provider", prS: "Does the patient have a preferred healthcare provider?", pr_none: "No Preference", pr_doctor: "Preferred Doctor", pr_nurse: "Preferred Nurse", prName: "Provider Name", prNamePh: "Name of the doctor or nurse",
+      vtT: "Preferred Visit Time", vt_morning: "Morning", vt_afternoon: "Afternoon", vt_evening: "Evening", vt_none: "No Preference",
+      asT: "Special Assistance Needs", asS: "Does the patient require any special assistance?", as_hearing: "Hearing Impairment", as_visual: "Visual Impairment", as_moving: "Difficulty Moving", as_wheelchair: "Wheelchair User", as_none: "No Special Assistance Required", as_other: "Other",
+      lfNotes: "Additional Notes", lfNotesS: "Anything else our care team should know?", lfNotesPh: "Preferences or special instructions",
+      lfNote: "Preferences only. Keep clinical diagnoses in the visit.",
+      nfT: "Open Patient File", nfS: "A new medical file on mobile number {m}.", nfEdit: "Personal Information", nfEditS: "Complete or correct the patient's details.",
+      whoT: "Who is this medical record for?", whoSelf: "The mobile owner", whoSelfS: "The owner of this mobile number is the patient.", whoFam: "Someone else", whoFamS: "A family member or another person on this number.",
+      relT: "Relationship to the mobile owner", relName: "Mobile owner's name", relNamePh: "Name of the person on this number", relReq: "Choose the relationship.",
+      w_father: "Father", w_mother: "Mother", w_husband: "Husband", w_wife: "Wife", w_son: "Son", w_daughter: "Daughter", w_otherRel: "Other Family Member", w_other: "Other",
+      fullName: "Full Name (Triple Name)", fullNamePh: "e.g. Fatimah Ahmed Ali", nameErr: "Enter the full name (at least three names).",
+      idType: "ID Type", idNo: "ID Number", idPh: "e.g. 1234567890", id_national: "National ID", id_iqama: "Iqama (Resident ID)", id_passport: "Passport", id_gcc: "GCC National ID",
+      idErr: "A National ID is 10 digits and starts with 1. An Iqama is 10 digits and starts with 2.", dob: "Date of Birth", gender: "Gender", nat: "Nationality", city: "City",
+      nat_SA: "Saudi Arabia", nat_EG: "Egypt", nat_YE: "Yemen", nat_SD: "Sudan", nat_JO: "Jordan", nat_SY: "Syria", nat_PK: "Pakistan", nat_IN: "India", nat_BD: "Bangladesh", nat_PH: "Philippines", nat_OT: "Other",
+      city_riyadh: "Riyadh", city_jeddah: "Jeddah", createFile: "Create File", fileMade: "File {n} opened.", infoSaved: "Personal info saved.",
+      m_idNumber: "ID number", m_dateOfBirth: "date of birth", m_gender: "gender", m_nationality: "nationality", m_city: "city", close: "Close"
+    },
+    ar: {
+      tagline: "رعاية كالعائلة", otherLang: "English", profile: "حسابي", logout: "تسجيل الخروج", notifications: "الإشعارات", soonMsg: "هذا القسم هو الخطوة الجاية.", noNotes: "ما فيه إشعارات للحين.",
+      backVisit: "رجوع للزيارة", backVisits: "رجوع لزياراتي", backPatients: "رجوع للمرضى", fileTag: "ملف المريض", fileNo: "رقم الملف الطبي", mobile: "رقم الجوال", g_m: "ذكر", g_f: "أنثى", years: "{n} سنة",
+      alT: "حساسية", missN: "{n} معلومات ناقصة", missN1: "معلومة وحدة ناقصة", editInfo: "تعديل البيانات الشخصية", nf: "ما لقينا ملف المريض", nfS: "تأكد من رقم الملف وحاول مرة ثانية.",
+      famT: "أفراد العائلة المرتبطين", famS: "الأشخاص المسجلين على نفس رقم الجوال.", openNew: "فتح ملف مريض", cur: "الملف الحالي", holder: "صاحب الرقم", caller: "صاحب الرقم: {r}",
+      famNone: "ما فيه أشخاص ثانيين مسجلين على هذا الرقم.", openFile: "فتح الملف",
+      medReport: "التقرير الطبي", pvT: "الزيارات السابقة", pvS: "سجل زيارات هذا المريض.", bk: "رقم الحجز", ord: "رقم الطلب", vdate: "تاريخ الزيارة", status: "الحالة", viewVisit: "عرض تفاصيل الزيارة", curVisit: "هذه الزيارة",
+      pvNone: "ما فيه زيارات على هذا الملف للحين.", st_done: "مكتملة", st_on: "جارية", st_booked: "مجدولة", st_off: "ملغاة", st_open: "مفتوحة",
+      sv_doctor: "زيارة طبيب", sv_nursing: "تمريض", sv_blood: "تحاليل", sv_iv: "علاج وريدي",
+      mfT: "الملف الطبي", mfS: "معلومات محفوظة في ملف المريض لكل زيارة.",
+      t_emergency: "معلومات الطوارئ", t_meds: "الأدوية", t_labs: "نتائج المختبر", t_reports: "التقارير الطبية الخارجية", t_lifestyle: "نمط الحياة",
+      save: "حفظ التغييرات", cancel: "إلغاء", saved: "انحفظ.", updated: "آخر تحديث {d} بواسطة {n}", storeErr: "ما قدرنا نحفظ. مساحة المتصفح ممتلئة.", fixErr: "راجع الخانات المحددة.",
+      optional: "(اختياري)", selectPh: "اختر", other: "أخرى", specify: "حدد",
+      bloodT: "فصيلة الدم", b_unknown: "غير معروفة",
+      chrT: "هل عند المريض أمراض مزمنة؟", yes: "نعم", no: "لا", unknown: "غير معروف", chrPick: "اختر الأمراض", chrReq: "اختر مرض واحد على الأقل.",
+      c_diabetes: "السكري", c_htn: "ارتفاع ضغط الدم", c_heart: "أمراض القلب", c_asthma: "الربو", c_ckd: "مرض الكلى المزمن", c_other: "أخرى", chrOtherPh: "اكتب المرض",
+      ecT: "جهة الاتصال للطوارئ", ecName: "اسم الشخص", ecNamePh: "الاسم الكامل", ecMob: "رقم الجوال", ecRel: "صلته بالمريض", mobErr: "اكتب رقم جوال مثل 05XXXXXXXX.", ecNeed: "اكتب اسم الشخص ورقم جواله.",
+      e_spouse: "الزوج / الزوجة", e_parent: "أحد الوالدين", e_child: "الابن / الابنة", e_sibling: "الأخ / الأخت", e_relative: "قريب آخر", e_caregiver: "مقدم رعاية", e_other: "أخرى",
+      takePhoto: "التقاط صورة", takePhotoS: "صورة علبة الدواء أو الوصفة", addManual: "إضافة يدوية", addManualS: "اكتب اسم الدواء",
+      medNew: "دواء جديد", medEdit: "تعديل الدواء", medName: "اسم الدواء", medNamePh: "مثال: ميتفورمين 500 ملغ", medNameReq: "اكتب اسم الدواء.",
+      photoNote: "اقرأ اسم الدواء من الصورة واكتبه تحت.", confirmName: "أؤكد أن اسم الدواء مطابق للصورة.", confirmReq: "أكّد اسم الدواء قبل الحفظ.",
+      stillT: "هل المريض مستمر عليه؟", on: "نعم – مستمر", off: "لا – موقوف", whenT: "متى ياخذه المريض؟",
+      tm_breakfast: "بعد الفطور", tm_lunch: "بعد الغداء", tm_dinner: "بعد العشاء", tm_bed: "قبل النوم", doseT: "الكمية في كل جرعة",
+      d_half: "نص حبة", d_1: "حبة وحدة", d_2: "حبتين", d_other: "أخرى", doseOtherPh: "مثال: 5 مل", needAnswer: "اختر إجابة.",
+      saveMed: "حفظ الدواء", saveAnother: "حفظ وإضافة دواء آخر", medAdded: "انحفظ الدواء.", medsNone: "ما فيه أدوية مسجلة للحين.", medsNoneS: "صوّر الدواء أو أضفه يدوياً.",
+      edit: "تعديل", remove: "حذف", removeQ: "تبي تحذف هذا من ملف المريض؟", removed: "انحذف.", photo: "صورة", viewPhoto: "عرض الصورة",
+      upReport: "رفع تقرير", upReportS: "صورة أو PDF لتقرير المختبر", labManual: "إضافة يدوية", labManualS: "اكتب نتيجة تحليل",
+      labNew: "إضافة نتيجة يدوياً", labUp: "رفع تقرير مختبر", labEdit: "تعديل النتيجة", testName: "اسم التحليل", testNamePh: "ابحث باسم التحليل أو الكود", testCode: "كود التحليل", testCodePh: "مثال: LAB-102", pickNone: "ما فيه تحليل مطابق. تقدر تكتب الاسم والكود بنفسك.", drOnly: "يظهر للأطباء فقط", result: "النتيجة", resultPh: "مثال: 6.8",
+      unit: "الوحدة", unitPh: "مثال: %", range: "المعدل الطبيعي", rangePh: "مثال: 4.0 - 5.6", tdate: "تاريخ التحليل", notes: "ملاحظات", notesPh: "أي شي ثاني تبي تكتبه",
+      reqF: "مطلوب.", dateErr: "اختر تاريخ ما يكون في المستقبل.", file: "ملف التقرير", fileReq: "أرفق ملف التقرير.", fileBig: "الملف كبير. استخدم ملف أقل من 1.5 ميجا.", fileType: "استخدم صورة أو ملف PDF.",
+      chooseFile: "اختر ملف", repTitle: "عنوان التقرير", repTitlePh: "مثال: تحليل الدهون – مختبر البرج",
+      madaLabs: "تحاليل مختبر مدى كير", madaLabsS: "تحاليل سويت عن طريق مدى كير ومربوطة بهذا الملف.", recLabs: "النتائج المسجلة", recLabsS: "من مختبرات خارجية أو مدخلة من فريق الرعاية.",
+      src_mada: "مدى كير", src_ext: "تقرير خارجي", src_manual: "إدخال يدوي", verified: "موثّقة", unverified: "غير موثّقة", pending: "بانتظار النتيجة", ml_code: "الكود", ml_inRep: "موجودة في تقرير المختبر", ml_test: "التحليل", ml_result: "النتيجة", ml_range: "المعدل الطبيعي", ml_flag: "الحالة", ml_by: "طلبه {n}", ml_note: "ملاحظة الطبيب", critical: "حرج", ml_auto: "مربوطة تلقائياً. النتائج توصل من مختبر مدى كير بدون أي إدخال.",
+      ms_ordered: "مطلوب · بانتظار سحب العينة", ms_collected: "تم سحب العينة", ms_received: "العينة في المختبر", ms_resulted: "طلعت النتائج · بانتظار اعتماد الطبيب", ms_reviewed: "اعتمدها {n}",
+      high: "مرتفع", low: "منخفض", normal: "طبيعي", viewReport: "عرض التقرير", labsNone: "ما فيه نتائج مختبر مسجلة للحين.", madaNone: "ما فيه تحاليل من مدى كير على هذا الملف للحين.",
+      repUp: "رفع تقرير طبي", repType: "نوع التقرير", facility: "المستشفى / العيادة", facilityPh: "من وين التقرير", repDate: "تاريخ التقرير",
+      r_discharge: "ملخص خروج", r_specialist: "تقرير استشاري", r_radiology: "تقرير أشعة", r_prescription: "وصفة طبية", r_other: "أخرى",
+      repsNone: "ما فيه تقارير خارجية للحين.", repsNoneS: "ارفع تقارير المستشفيات أو العيادات عشان يشوفها فريق الرعاية.", saveReport: "حفظ التقرير", saveResult: "حفظ النتيجة",
+      lgT: "اللغة المفضلة", lg_ar: "العربية", lg_en: "الإنجليزية", lg_other: "أخرى",
+      ctT: "طريقة التواصل المفضلة", ct_call: "اتصال", ct_wa: "واتساب", ct_sms: "رسالة نصية",
+      prT: "مقدم الرعاية المفضل", prS: "هل عند المريض مقدم رعاية يفضله؟", pr_none: "ما عنده تفضيل", pr_doctor: "طبيب مفضل", pr_nurse: "ممرض/ممرضة مفضلة", prName: "اسم مقدم الرعاية", prNamePh: "اسم الطبيب أو الممرض",
+      vtT: "وقت الزيارة المفضل", vt_morning: "الصباح", vt_afternoon: "الظهر", vt_evening: "المساء", vt_none: "ما عنده تفضيل",
+      asT: "احتياجات المساعدة الخاصة", asS: "هل يحتاج المريض مساعدة خاصة؟", as_hearing: "ضعف السمع", as_visual: "ضعف البصر", as_moving: "صعوبة في الحركة", as_wheelchair: "يستخدم كرسي متحرك", as_none: "ما يحتاج مساعدة خاصة", as_other: "أخرى",
+      lfNotes: "ملاحظات إضافية", lfNotesS: "فيه شي ثاني لازم يعرفه فريق الرعاية؟", lfNotesPh: "تفضيلات أو تعليمات خاصة",
+      lfNote: "هذه تفضيلات فقط. التشخيصات الطبية مكانها في الزيارة.",
+      nfT: "فتح ملف مريض", nfS: "ملف طبي جديد على رقم الجوال {m}.", nfEdit: "البيانات الشخصية", nfEditS: "كمّل أو صحح بيانات المريض.",
+      whoT: "لمن هذا الملف الطبي؟", whoSelf: "صاحب الرقم", whoSelfS: "صاحب رقم الجوال هو المريض.", whoFam: "شخص آخر", whoFamS: "فرد من العائلة أو شخص آخر على نفس الرقم.",
+      relT: "صلة صاحب الرقم بالمريض", relName: "اسم صاحب الرقم", relNamePh: "اسم الشخص صاحب الرقم", relReq: "اختر صلة القرابة.",
+      w_father: "الأب", w_mother: "الأم", w_husband: "الزوج", w_wife: "الزوجة", w_son: "الابن", w_daughter: "الابنة", w_otherRel: "قريب آخر", w_other: "أخرى",
+      fullName: "الاسم الكامل (ثلاثي)", fullNamePh: "مثال: فاطمة أحمد علي", nameErr: "اكتب الاسم الكامل (ثلاثة أسماء على الأقل).",
+      idType: "نوع الهوية", idNo: "رقم الهوية", idPh: "مثال: 1234567890", id_national: "هوية وطنية", id_iqama: "إقامة", id_passport: "جواز سفر", id_gcc: "هوية خليجية",
+      idErr: "الهوية الوطنية 10 أرقام وتبدأ بـ 1، والإقامة 10 أرقام وتبدأ بـ 2.", dob: "تاريخ الميلاد", gender: "الجنس", nat: "الجنسية", city: "المدينة",
+      nat_SA: "السعودية", nat_EG: "مصر", nat_YE: "اليمن", nat_SD: "السودان", nat_JO: "الأردن", nat_SY: "سوريا", nat_PK: "باكستان", nat_IN: "الهند", nat_BD: "بنغلاديش", nat_PH: "الفلبين", nat_OT: "أخرى",
+      city_riyadh: "الرياض", city_jeddah: "جدة", createFile: "فتح الملف", fileMade: "انفتح الملف {n}.", infoSaved: "انحفظت البيانات الشخصية.",
+      m_idNumber: "رقم الهوية", m_dateOfBirth: "تاريخ الميلاد", m_gender: "الجنس", m_nationality: "الجنسية", m_city: "المدينة", close: "إغلاق"
+    }
+  };
+  let current = "en";
+  const t = () => I18N[current];
+  const tx = (k, v) => t()[k].replace(/\{(\w+)\}/g, (_, n) => v[n]);
+  const T = v => MadaOrders.text(v, current);
+  const loc = () => current === "ar" ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB";
+  const pad2 = n => String(n).padStart(2, "0");
+  const today = () => { const d = new Date(); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; };
+  const fmtD = ymd => { if (!ymd) return "—"; const [y, m, d] = String(ymd).slice(0, 10).split("-").map(Number); return new Date(y, m - 1, d).toLocaleDateString(loc(), { day: "numeric", month: "short", year: "numeric" }); };
+  const fmtAt = iso => new Date(iso).toLocaleString(loc(), { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  const initials = n => (n || "?").trim().split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+  const nameOf = v => v && typeof v === "object" ? v[current] || v.en : v || "";
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+  // ---------- data ----------
+  const patient = () => MadaPatients.get(mrn) || MadaPatients.sample(mrn);
+  const medOf = () => MadaStore.getJSON(MEDKEY, {});
+  function putMed(patch) {
+    const next = { ...medOf(), ...patch };
+    MadaStore.setJSON(MEDKEY, next);
+    let ok = true; try { ok = localStorage.getItem(MEDKEY) != null; } catch (e) {}
+    if (!ok) throw new Error(t().storeErr);
+    return next;
+  }
+  const att = id => id ? MadaStore.getJSON("mada-patt-" + id, null) : null;
+  function putAtt(a) {
+    const id = uid(); MadaStore.setJSON("mada-patt-" + id, a);
+    let ok = true; try { ok = localStorage.getItem("mada-patt-" + id) != null; } catch (e) {}
+    if (!ok) { MadaStore.set("mada-patt-" + id, null); throw new Error(t().storeErr); }
+    return id;
+  }
+  const dropAtt = id => { if (id) MadaStore.set("mada-patt-" + id, null); };
+  const stamp = () => ({ at: new Date().toISOString(), by: me.name });
+  const visitsOf = () => MadaOrders.all().filter(o => o.mrn === mrn)
+    .map(o => ({ o, d: (o.appointment && o.appointment.date) || String(o.createdAt || "").slice(0, 10) })).sort((a, b) => b.d.localeCompare(a.d));
+  function latestAllergy() {
+    for (const { o } of visitsOf()) { const dv = o.doctorVisit || {}, al = (dv.steps && dv.steps.allergy) || dv.allergyDraft; if (al && al.status) return al.status === "yes" ? (al.items || []).map(it => DrAllergy.nameIn(it, current)).filter(Boolean) : []; }
+    return null;
+  }
+  // MADA CARE lab tests linked to this file. Nothing here is typed by the doctor:
+  // - lab items of Medical Requests for this file (sent when the doctor signs the visit, or added by staff):
+  //   status, results and approval come from the lab workflow (lab-test.html), results from the lab system;
+  // - tests ordered in a visit that have not reached the lab workflow yet, and booked lab services (awaiting result).
+  // One entry per order: { key, order, req, date, by, stage, tests: [{ code, name, rows: [{ code, name, value, unit, range, flag }] }], note, approvedBy, report }.
+  const hasMed = typeof MadaMedical !== "undefined";
+  function labRange(a) { return a.low ? `${a.low} - ${a.high}` : `< ${a.high}`; }
+  function madaLabs() {
+    const out = [], mine = visitsOf().map(x => x.o.id);
+    const reqs = hasMed ? MadaMedical.all().filter(r => r.mrn === mrn || mine.includes(r.orderId)) : [];
+    const drName = c => { const r = DrOrders.item(c); return r ? r[current] : ""; };
+    const labName = c => { const r = MadaLabs.byCode[c]; return r ? r.name[current] : ""; };
+    reqs.forEach(r => r.items.filter(it => it.type === "lab").forEach(it => {
+      const stage = MadaMedical.STEPS.lab[it.step], res = it.results || {}, rv = it.log.find(l => MadaMedical.STEPS.lab[l.step] === "reviewed");
+      const rowsOf = keys => keys.flatMap(k => MadaMedical.ANALYTES[k] || []).map(a => ({ code: a.code, name: a.name[current], value: res[a.code], unit: a.unit, range: labRange(a), flag: res[a.code] != null ? MadaMedical.labStatus(a, res[a.code]) : "" }));
+      // Tests by catalogue code when the doctor ordered them; otherwise by the lab's own test codes.
+      const tests = it.orderCodes && it.orderCodes.length
+        ? it.orderCodes.map(c => ({ code: c, name: drName(c) || c, rows: rowsOf(MadaMedical.CATALOG[c] ? [MadaMedical.CATALOG[c]] : []) }))
+        : (it.tests && it.tests.length ? it.tests : []).map(c => ({ code: c, name: labName(c) || c, rows: rowsOf([c]) }));
+      if (!tests.length) tests.push({ code: "", name: it.title ? it.title[current] : "", rows: [] });
+      const notes = it.log.map(l => l.data && l.data.docNote).filter(Boolean).concat((it.docNotes || []).map(n => n.text));
+      out.push({ key: r.id + it.id, order: r.orderId, req: r.id, date: (visitsOf().find(x => x.o.id === r.orderId) || {}).d || String(r.createdAt || "").slice(0, 10), by: r.byDoctor, stage, tests, note: notes.join(" · "), approvedBy: rv && rv.by, report: it.report || null });
+    }));
+    const sent = new Set(reqs.filter(r => r.items.some(i => i.type === "lab")).map(r => r.orderId));
+    visitsOf().forEach(({ o, d }) => {
+      if (sent.has(o.id)) return;
+      const items = ((o.doctorVisit && o.doctorVisit.steps && o.doctorVisit.steps.orders) || {}).items || [];
+      const codes = [...new Set(items.filter(x => x.svc === "lab").flatMap(x => DrOrders.labTests ? DrOrders.labTests(x.code) : [x.code]))];
+      if (codes.length) out.push({ key: o.id + "v", order: o.id, date: d, by: o.doctorVisit.steps && o.doctorVisit.steps.orders && o.doctorVisit.steps.orders.by, stage: "ordered", tests: codes.map(c => ({ code: c, name: drName(c) || c, rows: [] })) });
+      if (o.service === "blood") { const ts = (o.items || []).filter(x => x.kind === "test"); if (ts.length) out.push({ key: o.id + "b", order: o.id, date: d, stage: "ordered", tests: ts.map(x => ({ code: x.code, name: labName(x.code) || x.code, rows: [] })) }); }
+    });
+    return out.sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  }
+  const madaCount = () => madaLabs().reduce((n, g) => n + g.tests.length, 0);
+
+  // ---------- state ----------
+  let tab = (location.hash || "").slice(1);
+  if (!TABS.some(x => x[0] === tab)) tab = "emergency";
+  let em = null, lf = null, medF = null, labF = null, repF = null, tried = false, nfS = null, nfTried = false;
+  const resetForms = () => { em = null; lf = null; medF = null; labF = null; repF = null; tried = false; };
+
+  // ---------- small builders ----------
+  const chk = '<path d="m5 12 5 5 9-10"/>';
+  const choice = (group, val, label, on, multi) => `<button type="button" class="ch" data-g="${group}" data-v="${esc(val)}" ${multi ? `aria-pressed="${!!on}"` : `role="radio" aria-checked="${!!on}"`}><span class="bx ${multi ? "" : "rd"}">${svg(chk, 3)}</span>${label}</button>`;
+  const chs = (group, list, cur, label, multi, bad) => `<div class="chs ${bad ? "bad" : ""}" ${multi ? "" : 'role="radiogroup"'}>${list.map(v => choice(group, v, label(v), multi ? (cur || []).includes(v) : cur === v, multi)).join("")}</div>`;
+  const field = (lbl, inner, err, opt) => `<div class="pf"><label>${lbl}${opt ? ` <span class="opt">${t().optional}</span>` : ""}</label>${inner}${err ? `<span class="perr">${err}</span>` : ""}</div>`;
+  const inp = (id, val, ph, bad, extra) => `<input class="pin ${bad ? "bad" : ""}" id="${id}" value="${esc(val || "")}" placeholder="${esc(ph || "")}" autocomplete="off" ${extra || ""}>`;
+  const upd = s => s && s.at ? `<span class="pupd">${tx("updated", { d: esc(fmtAt(s.at)), n: esc(nameOf(s.by)) })}</span>` : `<span class="pupd"></span>`;
+  const empty = (b, s) => `<div class="ps-empty"><b>${b}</b>${s || ""}</div>`;
+
+  // ---------- header, family, visits ----------
+  function missingOf(p) {
+    return ["idNumber", "dateOfBirth", "gender", "nationality", "city"].filter(k => k === "city" ? !(p.address && p.address.city) : !p[k]);
+  }
+  function header(p) {
+    const name = nameOf(p.name), al = latestAllergy(), miss = missingOf(p), dob = p.dateOfBirth;
+    const age = dob ? MadaPatients.ageOf(dob) : p.age || p.approxAge;
+    return `<section class="pt-card ph">
+      <span class="ph-ava">${esc(initials(name))}</span>
+      <div class="ph-main"><span class="ph-tag">${svg(IC.folder, 2)}${t().fileTag}</span><h1>${esc(name)}</h1>
+        <div class="ph-meta"><span>${svg(IC.folder)}${t().fileNo} · <b class="num">${esc(mrn)}</b></span><span>${svg(IC.phone)}${t().mobile} · <b class="num">${esc(DrPortal.phone(p.mobile) || "—")}</b></span></div>
+        <div class="ph-chips">${p.gender ? `<span class="ph-chip g-${p.gender}">${t()["g_" + p.gender]}</span>` : ""}${age != null ? `<span class="ph-chip">${tx("years", { n: age })}${dob ? ` · ${esc(fmtD(dob))}` : ""}</span>` : ""}
+          ${al && al.length ? `<span class="ph-chip al">${svg(IC.warn, 2.2)}${t().alT}: ${esc(al.join(current === "ar" ? "، " : ", "))}</span>` : ""}
+          ${miss.length ? `<button type="button" class="ph-chip miss" id="phMiss" title="${esc(miss.map(k => t()["m_" + k]).join(", "))}">${svg(IC.warn, 2.2)}${miss.length === 1 ? t().missN1 : tx("missN", { n: miss.length })}</button>` : ""}</div></div>
+      <div class="ph-acts"><button type="button" class="pb out" id="editInfo">${svg(IC.pen)}${t().editInfo}</button></div>
+    </section>`;
+  }
+  function relText(f) {
+    if (f.openedFor === "self") return t().holder;
+    if (!f.relationship) return "";
+    const r = WRELS.includes(f.relationship) ? t()["w_" + f.relationship] : f.relationship;
+    return tx("caller", { r: esc(r) });
+  }
+  function family(p) {
+    const list = p.mobile ? MadaPatients.findByMobile(p.mobile) : [];
+    const cards = list.map(f => {
+      const isCur = f.fileNo === mrn, nm = nameOf(f.name), rel = relText(f);
+      return `<a class="fm ${isCur ? "cur" : ""}" href="doctor-patient.html?mrn=${encodeURIComponent(f.fileNo)}${keepBack()}" ${isCur ? 'aria-current="page"' : ""}>
+        <span class="fm-ava">${esc(initials(nm))}</span><span><b>${esc(nm)}</b><small><span class="num">${esc(f.fileNo)}</span>${f.age != null ? ` · <span>${tx("years", { n: f.age })}</span>` : ""}</small>${rel ? `<span class="fm-rel">${rel}</span>` : ""}</span>
+        ${isCur ? `<span class="fm-cur">${t().cur}</span>` : `<span class="fm-go">${svg(IC.chev, 2)}</span>`}</a>`;
+    }).join("");
+    return `<section class="pt-card"><div class="ps-h"><span class="ic">${svg(IC.family)}</span><div><h2>${t().famT}</h2><p>${t().famS}</p></div>
+      <button type="button" class="pb green" id="openNew">${svg(IC.plus, 2.2)}${t().openNew}</button></div>
+      <div class="ps-b">${list.length > 1 ? `<div class="fm-grid">${cards}</div>` : `<div class="fm-grid">${cards}</div><p class="ps-empty" style="margin-top:12px">${t().famNone}</p>`}</div></section>`;
+  }
+  function stOf(o) {
+    const dv = o.doctorVisit || {};
+    if (o.status === "completed" || dv.status === "done") return ["done", t().st_done];
+    if (o.status === "cancelled") return ["off", t().st_off];
+    if (dv.status === "ongoing" || dv.status === "paused") return ["on", t().st_on];
+    if (o.bookingId) return ["", t().st_booked];
+    return ["", t().st_open];
+  }
+  function visits() {
+    const list = visitsOf();
+    const svcIc = { doctor: IC.doctor, nursing: IC.nurse, blood: IC.lab, iv: IC.iv };
+    return `<section class="pt-card"><div class="ps-h"><span class="ic">${svg(IC.history)}</span><div><h2>${t().pvT}</h2><p>${t().pvS}</p></div></div>
+      <div class="ps-b">${list.length ? `<div class="pv-list">${list.map(({ o, d }) => {
+        const [cls, lbl] = stOf(o), mine = o.booking && o.booking.doctorId === me.doctorId && o.doctorVisit && cls === "done";
+        return `<div class="pv"><div class="pv-svc"><span class="ic">${svg(svcIc[o.service] || IC.folder)}</span><span><b>${esc(t()["sv_" + o.service] || o.service || "")}</b>${o.id === from ? `<span class="pv-cur">${t().curVisit}</span>` : ""}</span></div>
+          <div><small>${t().bk}</small><b class="num">${esc(o.bookingId || "—")}</b></div><div><small>${t().ord}</small><b class="num">${esc(o.id)}</b></div>
+          <div><small>${t().vdate}</small><b>${esc(fmtD(d))}</b><div style="margin-top:6px"><span class="pv-st ${cls}">${lbl}</span></div></div>
+          <div class="pv-acts">${mine ? `<a class="pb out sm" href="doctor-visit.html?id=${encodeURIComponent(o.id)}&view=1">${svg(IC.eye)}${t().viewVisit}</a><a class="pb out sm" href="doctor-reports.html?id=${encodeURIComponent(o.id)}">${svg(IC.report)}${t().medReport}</a>` : ""}</div></div>`;
+      }).join("")}</div>` : empty(t().pvNone)}</div></section>`;
+  }
+
+  // ---------- medical file sections ----------
+  function tabsBar() {
+    const m = medOf(), cnt = { meds: (m.meds || []).length, labs: madaCount(), reports: (m.reports || []).length };
+    return `<div class="mt" role="tablist">${TABS.map(([k, ic]) => `<button type="button" role="tab" aria-selected="${tab === k}" data-tab="${k}">${svg(ic)}${t()["t_" + k]}${cnt[k] ? `<span class="cnt">${cnt[k]}</span>` : ""}</button>`).join("")}</div>`;
+  }
+  // Emergency information
+  const emLoad = () => { if (!em) { const s = medOf().emergency || {}; em = { blood: s.blood || "", chronic: { status: "", items: [], other: "", ...(s.chronic || {}) }, contact: { name: "", mobile: "", rel: "", ...(s.contact || {}) } }; em.chronic.items = [...em.chronic.items]; } };
+  const mobOk = v => /^05\d{8}$/.test(v);
+  function emErr() {
+    const c = em.chronic, k = em.contact, any = k.name.trim() || k.mobile.trim() || k.rel;
+    return { chronic: c.status === "yes" && !c.items.length, other: c.status === "yes" && c.items.includes("other") && !c.other.trim(),
+      cname: any && !k.name.trim(), cmob: (any && !k.mobile.trim()) || (k.mobile.trim() && !mobOk(k.mobile.trim())) };
+  }
+  function emergencyView() {
+    emLoad(); const e = tried ? emErr() : {}, s = medOf().emergency;
+    return `<div class="fq"><label for="emBlood">${t().bloodT}</label><select class="pin pmore" id="emBlood"><option value="">${t().selectPh}</option>${BLOOD.map(b => `<option value="${b}" ${em.blood === b ? "selected" : ""}>${b === "unknown" ? t().b_unknown : "\u2066" + b.replace("-", "−") + "\u2069"}</option>`).join("")}</select></div>
+      <div class="fq"><span class="fl">${t().chrT}</span>${chs("chrS", ["yes", "no", "unknown"], em.chronic.status, v => t()[v])}
+        ${em.chronic.status === "yes" ? `<span class="fl" style="font-size:14px;margin-top:6px">${t().chrPick}</span>${chs("chr", CHRONIC, em.chronic.items, v => t()["c_" + v], true, e.chronic)}${e.chronic ? `<span class="perr">${t().chrReq}</span>` : ""}
+        ${em.chronic.items.includes("other") ? `<div class="pmore">${inp("chrOther", em.chronic.other, t().chrOtherPh, e.other, 'maxlength="80"')}${e.other ? `<span class="perr">${t().reqF}</span>` : ""}</div>` : ""}` : ""}</div>
+      <div class="fq"><span class="fl">${t().ecT}</span>
+        <div class="pg2">${field(t().ecName, inp("ecName", em.contact.name, t().ecNamePh, e.cname, 'maxlength="60"'), e.cname ? t().ecNeed : "")}
+        ${field(t().ecMob, inp("ecMob", em.contact.mobile, "05XXXXXXXX", e.cmob, 'inputmode="tel" maxlength="10" dir="ltr"'), e.cmob ? t().mobErr : "")}</div>
+        <span class="fl" style="font-size:13.5px;margin-top:4px">${t().ecRel}</span>${chs("ecRel", ERELS, em.contact.rel, v => t()["e_" + v])}</div>
+      <div class="pfoot">${upd(s)}<button type="button" class="pb out" id="emCancel">${t().cancel}</button><button type="button" class="pb dark" id="emSave">${svg(IC.check, 2.2)}${t().save}</button></div>`;
+  }
+  // Medications
+  const medBlank = photo => ({ id: "", name: "", status: "", times: [], dose: "", doseOther: "", photo: photo || "", confirmed: false });
+  function medErr() { const f = medF; return { name: !f.name.trim(), conf: f.photo && !f.confirmed, status: !f.status, dose: !f.dose, doseOther: f.dose === "other" && !f.doseOther.trim() }; }
+  function medForm() {
+    const f = medF, e = tried ? medErr() : {}, a = f.photo && att(f.photo);
+    return `<div class="fp" id="medForm"><div class="fp-h"><b>${f.id ? t().medEdit : t().medNew}</b><button type="button" class="px" id="medX" aria-label="${t().close}">${svg(IC.x, 2.2)}</button></div>
+      ${a ? `<div class="fp-photo"><img src="${a.data}" alt="${esc(t().photo)}" data-view="${f.photo}"><p>${t().photoNote}</p></div>` : ""}
+      <div class="fq">${field(t().medName, inp("medName", f.name, t().medNamePh, e.name, 'maxlength="80"'), e.name ? t().medNameReq : "")}
+        ${f.photo ? `<label class="fp-cf ${e.conf ? "bad" : ""}"><input type="checkbox" id="medConf" ${f.confirmed ? "checked" : ""}><span>${t().confirmName}</span></label>${e.conf ? `<span class="perr">${t().confirmReq}</span>` : ""}` : ""}</div>
+      <div class="fq"><span class="fl">${t().stillT}</span>${chs("mSt", ["on", "off"], f.status, v => t()[v], false, e.status)}${e.status ? `<span class="perr">${t().needAnswer}</span>` : ""}</div>
+      <div class="fq"><span class="fl">${t().whenT} <span class="opt">${t().optional}</span></span>${chs("mTm", TIMES, f.times, v => t()["tm_" + v], true)}</div>
+      <div class="fq"><span class="fl">${t().doseT}</span>${chs("mDs", DOSES, f.dose, v => t()["d_" + v], false, e.dose)}${e.dose ? `<span class="perr">${t().needAnswer}</span>` : ""}
+        ${f.dose === "other" ? `<div class="pmore">${inp("doseOther", f.doseOther, t().doseOtherPh, e.doseOther, 'maxlength="30"')}${e.doseOther ? `<span class="perr">${t().reqF}</span>` : ""}</div>` : ""}</div>
+      <div class="pfoot"><button type="button" class="pb out" id="medCancel">${t().cancel}</button>${f.id ? "" : `<button type="button" class="pb green" id="medAnother">${svg(IC.plus, 2.2)}${t().saveAnother}</button>`}<button type="button" class="pb dark" id="medSave">${svg(IC.check, 2.2)}${t().saveMed}</button></div></div>`;
+  }
+  const doseTxt = m => m.dose === "other" ? m.doseOther : t()["d_" + m.dose];
+  function medsView() {
+    const list = medOf().meds || [];
+    return `<div class="add2"><label><input type="file" id="medPhoto" accept="image/*" capture="environment"><span class="ic">${svg(IC.camera)}</span><span><b>${t().takePhoto}</b><small>${t().takePhotoS}</small></span></label>
+        <button type="button" id="medManual"><span class="ic">${svg(IC.pen)}</span><span><b>${t().addManual}</b><small>${t().addManualS}</small></span></button></div>
+      ${medF ? medForm() : ""}
+      ${list.length ? `<div class="il">${list.map(m => { const a = m.photo && att(m.photo); return `<div class="it">
+        ${a ? `<button type="button" class="it-ic" data-view="${m.photo}" aria-label="${t().viewPhoto}"><img src="${a.data}" alt=""></button>` : `<span class="it-ic">${svg(IC.med)}</span>`}
+        <div class="it-m"><b>${esc(m.name)}</b><small><span class="tg ${m.status === "on" ? "ok" : "off"}">${m.status === "on" ? t().on : t().off}</span>
+          ${(m.times || []).length ? `<span>${m.times.map(x => t()["tm_" + x]).join(" · ")}</span>` : ""}<span>${esc(doseTxt(m) || "")}</span></small></div>
+        <div class="it-a"><button type="button" class="pb out sm" data-medit="${m.id}">${svg(IC.pen)}${t().edit}</button><button type="button" class="pb danger sm icon" data-mdel="${m.id}" aria-label="${t().remove}">${svg(IC.trash)}</button></div></div>`; }).join("")}</div>`
+        : medF ? "" : empty(t().medsNone, t().medsNoneS)}`;
+  }
+  // Laboratory results
+  function flag(r) {
+    const v = parseFloat(String(r.result).replace(",", ".")), g = String(r.range || "").replace(/,/g, ".").replace(/[–—]/g, "-");
+    if (isNaN(v) || !/^\s*[<>]?\s*\d/.test(String(r.result).trim()) && isNaN(Number(r.result))) return "";
+    let m = g.match(/^\s*(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\s*$/);
+    if (m) return v < +m[1] ? "lo" : v > +m[2] ? "hi" : "nm";
+    m = g.match(/^\s*(<|<=|≤)\s*(\d+(?:\.\d+)?)\s*$/); if (m) return v > +m[2] || (m[1] === "<" && v === +m[2]) ? "hi" : "nm";
+    m = g.match(/^\s*(>|>=|≥)\s*(\d+(?:\.\d+)?)\s*$/); if (m) return v < +m[2] || (m[1] === ">" && v === +m[2]) ? "lo" : "nm";
+    return "";
+  }
+  const flagTag = f => f ? `<span class="tg ${f}">${t()[{ hi: "high", lo: "low", nm: "normal" }[f]]}</span>` : "";
+  function labErr() {
+    const f = labF, d = f.date;
+    return { test: !f.test.trim(), result: f.kind === "manual" && !f.result.trim(), date: !d || d > today(), file: f.kind === "upload" && !f.att };
+  }
+  function labForm() {
+    const f = labF, e = tried ? labErr() : {}, a = f.att && att(f.att), up = f.kind === "upload";
+    return `<div class="lab-ov" id="labOv"><div class="fp lab-mod" id="labForm" role="dialog" aria-modal="true"><div class="fp-h"><b>${f.id ? t().labEdit : up ? t().labUp : t().labNew}<span class="tg dr-only">${svg(IC.shield, 2)}${t().drOnly}</span></b><button type="button" class="px" id="labX" aria-label="${t().close}">${svg(IC.x, 2.2)}</button></div>
+      ${up ? `<div class="fq">${field(t().file, `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><label class="pb out sm" style="position:relative">${svg(IC.upload)}${t().chooseFile}<input type="file" id="labFile" accept="image/*,application/pdf" style="position:absolute;width:1px;height:1px;opacity:0"></label>${a ? `<button type="button" class="tg ext" data-view="${f.att}" style="border:0;cursor:pointer">${svg(IC.report, 2)}${esc(a.name)}</button>` : ""}</div>`, e.file ? t().fileReq : "")}</div>` : ""}
+      ${up ? `<div class="fq"><div class="pg2">${field(t().repTitle, inp("labTest", f.test, t().repTitlePh, e.test, 'maxlength="80"'), e.test ? t().reqF : "")}
+        ${field(t().tdate, `<input type="date" class="pin ${e.date ? "bad" : ""}" id="labDate" value="${esc(f.date)}" max="${today()}">`, e.date ? t().dateErr : "")}</div>`
+      : `<div class="fq"><div class="pg-lab">${field(t().testName, `<div class="lp-w">${inp("labTest", f.test, t().testNamePh, e.test, 'maxlength="80" role="combobox" aria-autocomplete="list" aria-controls="labPick" aria-expanded="false"')}<div class="lp" id="labPick" role="listbox" hidden></div></div>`, e.test ? t().reqF : "")}
+        ${field(t().testCode, inp("labCode", f.code, t().testCodePh, false, 'maxlength="20" dir="ltr"'), "", 1)}
+        ${field(t().tdate, `<input type="date" class="pin ${e.date ? "bad" : ""}" id="labDate" value="${esc(f.date)}" max="${today()}">`, e.date ? t().dateErr : "")}</div>`}
+      ${up ? "" : `<div class="pg3">${field(t().result, inp("labRes", f.result, t().resultPh, e.result, 'maxlength="30" dir="auto"'), e.result ? t().reqF : "")}${field(t().unit, inp("labUnit", f.unit, t().unitPh, false, 'maxlength="20" dir="auto"'), "", 1)}${field(t().range, inp("labRange", f.range, t().rangePh, false, 'maxlength="30" dir="ltr"'), "", 1)}</div>`}
+      ${field(t().notes, `<textarea class="pta" id="labNotes" maxlength="300" placeholder="${esc(t().notesPh)}" dir="auto">${esc(f.notes)}</textarea>`, "", 1)}</div>
+      <div class="pfoot"><button type="button" class="pb out" id="labCancel">${t().cancel}</button><button type="button" class="pb dark" id="labSave">${svg(IC.check, 2.2)}${t().saveResult}</button></div></div></div>`;
+  }
+  function mlCard(g) {
+    const st = g.stage === "reviewed" ? tx("ms_reviewed", { n: esc(nameOf(g.approvedBy) || "") }) : t()["ms_" + g.stage];
+    const flagT = f => f ? `<span class="tg ${f === "critical" ? "hi crit" : f === "high" ? "hi" : f === "low" ? "lo" : "nm"}">${t()[f]}</span>` : "";
+    const val = r => r.value != null ? `<b class="num" dir="ltr">${esc(r.value)}</b> <small>${esc(r.unit)}</small>` : `<span class="ml-wait">${t().pending}</span>`;
+    const body = g.tests.map(x => x.rows.length === 1 ? `<tr><td class="num" data-l="${t().ml_code}">${esc(x.code)}</td><td data-l="${t().ml_test}"><b>${esc(x.name)}</b></td><td data-l="${t().ml_result}">${val(x.rows[0])}</td><td data-l="${t().ml_range}" class="num"><span dir="ltr">${esc(x.rows[0].range)}</span></td><td data-l="${t().ml_flag}">${flagT(x.rows[0].flag)}</td></tr>`
+      : `<tr class="ml-t"><td class="num" data-l="${t().ml_code}">${esc(x.code)}</td><td data-l="${t().ml_test}"><b>${esc(x.name)}</b></td><td data-l="${t().ml_result}">${x.rows.length ? "" : `<span class="ml-wait">${["resulted", "reviewed"].includes(g.stage) ? t().ml_inRep : t().pending}</span>`}</td><td></td><td></td></tr>`
+        + x.rows.map(r => `<tr class="ml-a"><td class="num" data-l="${t().ml_code}">${esc(r.code)}</td><td data-l="${t().ml_test}">${esc(r.name)}</td><td data-l="${t().ml_result}">${val(r)}</td><td data-l="${t().ml_range}" class="num"><span dir="ltr">${esc(r.range)}</span></td><td data-l="${t().ml_flag}">${flagT(r.flag)}</td></tr>`).join("")).join("");
+    return `<div class="ml-card"><div class="ml-h"><span class="it-ic" style="background:#e3f4ee;color:#0f6b52">${svg(IC.lab)}</span>
+        <div class="it-m"><b>${esc(fmtD(g.date))}</b><small><span class="num">${esc(g.order)}</span>${g.req ? `<span class="num">${esc(g.req)}</span>` : ""}${g.by ? `<span>${esc(tx("ml_by", { n: nameOf(g.by) }))}</span>` : ""}</small></div>
+        <span class="tg ver">${svg(IC.check, 2.6)}${t().src_mada} · ${t().verified}</span><span class="tg ${g.stage === "reviewed" ? "ok" : g.stage === "resulted" ? "ext" : "unv"}">${st}</span></div>
+      <table class="ml-tb"><thead><tr><th>${t().ml_code}</th><th>${t().ml_test}</th><th>${t().ml_result}</th><th>${t().ml_range}</th><th>${t().ml_flag}</th></tr></thead><tbody>${body}</tbody></table>
+      ${g.note || g.report ? `<div class="ml-f">${g.note ? `<span><b>${t().ml_note}:</b> ${esc(g.note)}</span>` : "<span></span>"}${g.report ? `<button type="button" class="pb out sm" data-mrrep="${esc(g.report.key)}">${svg(IC.eye)}${t().viewReport}</button>` : ""}</div>` : ""}</div>`;
+  }
+  // View only: lab tests ordered through MADA CARE, with their results from the lab system.
+  function labsView() {
+    const md = madaLabs();
+    return `<div class="lt-h">${svg(IC.shield, 2)}${t().madaLabs}</div>
+      ${md.length ? `<div class="il">${md.map(mlCard).join("")}</div>` : `<div class="ps-empty">${t().madaNone}</div>`}`;
+  }
+  // External medical reports
+  function repErr() { const f = repF; return { title: !f.title.trim(), date: !f.date || f.date > today(), file: !f.att }; }
+  function repForm() {
+    const f = repF, e = tried ? repErr() : {}, a = f.att && att(f.att);
+    return `<div class="fp" id="repForm"><div class="fp-h"><b>${t().repUp}</b><button type="button" class="px" id="repX" aria-label="${t().close}">${svg(IC.x, 2.2)}</button></div>
+      <div class="fq">${field(t().file, `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><label class="pb out sm" style="position:relative">${svg(IC.upload)}${t().chooseFile}<input type="file" id="repFile" accept="image/*,application/pdf" style="position:absolute;width:1px;height:1px;opacity:0"></label>${a ? `<button type="button" class="tg ext" data-view="${f.att}" style="border:0;cursor:pointer">${svg(IC.report, 2)}${esc(a.name)}</button>` : ""}</div>`, e.file ? t().fileReq : "")}
+        <div class="pg2">${field(t().repTitle, inp("repTitle", f.title, t().repTitlePh, e.title, 'maxlength="80"'), e.title ? t().reqF : "")}${field(t().repDate, `<input type="date" class="pin ${e.date ? "bad" : ""}" id="repDate" value="${esc(f.date)}" max="${today()}">`, e.date ? t().dateErr : "")}</div>
+        <div class="pg2">${field(t().repType, `<select class="pin" id="repType"><option value="">${t().selectPh}</option>${RTYPES.map(r => `<option value="${r}" ${f.type === r ? "selected" : ""}>${t()["r_" + r]}</option>`).join("")}</select>`, "", 1)}${field(t().facility, inp("repFac", f.facility, t().facilityPh, false, 'maxlength="60"'), "", 1)}</div>
+        ${field(t().notes, `<textarea class="pta" id="repNotes" maxlength="300" placeholder="${esc(t().notesPh)}" dir="auto">${esc(f.notes)}</textarea>`, "", 1)}</div>
+      <div class="pfoot"><button type="button" class="pb out" id="repCancel">${t().cancel}</button><button type="button" class="pb dark" id="repSave">${svg(IC.check, 2.2)}${t().saveReport}</button></div></div>`;
+  }
+  function reportsView() {
+    const list = (medOf().reports || []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    return `${repF ? repForm() : `<div class="add2" style="grid-template-columns:minmax(0,1fr)"><button type="button" id="repNew"><span class="ic">${svg(IC.upload)}</span><span><b>${t().repUp}</b><small>${t().upReportS.replace(/lab |المختبر/, "")}</small></span></button></div>`}
+      ${list.length ? `<div class="il">${list.map(r => `<div class="it"><span class="it-ic">${svg(IC.report)}</span>
+        <div class="it-m"><b>${esc(r.title)}</b><small><span>${esc(fmtD(r.date))}</span>${r.type ? `<span class="tg ext">${t()["r_" + r.type]}</span>` : ""}${r.facility ? `<span>${esc(r.facility)}</span>` : ""}<span class="tg unv">${t().src_ext} · ${t().unverified}</span></small>${r.notes ? `<span class="note">${esc(r.notes)}</span>` : ""}</div>
+        <div class="it-a"><button type="button" class="pb out sm" data-view="${r.att}">${svg(IC.eye)}${t().viewReport}</button><button type="button" class="pb danger sm icon" data-rdel="${r.id}" aria-label="${t().remove}">${svg(IC.trash)}</button></div></div>`).join("")}</div>`
+        : repF ? "" : empty(t().repsNone, t().repsNoneS)}`;
+  }
+  // Lifestyle & preferences
+  const lfLoad = () => { if (!lf) { const s = medOf().lifestyle || {}; lf = { lang: "", langOther: "", contact: [], provider: "", providerName: "", time: "", assist: [], assistOther: "", notes: "", ...s }; lf.contact = [].concat(lf.contact || []); lf.assist = [...(lf.assist || [])]; } };
+  function lfErr() { return { langOther: lf.lang === "other" && !lf.langOther.trim(), assistOther: lf.assist.includes("other") && !lf.assistOther.trim() }; }
+  function lifestyleView() {
+    lfLoad(); const e = tried ? lfErr() : {}, s = medOf().lifestyle;
+    return `<div class="nf-note" style="margin-bottom:14px">${svg(IC.info)}<span>${t().lfNote}</span></div>
+      <div class="fq"><span class="fl">${t().lgT}</span>${chs("lfLang", ["ar", "en", "other"], lf.lang, v => t()["lg_" + v])}
+        ${lf.lang === "other" ? `<div class="pmore">${inp("lfLangO", lf.langOther, t().specify, e.langOther, 'maxlength="40"')}${e.langOther ? `<span class="perr">${t().reqF}</span>` : ""}</div>` : ""}</div>
+      <div class="fq"><span class="fl">${t().ctT}</span>${chs("lfCt", ["call", "wa", "sms"], lf.contact, v => t()["ct_" + v], true)}</div>
+      <div class="fq"><span class="fl">${t().prT} <span class="hint">${t().prS}</span></span>${chs("lfPr", ["none", "doctor", "nurse"], lf.provider, v => t()["pr_" + v])}
+        ${lf.provider === "doctor" || lf.provider === "nurse" ? `<div class="pmore">${field(t().prName, inp("lfPrName", lf.providerName, t().prNamePh, false, 'maxlength="60"'), "", 1)}</div>` : ""}</div>
+      <div class="fq"><span class="fl">${t().vtT}</span>${chs("lfVt", ["morning", "afternoon", "evening", "none"], lf.time, v => t()["vt_" + v])}</div>
+      <div class="fq"><span class="fl">${t().asT} <span class="hint">${t().asS}</span></span>${chs("lfAs", ASSIST, lf.assist, v => t()["as_" + v], true)}
+        ${lf.assist.includes("other") ? `<div class="pmore">${inp("lfAsO", lf.assistOther, t().specify, e.assistOther, 'maxlength="80"')}${e.assistOther ? `<span class="perr">${t().reqF}</span>` : ""}</div>` : ""}</div>
+      <div class="fq"><span class="fl">${t().lfNotes} <span class="hint">${t().lfNotesS}</span></span><textarea class="pta" id="lfNotes" maxlength="500" placeholder="${esc(t().lfNotesPh)}" dir="auto">${esc(lf.notes)}</textarea></div>
+      <div class="pfoot">${upd(s)}<button type="button" class="pb out" id="lfCancel">${t().cancel}</button><button type="button" class="pb dark" id="lfSave">${svg(IC.check, 2.2)}${t().save}</button></div>`;
+  }
+  function fileSections() {
+    const body = tab === "emergency" ? emergencyView() : tab === "meds" ? medsView() : tab === "labs" ? labsView() : tab === "reports" ? reportsView() : lifestyleView();
+    return `<section class="pt-card" id="mf"><div class="ps-h"><span class="ic">${svg(IC.folder)}</span><div><h2>${t().mfT}</h2><p>${t().mfS}</p></div></div>
+      ${tabsBar()}<div class="ps-b" role="tabpanel">${body}</div></section>`;
+  }
+
+  // ---------- render ----------
+  function render() {
+    const p = patient(), back = from ? `doctor-visit.html?id=${encodeURIComponent(from)}` : fromList ? "doctor-patients.html" : "doctor-visits.html";
+    const backA = `<a class="pt-back" href="${back}">${svg(IC.back, 2)}${from ? t().backVisit : fromList ? t().backPatients : t().backVisits}</a>`;
+    if (!p) { $("vw").innerHTML = `${backA}<div class="pt-card ps-b">${empty(t().nf, t().nfS)}</div>`; return; }
+    const y = window.scrollY;
+    $("vw").innerHTML = `<div class="pt-page">${backA}${header(p)}${family(p)}${visits()}${fileSections()}</div>`;
+    window.scrollTo(0, y);
+    if (nfS) $("nfOv").innerHTML = nfView();
+  }
+  const rerender = () => render();
+
+  // ---------- file helpers ----------
+  const readURL = f => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = no; r.readAsDataURL(f); });
+  async function compress(f) {
+    const url = await readURL(f);
+    const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = url; });
+    const k = Math.min(1, 1280 / Math.max(img.width, img.height)), c = document.createElement("canvas");
+    c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+    return c.toDataURL("image/jpeg", 0.72);
+  }
+  // Keeps an image (compressed) or a PDF (up to 1.5 MB) and returns its attachment id.
+  async function keepFile(f) {
+    const isImg = /^image\//.test(f.type), isPdf = f.type === "application/pdf";
+    if (!isImg && !isPdf) throw new Error(t().fileType);
+    if (isPdf && f.size > MAXFILE) throw new Error(t().fileBig);
+    const data = isImg ? await compress(f) : await readURL(f);
+    if (data.length > MAXFILE * 1.37) throw new Error(t().fileBig);
+    return putAtt({ name: f.name || (isImg ? "photo.jpg" : "report.pdf"), type: isImg ? "image/jpeg" : "application/pdf", data });
+  }
+  function viewAtt(id, a) {
+    a = a || att(id); if (!a) return;
+    const ov = $("viewOv");
+    ov.innerHTML = `<div class="pv-box" role="dialog" aria-modal="true" aria-label="${esc(a.name)}"><div class="pv-bh"><b>${esc(a.name)}</b><button type="button" class="px" id="viewX" aria-label="${t().close}">${svg(IC.x, 2.2)}</button></div>
+      <div class="pv-bd">${/^image\//.test(a.type) ? `<img src="${a.data}" alt="${esc(a.name)}">` : `<iframe src="${a.data}" title="${esc(a.name)}"></iframe>`}</div></div>`;
+    ov.hidden = false; $("viewX").focus();
+  }
+  const closeView = () => { const ov = $("viewOv"); ov.hidden = true; ov.innerHTML = ""; };
+
+  // ---------- open / edit a patient file ----------
+  function nfLoad(edit) {
+    const p = edit ? patient() : null;
+    nfS = { edit: !!edit, who: p ? p.openedFor || "" : "family", rel: p && p.relationship || "", relOther: "", relName: p && p.requesterName || "", name: p ? nameOf(p.name) : "",
+      idType: p && p.idType || "", idNumber: p && p.idNumber || "", dob: p && p.dateOfBirth || "", gender: p && p.gender || "", nat: p && p.nationality || "", city: p && p.address && p.address.city || "" };
+    if (nfS.rel && !WRELS.includes(nfS.rel)) { nfS.relOther = nfS.rel; nfS.rel = "otherRel"; }
+    nfTried = false;
+  }
+  function nfErr() {
+    const s = nfS, id = s.idNumber.trim();
+    return { name: !s.edit && s.name.trim().split(/\s+/).filter(Boolean).length < 3, rel: !s.edit && s.who === "family" && !s.rel,
+      id: id && ((s.idType === "national" && !/^1\d{9}$/.test(id)) || (s.idType === "iqama" && !/^2\d{9}$/.test(id))), dob: s.dob && s.dob > today() };
+  }
+  function nfView() {
+    const s = nfS, e = nfTried ? nfErr() : {}, p = patient();
+    return `<div class="dlg nf"><div class="nf-h"><span class="ic">${svg(s.edit ? IC.id : IC.plus, 2)}</span><div><h3 id="nfT">${s.edit ? t().nfEdit : t().nfT}</h3><p>${s.edit ? t().nfEditS : tx("nfS", { m: `<span class="num">${esc(DrPortal.phone(p.mobile))}</span>` })}</p></div>
+        <button type="button" class="px" id="nfX" aria-label="${t().close}">${svg(IC.x, 2.2)}</button></div>
+      <div class="nf-b">
+        ${s.edit ? "" : `<div class="fq"><span class="fl">${t().whoT}</span>${chs("nfWho", ["self", "family"], s.who, v => v === "self" ? `<span><b style="display:block">${t().whoSelf}</b><small style="font-weight:400;color:var(--muted)">${t().whoSelfS}</small></span>` : `<span><b style="display:block">${t().whoFam}</b><small style="font-weight:400;color:var(--muted)">${t().whoFamS}</small></span>`)}</div>
+        ${s.who === "family" ? `<div class="fq"><span class="fl">${t().relT}</span>${chs("nfRel", WRELS, s.rel, v => t()["w_" + v], false, e.rel)}${e.rel ? `<span class="perr">${t().relReq}</span>` : ""}
+          ${s.rel === "otherRel" ? `<div class="pmore">${inp("nfRelO", s.relOther, t().specify, false, 'maxlength="40"')}</div>` : ""}
+          <div class="pmore">${field(t().relName, inp("nfRelName", s.relName, t().relNamePh, false, 'maxlength="60"'), "", 1)}</div></div>` : ""}`}
+        <div class="fq">${s.edit ? "" : field(t().fullName, inp("nfName", s.name, t().fullNamePh, e.name, 'maxlength="80"'), e.name ? t().nameErr : "")}
+          <div class="pg2">${field(t().idType, `<select class="pin" id="nfIdType"><option value="">${t().selectPh}</option>${["national", "iqama", "passport", "gcc"].map(k => `<option value="${k}" ${s.idType === k ? "selected" : ""}>${t()["id_" + k]}</option>`).join("")}</select>`, "", 1)}
+            ${field(t().idNo, inp("nfId", s.idNumber, t().idPh, e.id, 'maxlength="20" dir="ltr"'), e.id ? t().idErr : "", 1)}</div>
+          <div class="pg2">${field(t().dob, `<input type="date" class="pin ${e.dob ? "bad" : ""}" id="nfDob" value="${esc(s.dob)}" max="${today()}">`, e.dob ? t().dateErr : "", 1)}
+            <div class="pf"><label>${t().gender} <span class="opt">${t().optional}</span></label>${chs("nfG", ["m", "f"], s.gender, v => t()["g_" + v])}</div></div>
+          <div class="pg2">${field(t().nat, `<select class="pin" id="nfNat"><option value="">${t().selectPh}</option>${NATS.map(k => `<option value="${k}" ${s.nat === k ? "selected" : ""}>${t()["nat_" + k]}</option>`).join("")}</select>`, "", 1)}
+            ${field(t().city, `<select class="pin" id="nfCity"><option value="">${t().selectPh}</option>${CITIES.map(k => `<option value="${k}" ${s.city === k ? "selected" : ""}>${t()["city_" + k]}</option>`).join("")}</select>`, "", 1)}</div></div>
+      </div>
+      <div class="nf-f"><button type="button" class="pb out" id="nfCancel">${t().cancel}</button><button type="button" class="pb dark" id="nfSave">${svg(IC.check, 2.2)}${s.edit ? t().save : t().createFile}</button></div></div>`;
+  }
+  function openNf(edit) { nfLoad(edit); const ov = $("nfOv"); ov.innerHTML = nfView(); ov.hidden = false; const f = ov.querySelector("input,button.ch"); if (f) f.focus(); }
+  function closeNf() { nfS = null; const ov = $("nfOv"); ov.hidden = true; ov.innerHTML = ""; }
+  function nfSave() {
+    nfTried = true; const er = nfErr();
+    if (Object.values(er).some(Boolean)) { $("nfOv").innerHTML = nfView(); toast(t().fixErr); const b = $("nfOv").querySelector(".bad, .perr"); if (b) b.scrollIntoView({ block: "center" }); return; }
+    const s = nfS, p = patient(), addr = { ...(p.address || {}), city: s.city };
+    const base = { idType: s.idType || null, idNumber: s.idNumber.trim() || null, dateOfBirth: s.dob || null, gender: s.gender || null, nationality: s.nat || null, address: s.city ? addr : null };
+    if (s.edit) {
+      MadaPatients.upsert({ fileNo: mrn, mobile: p.mobile, ...(MadaPatients.get(mrn) ? {} : { name: p.name, source: "doctor", createdBy: me.name }), ...base });
+      closeNf(); toast(t().infoSaved); render(); return;
+    }
+    // TODO: the backend creates the patient file and issues the file number.
+    const fileNo = MadaPatients.nextFileNo();
+    MadaPatients.upsert({ fileNo, mobile: p.mobile, name: s.name.trim().replace(/\s+/g, " "), ...base, address: { city: s.city },
+      openedFor: s.who, relationship: s.who === "family" ? (s.rel === "otherRel" ? s.relOther.trim() || "otherRel" : s.rel) : null,
+      requesterName: s.who === "family" ? s.relName.trim() || null : null, source: "doctor", createdBy: me.name });
+    try { sessionStorage.setItem("mada-dr-toast", tx("fileMade", { n: fileNo })); } catch (e) {}
+    location.href = `doctor-patient.html?mrn=${encodeURIComponent(fileNo)}${keepBack()}`;
+  }
+
+  // ---------- events ----------
+  const val = id => ($(id) || {}).value || "";
+  function readInputs() {
+    if (em && $("emBlood")) { em.blood = val("emBlood"); if ($("chrOther")) em.chronic.other = val("chrOther"); em.contact.name = val("ecName"); em.contact.mobile = val("ecMob").replace(/\s/g, ""); }
+    if (medF && $("medName")) { medF.name = val("medName"); if ($("medConf")) medF.confirmed = $("medConf").checked; if ($("doseOther")) medF.doseOther = val("doseOther"); }
+    if (labF && $("labTest")) { labF.test = val("labTest"); if ($("labCode")) labF.code = val("labCode").trim().toUpperCase(); labF.date = val("labDate"); labF.notes = val("labNotes"); if ($("labRes")) { labF.result = val("labRes"); labF.unit = val("labUnit"); labF.range = val("labRange"); } }
+    if (repF && $("repTitle")) { repF.title = val("repTitle"); repF.date = val("repDate"); repF.type = val("repType"); repF.facility = val("repFac"); repF.notes = val("repNotes"); }
+    if (lf && $("lfNotes")) { if ($("lfLangO")) lf.langOther = val("lfLangO"); if ($("lfPrName")) lf.providerName = val("lfPrName"); if ($("lfAsO")) lf.assistOther = val("lfAsO"); lf.notes = val("lfNotes"); }
+    if (nfS && $("nfIdType")) { if ($("nfName")) nfS.name = val("nfName"); if ($("nfRelO")) nfS.relOther = val("nfRelO"); if ($("nfRelName")) nfS.relName = val("nfRelName");
+      nfS.idType = val("nfIdType"); nfS.idNumber = val("nfId"); nfS.dob = val("nfDob"); nfS.nat = val("nfNat"); nfS.city = val("nfCity"); }
+  }
+  function toggle(arr, v, only) { const i = arr.indexOf(v); if (i >= 0) arr.splice(i, 1); else { if (only) arr.length = 0; arr.push(v); } }
+  function onChoice(g, v) {
+    readInputs();
+    if (g === "chrS") em.chronic.status = v; else if (g === "chr") toggle(em.chronic.items, v); else if (g === "ecRel") em.contact.rel = em.contact.rel === v ? "" : v;
+    else if (g === "mSt") medF.status = v; else if (g === "mTm") toggle(medF.times, v); else if (g === "mDs") medF.dose = v;
+    else if (g === "lfLang") lf.lang = v; else if (g === "lfCt") toggle(lf.contact, v); else if (g === "lfPr") lf.provider = v; else if (g === "lfVt") lf.time = v;
+    else if (g === "lfAs") { if (v === "none") lf.assist = lf.assist.includes("none") ? [] : ["none"]; else { lf.assist = lf.assist.filter(x => x !== "none"); toggle(lf.assist, v); } }
+    else if (g === "nfWho") nfS.who = v; else if (g === "nfRel") nfS.rel = v; else if (g === "nfG") nfS.gender = nfS.gender === v ? "" : v;
+    if (g.startsWith("nf")) { $("nfOv").innerHTML = nfView(); const b = $("nfOv").querySelector(`[data-g="${g}"][data-v="${v}"]`); if (b) b.focus(); return; }
+    rerender(); const b = document.querySelector(`#mf [data-g="${g}"][data-v="${CSS.escape(v)}"]`); if (b) b.focus({ preventScroll: true });
+  }
+  function save(fn, msg) { try { fn(); toast(msg || t().saved); return true; } catch (e) { toast(e.message || t().storeErr); return false; } }
+  function scrollBad() { const b = document.querySelector("#mf .bad, #mf .perr"); if (b) b.scrollIntoView({ block: "center", behavior: "smooth" }); }
+  const removeItem = (key, id, attKey) => {
+    if (!confirm(t().removeQ)) return;
+    const list = medOf()[key] || [], it = list.find(x => x.id === id);
+    save(() => { putMed({ [key]: list.filter(x => x.id !== id) }); if (it) dropAtt(it[attKey]); }, t().removed); rerender();
+  };
+
+  document.addEventListener("click", e => {
+    const el = e.target.closest("button, a, [data-view]");
+    if (!el) return;
+    if (el.dataset.view) { e.preventDefault(); return viewAtt(el.dataset.view); }
+    if (el.dataset.mrrep) { const g = madaLabs().find(x => x.report && x.report.key === el.dataset.mrrep), d = MadaStore.get(el.dataset.mrrep); if (g && d) viewAtt(null, { name: g.report.name, type: g.report.type, data: d }); return; }
+    if (el.id === "viewX") return closeView();
+    if (el.dataset.g) return onChoice(el.dataset.g, el.dataset.v);
+    if (el.dataset.tab) { readInputs(); if (tab !== el.dataset.tab) { tab = el.dataset.tab; resetForms(); history.replaceState(null, "", "#" + tab); } rerender(); const sb = document.querySelector('.mt [aria-selected="true"]'); if (sb) sb.scrollIntoView({ block: "nearest", inline: "nearest" }); return; }
+    const id = el.id;
+    // personal info / new file
+    if (id === "openNew") return openNf(false);
+    if (id === "editInfo" || id === "phMiss") return openNf(true);
+    if (id === "nfX" || id === "nfCancel") return closeNf();
+    if (id === "nfSave") { readInputs(); return nfSave(); }
+    // emergency
+    if (id === "emCancel") { em = null; tried = false; return rerender(); }
+    if (id === "emSave") {
+      readInputs(); tried = true;
+      if (Object.values(emErr()).some(Boolean)) { rerender(); toast(t().fixErr); return scrollBad(); }
+      const c = em.chronic, d = { blood: em.blood, chronic: { status: c.status, items: c.status === "yes" ? c.items : [], other: c.status === "yes" && c.items.includes("other") ? c.other.trim() : "" },
+        contact: { name: em.contact.name.trim(), mobile: em.contact.mobile.trim(), rel: em.contact.rel }, ...stamp() };
+      if (save(() => putMed({ emergency: d }))) { em = null; tried = false; } return rerender();
+    }
+    // medications
+    if (id === "medManual") { medF = medBlank(); tried = false; rerender(); return $("medName").focus(); }
+    if (id === "medX" || id === "medCancel") { if (medF && medF.photo && !(medOf().meds || []).some(m => m.photo === medF.photo)) dropAtt(medF.photo); medF = null; tried = false; return rerender(); }
+    if (id === "medSave" || id === "medAnother") {
+      readInputs(); tried = true;
+      if (Object.values(medErr()).some(Boolean)) { rerender(); toast(medErr().conf && !medErr().name ? t().confirmReq : t().fixErr); return scrollBad(); }
+      const list = medOf().meds || [], f = medF, m = { id: f.id || uid(), name: f.name.trim(), status: f.status, times: TIMES.filter(x => f.times.includes(x)), dose: f.dose, doseOther: f.dose === "other" ? f.doseOther.trim() : "", photo: f.photo || "", ...stamp() };
+      const old = f.id && list.find(x => x.id === f.id);
+      if (save(() => putMed({ meds: old ? list.map(x => x.id === f.id ? m : x) : list.concat(m) }), t().medAdded)) { medF = id === "medAnother" ? medBlank() : null; tried = false; }
+      rerender(); if (medF) $("medName").focus(); return;
+    }
+    if (el.dataset.medit) { const m = (medOf().meds || []).find(x => x.id === el.dataset.medit); medF = { ...medBlank(), ...m, times: [...(m.times || [])], confirmed: true }; tried = false; rerender(); return $("medForm").scrollIntoView({ block: "start", behavior: "smooth" }); }
+    if (el.dataset.mdel) return removeItem("meds", el.dataset.mdel, "photo");
+    // labs
+    if (id === "labManual" || id === "labUpload") { labF = { id: "", kind: id === "labManual" ? "manual" : "upload", test: "", code: "", result: "", unit: "", range: "", date: today(), notes: "", att: "" }; tried = false; rerender(); return $("labTest").focus(); }
+    if (id === "labX" || id === "labCancel") { if (labF && labF.att && !(medOf().labs || []).some(x => x.att === labF.att)) dropAtt(labF.att); labF = null; tried = false; return rerender(); }
+    if (el.dataset.lpick) { readInputs(); const it = labCat().find(x => x.code === el.dataset.lpick); labF.code = it.code; labF.test = it[current]; rerender(); return $("labRes").focus(); }
+    if (id === "labSave") {
+      readInputs(); tried = true;
+      if (Object.values(labErr()).some(Boolean)) { rerender(); toast(t().fixErr); return scrollBad(); }
+      const list = medOf().labs || [], f = labF, r = { id: f.id || uid(), kind: f.kind, test: f.test.trim(), code: (f.code || "").trim(), result: f.result.trim(), unit: f.unit.trim(), range: f.range.trim(), date: f.date, notes: f.notes.trim(), att: f.att || "", ...stamp() };
+      if (save(() => putMed({ labs: f.id ? list.map(x => x.id === f.id ? r : x) : list.concat(r) }))) { labF = null; tried = false; } return rerender();
+    }
+    if (el.dataset.ledit) { const r = (medOf().labs || []).find(x => x.id === el.dataset.ledit); labF = { code: "", ...r }; tried = false; rerender(); return $("labForm").scrollIntoView({ block: "start", behavior: "smooth" }); }
+    if (el.dataset.ldel) return removeItem("labs", el.dataset.ldel, "att");
+    // reports
+    if (id === "repNew") { repF = { id: "", title: "", type: "", facility: "", date: today(), notes: "", att: "" }; tried = false; rerender(); return $("repTitle").focus(); }
+    if (id === "repX" || id === "repCancel") { if (repF && repF.att) dropAtt(repF.att); repF = null; tried = false; return rerender(); }
+    if (id === "repSave") {
+      readInputs(); tried = true;
+      if (Object.values(repErr()).some(Boolean)) { rerender(); toast(t().fixErr); return scrollBad(); }
+      const list = medOf().reports || [], f = repF, r = { id: uid(), title: f.title.trim(), type: f.type, facility: f.facility.trim(), date: f.date, notes: f.notes.trim(), att: f.att, ...stamp() };
+      if (save(() => putMed({ reports: list.concat(r) }))) { repF = null; tried = false; } return rerender();
+    }
+    if (el.dataset.rdel) return removeItem("reports", el.dataset.rdel, "att");
+    // lifestyle
+    if (id === "lfCancel") { lf = null; tried = false; return rerender(); }
+    if (id === "lfSave") {
+      readInputs(); tried = true;
+      if (Object.values(lfErr()).some(Boolean)) { rerender(); toast(t().fixErr); return scrollBad(); }
+      const d = { lang: lf.lang, langOther: lf.lang === "other" ? lf.langOther.trim() : "", contact: ["call", "wa", "sms"].filter(x => lf.contact.includes(x)), provider: lf.provider,
+        providerName: lf.provider === "doctor" || lf.provider === "nurse" ? lf.providerName.trim() : "", time: lf.time, assist: ASSIST.filter(x => lf.assist.includes(x)),
+        assistOther: lf.assist.includes("other") ? lf.assistOther.trim() : "", notes: lf.notes.trim(), ...stamp() };
+      if (save(() => putMed({ lifestyle: d }))) { lf = null; tried = false; } return rerender();
+    }
+  });
+  document.addEventListener("change", async e => {
+    const el = e.target, f = el.files && el.files[0];
+    if (!f) return;
+    try {
+      if (el.id === "medPhoto") { const a = await keepFile(f); if (medF && medF.photo && !(medOf().meds || []).some(m => m.photo === medF.photo)) dropAtt(medF.photo); medF = { ...medBlank(a) }; tried = false; rerender(); $("medForm").scrollIntoView({ block: "start", behavior: "smooth" }); $("medName").focus({ preventScroll: true }); }
+      else if (el.id === "labFile") { readInputs(); const a = await keepFile(f); if (labF.att) dropAtt(labF.att); labF.att = a; if (!labF.test) labF.test = f.name.replace(/\.[^.]+$/, ""); rerender(); }
+      else if (el.id === "repFile") { readInputs(); const a = await keepFile(f); if (repF.att) dropAtt(repF.att); repF.att = a; if (!repF.title) repF.title = f.name.replace(/\.[^.]+$/, ""); rerender(); }
+    } catch (err) { toast(err.message || t().storeErr); }
+    el.value = "";
+  });
+  $("viewOv").addEventListener("click", e => { if (e.target === $("viewOv")) closeView(); });
+  $("nfOv").addEventListener("click", e => { if (e.target === $("nfOv")) closeNf(); });
+  document.addEventListener("keydown", e => { if (e.key !== "Escape") return; if (!$("viewOv").hidden) closeView(); else if (!$("nfOv").hidden) closeNf(); else if ($("lp-open")) closePick(); else if (labF) $("labX").click(); });
+  // Lab test picker: suggestions from the MADA CARE lab catalogue (name + code).
+  const labCat = () => (typeof DrOrders !== "undefined" && DrOrders.labs ? DrOrders.labs() : []);
+  const norm = x => String(x || "").toLowerCase().replace(/[\s\-()]/g, "");
+  function closePick() { const l = $("labPick"); if (l) { l.hidden = true; $("labTest").setAttribute("aria-expanded", "false"); } const o = $("lp-open"); if (o) o.remove(); }
+  function showPick() {
+    const l = $("labPick"), q = norm(val("labTest")); if (!l) return;
+    const hits = labCat().filter(x => !q || norm(x.en).includes(q) || norm(x.ar).includes(q) || norm(x.code).includes(q)).slice(0, 8);
+    l.innerHTML = hits.length ? hits.map(x => `<button type="button" role="option" data-lpick="${x.code}"><span class="num">${x.code}</span><b>${esc(x[current])}</b>${current === "ar" ? `<small dir="ltr">${esc(x.en)}</small>` : ""}</button>`).join("") : `<div class="lp-none">${t().pickNone}</div>`;
+    l.hidden = false; $("labTest").setAttribute("aria-expanded", "true");
+    if (!$("lp-open")) { const m = document.createElement("i"); m.id = "lp-open"; m.hidden = true; document.body.append(m); }
+  }
+  document.addEventListener("focusin", e => { if (e.target.id === "labTest" && labF && labF.kind === "manual") showPick(); else if (!e.target.closest || !e.target.closest(".lp-w")) closePick(); });
+  document.addEventListener("input", e => { if (e.target.id === "labTest" && labF && labF.kind === "manual") { if (labF.code && labCat().some(x => x.code === labF.code)) { labF.code = ""; $("labCode").value = ""; } showPick(); } });
+  document.addEventListener("mousedown", e => { if ($("lp-open") && !e.target.closest(".lp-w")) closePick(); });
+  document.addEventListener("click", e => { if (e.target.id === "labOv") $("labX").click(); });
+  window.addEventListener("hashchange", () => { const h = location.hash.slice(1); if (TABS.some(x => x[0] === h) && h !== tab) { tab = h; resetForms(); rerender(); } });
+
+  document.addEventListener("click", e => { if (e.target.closest("[data-soon]")) { e.preventDefault(); toast(t().soonMsg); } });
+  $("bell").addEventListener("click", () => toast(t().noNotes));
+  function toast(msg) { const el = $("toast"); el.textContent = msg; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 2800); }
+  function setLang(lang) {
+    readInputs();
+    current = lang;
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+    document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = t()[el.dataset.i18n]);
+    document.querySelectorAll("[data-i18n-aria]").forEach(el => el.setAttribute("aria-label", t()[el.dataset.i18nAria]));
+    document.title = lang === "ar" ? "مدى كير | ملف المريض" : "Mada Care | Patient File";
+    DrPortal.render(me, lang, fromList ? "patients" : "visits"); render();
+    try { localStorage.setItem("mada-lang", lang); } catch (e) {}
+  }
+  $("langToggle").addEventListener("click", () => setLang(current === "en" ? "ar" : "en"));
+  const user = $("user"), userBtn = $("userBtn");
+  userBtn.addEventListener("click", e => { e.stopPropagation(); userBtn.setAttribute("aria-expanded", user.classList.toggle("open")); });
+  document.addEventListener("click", () => { user.classList.remove("open"); userBtn.setAttribute("aria-expanded", false); });
+  $("logout").addEventListener("click", e => { e.preventDefault(); MadaAuth.logout(); });
+
+  let saved = "en";
+  try { saved = localStorage.getItem("mada-lang") || "en"; } catch (e) {}
+  setLang(saved);
+  try { const m = sessionStorage.getItem("mada-dr-toast"); if (m) { toast(m); sessionStorage.removeItem("mada-dr-toast"); } } catch (e) {}
+</script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+/* Family Education (doctor-edu.js) */
+.ed-form { display: block; }
+.ed-f { margin-bottom: 20px; }
+.ed-row1 { display: grid; grid-template-columns: minmax(200px, 300px) minmax(0, 1fr); gap: 18px; }
+.ed-date .hx-in { height: 50px; }
+.ed-pills3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.ed-pills2 { display: grid; grid-template-columns: repeat(2, minmax(0, 220px)); gap: 10px; }
+.ed-pill > svg { width: 20px; height: 20px; flex: none; }
+.ed-pills3.bad .or-pill, .ed-pills2.bad .or-pill { border-color: #f0b4b4; background: #fff7f7; }
+.ed-diff { margin-top: 12px; padding: 12px; border-radius: 12px; background: #fdf8ef; border: 1px solid #f3e2c0; display: grid; gap: 10px; }
+.ed-diff small { font-size: 13px; font-weight: 600; color: #6b4a12; }
+.ed-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.ed-chip { display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px; border-radius: 19px; border: 1px solid #e3e8ea; background: #fff; font: inherit; font-size: 13.5px; color: #2c3d43; cursor: pointer; }
+.ed-chip svg { width: 14px; height: 14px; }
+.ed-chip.on { background: #fdf4e3; border-color: #e8a33d; color: #a35a00; font-weight: 600; }
+.ed-diff .hx-in { height: 46px; font-size: 14.5px; }
+.ed-who { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; }
+.ed-who.bad { padding: 8px 10px; border-radius: 10px; background: #fff7f7; box-shadow: inset 0 0 0 1px #f0b4b4; }
+.ed-ck { font-size: 14.5px; }
+.ed-ck input { width: 22px; height: 22px; }
+.ed-oth { display: inline-flex; align-items: center; gap: 12px; flex: 1 1 260px; min-width: 0; }
+.ed-oth .hx-in { height: 46px; font-size: 14.5px; flex: 1; min-width: 0; }
+.ed-oth .hx-in.bad { border-color: #dc2626; }
+.ed-tg { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+.ed-tl { min-width: 0; }
+.ed-tl.bad .ed-list { padding: 8px 10px; border-radius: 10px; background: #fff7f7; box-shadow: inset 0 0 0 1px #f0b4b4; }
+.ed-sb { margin-bottom: 12px; }
+.ed-sb input { height: 50px; }
+.ed-sb > svg { top: 14px; }
+.ed-sg { position: absolute; z-index: 5; top: calc(100% + 4px); inset-inline: 0; background: #fff; border: 1px solid #e3e8ea; border-radius: 12px; box-shadow: 0 12px 30px rgba(16,35,43,.12); padding: 6px; display: grid; gap: 2px; }
+.ed-si { display: flex; align-items: center; gap: 10px; min-height: 42px; padding: 6px 10px; border: 0; border-radius: 8px; background: none; font: inherit; font-size: 14px; color: #15304a; text-align: start; cursor: pointer; }
+.ed-si:hover, .ed-si:focus-visible { background: #eef4fd; }
+.ed-si svg { width: 16px; height: 16px; color: #2f6fd6; flex: none; }
+.ed-si.custom { color: #0f6b52; font-weight: 600; }
+.ed-si.custom svg { color: #0f8f6f; }
+.ed-list { display: grid; gap: 12px; }
+.ed-added { display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 10px; border-radius: 10px; background: #ecf8f3; border: 1px solid #bfe3d3; color: #0f6b52; font-size: 14.5px; font-weight: 600; }
+[dir="rtl"] .ed-added { padding: 6px 10px 6px 6px; }
+.ed-added > svg { width: 16px; height: 16px; flex: none; }
+.ed-added > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.ed-rm { width: 30px; height: 30px; border: 0; border-radius: 8px; background: #fff; color: #b4432f; display: grid; place-items: center; cursor: pointer; flex: none; }
+.ed-rm svg { width: 15px; height: 15px; }
+.ed-common { border: 1px solid #e3e8ea; border-radius: 14px; background: #f7f9fa; padding: 12px 14px; }
+.ed-common b { display: block; font-size: 15px; color: #15304a; margin-bottom: 6px; }
+.ed-common ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.ed-ci { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 36px; padding: 4px 6px; border: 0; border-radius: 8px; background: none; font: inherit; font-size: 14px; color: #2c3d43; text-align: start; cursor: pointer; }
+.ed-ci:hover { background: #fff; }
+.ed-ci svg { width: 16px; height: 16px; color: #0f8f6f; flex: none; }
+.ed-ci span { flex: 1; }
+.ed-ci.on { color: #0f6b52; font-weight: 600; cursor: default; }
+.ed-ci em { font-style: normal; font-size: 12px; color: #6b7a80; font-weight: 500; }
+.ed .hx-area textarea { min-height: 96px; }
+.ed-acts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: 16px; margin-top: 4px; }
+.ed-acts .hx-btn { width: 100%; justify-content: center; }
+.ed-acts .hx-btn svg { width: 18px; height: 18px; }
+.ed-sum { margin: 0; padding: 6px 18px 12px; }
+.ed-sum > div { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 12px; padding: 12px 0; border-bottom: 1px solid #eef2f3; }
+.ed-sum > div:last-child { border-bottom: 0; }
+.ed-sum dt { font-size: 13.5px; color: #6b7a80; }
+.ed-sum dd { margin: 0; font-size: 14.5px; font-weight: 600; color: #15304a; min-width: 0; }
+.ed-sum dd small { display: block; font-weight: 400; color: #5d6d78; margin-top: 4px; }
+.ed-sum dd p { margin: 0; font-weight: 400; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; }
+.ed-flag { display: inline-block; padding: 2px 8px; border-radius: 6px; background: #fdf4e3; color: #a35a00; font-size: 13px; }
+.ed-tul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.ed-tul li { display: flex; gap: 8px; align-items: flex-start; }
+.ed-tul svg { width: 15px; height: 15px; color: #0f8f6f; flex: none; margin-top: 3px; }
+@media (max-width: 1500px) {
+  .ed-row1 { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .ed-row1 .ed-date { max-width: 300px; }
+}
+@media (max-width: 1240px) {
+  .ed-tg { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 900px) {
+  .ed-row1 { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .ed-pills3 { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .ed-pills2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ed-who { gap: 12px 20px; }
+  .ed-oth { flex-basis: 100%; }
+  .ed-acts { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .ed-acts .nu-save { order: -1; }
+  .ed-sum { padding: 4px 12px 10px; }
+  .ed-sum > div { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+}

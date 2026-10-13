@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="assets/mada-logo.png">
+<title>Mada Care | My Schedule</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #0b6b5c; --primary-soft: #e6f3ef; --teal: #12a37f; --navy: #0b3a55;
+    --ink: #10232b; --muted: #6b7a80; --border: #e3e8ea; --page: #f6f8f9;
+    --orange: #d97706; --orange-soft: #fef3e2;
+    --font: "Inter", "Tajawal", system-ui, sans-serif;
+  }
+  [dir="rtl"] { --font: "Tajawal", "Inter", system-ui, sans-serif; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--page); color: var(--ink); min-height: 100vh; }
+  button { font: inherit; color: inherit; }
+  [hidden] { display: none !important; }
+  .app { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 100vh; }
+
+  /* Sidebar */
+  .side { position: sticky; top: 0; height: 100vh; background: #fff; border-inline-end: 1px solid var(--border); padding: 18px 14px; display: flex; flex-direction: column; gap: 22px; overflow: hidden; }
+  .logo { display: flex; align-items: center; gap: 8px; padding: 0 6px; text-decoration: none; color: var(--ink); }
+  .logo img { height: 40px; width: auto; }
+  .logo b { display: block; font-size: 18px; font-weight: 600; line-height: 1.1; }
+  .logo small { font-size: 10.5px; color: var(--primary); }
+  .menu { display: grid; gap: 4px; }
+  .menu a { display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 14px; border-radius: 10px; text-decoration: none; color: #2c3d43; font-size: 14px; font-weight: 500; }
+  .menu a svg { width: 21px; height: 21px; flex: none; }
+  .menu a:hover { background: #f3f6f7; }
+  .menu a[aria-current="page"] { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
+  .menu a.soon { color: #8a979c; cursor: default; }
+  .menu a.soon:hover { background: none; }
+  .soon-tag { margin-inline-start: auto; height: 18px; padding: 0 7px; border-radius: 9px; background: var(--orange-soft); color: var(--orange); font-size: 10.5px; font-weight: 600; line-height: 18px; }
+  .support { order: 3; display: flex; align-items: center; gap: 12px; padding: 14px 8px 0; border-top: 1px solid var(--border); font-size: 13px; }
+  .support svg { width: 26px; height: 26px; color: #2c3d43; flex: none; }
+  .support b { display: block; font-weight: 600; }
+  .support a { color: var(--muted); text-decoration: none; }
+  .side-art { order: 2; margin-top: auto; margin-inline-start: -14px; width: 170px; color: #e3f2ee; }
+  [dir="rtl"] .side-art { transform: scaleX(-1); }
+
+  /* Top bar */
+  .top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: flex-end; gap: 14px; height: 76px; padding: 0 28px; background: rgba(246,248,249,.92); backdrop-filter: blur(6px); border-bottom: 1px solid var(--border); }
+  .lang-btn { display: flex; align-items: center; gap: 6px; background: none; border: 0; cursor: pointer; font-size: 13px; color: #44545a; padding: 8px; border-radius: 8px; }
+  .lang-btn:hover, .bell:hover { background: #eef2f3; }
+  .lang-btn svg { width: 16px; height: 16px; }
+  .bell { position: relative; width: 42px; height: 42px; border: 0; background: none; border-radius: 50%; cursor: pointer; display: grid; place-items: center; color: #2c3d43; }
+  .bell svg { width: 23px; height: 23px; }
+  .sep { width: 1px; height: 34px; background: var(--border); }
+  .user { position: relative; }
+  .user-btn { display: flex; align-items: center; gap: 12px; background: none; border: 0; cursor: pointer; padding: 4px 6px; border-radius: 12px; text-align: start; }
+  .user-btn:hover { background: #eef2f3; }
+  .ava { width: 50px; height: 50px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; font-weight: 700; font-size: 16px; overflow: hidden; flex: none; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--border); }
+  .ava img { width: 100%; height: 100%; object-fit: cover; }
+  .u-name { display: block; font-size: 14px; font-weight: 600; }
+  .u-spec { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .user-btn > svg { width: 16px; height: 16px; color: #44545a; }
+  .user-menu { position: absolute; top: 110%; inset-inline-end: 0; min-width: 180px; background: #fff; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 24px rgba(16,35,43,.08); padding: 6px; display: none; }
+  .user.open .user-menu { display: block; }
+  .user-menu a { display: block; padding: 9px 10px; border-radius: 6px; font-size: 13px; color: var(--ink); text-decoration: none; }
+  .user-menu a:hover { background: var(--primary-soft); color: var(--primary); }
+
+  /* Content */
+  main { padding: 22px 28px 32px; }
+  .stage { position: relative; overflow: hidden; min-height: calc(100vh - 76px - 54px); border-radius: 18px; border: 1px solid var(--border); background: radial-gradient(circle at 0 0, #e9f5f1 0, rgba(233,245,241,0) 220px), linear-gradient(160deg, #ffffff 55%, #fff3e8 100%); display: grid; place-items: center; padding: 40px 20px; }
+  .stage::after { content: ""; position: absolute; width: 360px; height: 360px; border-radius: 50%; inset-inline-end: -120px; bottom: -150px; background: rgba(253,214,180,.35); }
+  .empty { position: relative; z-index: 1; display: grid; justify-items: center; text-align: center; max-width: 560px; }
+  .empty-art { width: 330px; max-width: 100%; height: auto; margin-bottom: 18px; }
+  .empty h1 { font-size: 30px; font-weight: 700; color: #15304a; letter-spacing: -.3px; }
+  .empty p { margin-top: 10px; font-size: 16px; color: var(--muted); line-height: 1.6; }
+  .rule { width: 60px; height: 4px; border-radius: 2px; background: var(--teal); margin: 26px 0; }
+  .quote { display: flex; align-items: flex-start; gap: 12px; padding: 16px 22px; border-radius: 12px; background: rgba(230,243,239,.75); font-size: 17px; font-weight: 500; color: #15304a; line-height: 1.5; text-align: start; }
+  .quote span.q { font-size: 34px; line-height: .9; color: var(--teal); font-weight: 700; font-family: Georgia, serif; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 60; background: var(--ink); color: #fff; padding: 11px 18px; border-radius: 10px; font-size: 13px; max-width: calc(100% - 32px); }
+
+  .num { direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; }
+  .ov { position: fixed; inset: 0; z-index: 50; background: rgba(16,35,43,.42); display: grid; place-items: center; padding: 16px; overflow-y: auto; }
+  .dlg { position: relative; width: 100%; background: #fff; border-radius: 18px; box-shadow: 0 24px 60px rgba(0,0,0,.18); margin: auto; }
+  @media (max-width: 900px) {
+    .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; align-content: start; }
+    .side { position: static; height: auto; flex-direction: row; align-items: center; gap: 12px; padding: 10px 12px; border-inline-end: 0; border-bottom: 1px solid var(--border); }
+    .logo { flex: none; }
+    .logo img { height: 34px; }
+    .logo span { display: none; }
+    .menu { display: flex; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+    .menu::-webkit-scrollbar { display: none; }
+    .menu a { flex: none; height: 38px; padding: 0 12px; font-size: 13px; gap: 8px; }
+    .menu a svg { width: 18px; height: 18px; }
+    .side-art, .support { display: none; }
+    .top { height: 66px; padding: 0 12px; gap: 8px; }
+    .user-meta { display: none; }
+    .ava { width: 42px; height: 42px; }
+    main { padding: 14px 12px 24px; }
+  }
+
+  /* My Schedule */
+  .sc { max-width: 1100px; display: grid; gap: 18px; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 18px; }
+  .sc-head { display: flex; align-items: center; gap: 16px; padding: 22px 24px; flex-wrap: wrap; }
+  .sc-head .ic { width: 56px; height: 56px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; flex: none; }
+  .sc-head .ic svg { width: 26px; height: 26px; }
+  .sc-head h1 { font-size: 24px; font-weight: 700; color: #15304a; }
+  .sc-head p { font-size: 14px; color: var(--muted); margin-top: 2px; }
+  .sc-head > div { flex: 1; min-width: 220px; }
+  .ro-tag { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 15px; background: #eef2f3; color: #44545a; font-size: 12.5px; font-weight: 600; }
+  .ro-tag svg { width: 15px; height: 15px; }
+  .sc-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 16px 20px; border-bottom: 1px solid #eef2f3; }
+  .seg { display: inline-flex; padding: 4px; background: #f2f5f6; border-radius: 12px; }
+  .seg button { height: 38px; padding: 0 18px; border: 0; border-radius: 9px; background: none; cursor: pointer; font-size: 14px; font-weight: 600; color: #5d6d78; }
+  .seg button[aria-pressed="true"] { background: #fff; color: var(--primary); box-shadow: 0 1px 3px rgba(16,35,43,.12); }
+  .nav2 { display: flex; align-items: center; gap: 8px; margin-inline-start: auto; }
+  .nav2 b { min-width: 190px; text-align: center; font-size: 15px; color: #15304a; }
+  .ib { width: 40px; height: 40px; border: 1px solid #d9e1e3; border-radius: 10px; background: #fff; display: grid; place-items: center; cursor: pointer; color: #2c3d43; }
+  .ib svg { width: 18px; height: 18px; }
+  [dir="rtl"] .ib.ar svg { transform: scaleX(-1); }
+  .btn-today { height: 40px; padding: 0 14px; border: 1px solid #d9e1e3; border-radius: 10px; background: #fff; cursor: pointer; font-size: 13.5px; font-weight: 600; }
+  .btn-today:disabled { opacity: .45; cursor: default; }
+  .sum { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding: 16px 20px; border-bottom: 1px solid #eef2f3; }
+  .sum div { padding: 12px 14px; border-radius: 12px; background: #f7fafa; }
+  .sum small { display: block; font-size: 12.5px; color: var(--muted); }
+  .sum b { display: block; font-size: 22px; font-weight: 700; color: #15304a; margin-top: 2px; }
+  .days { display: grid; gap: 10px; padding: 16px 20px 20px; }
+  .day { display: grid; grid-template-columns: 74px minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 12px 16px; border: 1px solid #e7ecee; border-radius: 14px; }
+  .day.today { border-color: #7cc4a4; background: #f4fbf8; }
+  .day.past { opacity: .62; }
+  .dd { text-align: center; padding: 6px 0; border-radius: 10px; background: #f2f5f6; }
+  .day.today .dd { background: var(--primary); color: #fff; }
+  .dd small { display: block; font-size: 12px; font-weight: 600; }
+  .dd b { display: block; font-size: 22px; font-weight: 700; line-height: 1.1; }
+  .sh { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .sh-t { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px; border-radius: 8px; font-size: 13.5px; font-weight: 700; }
+  .sh-t svg { width: 16px; height: 16px; }
+  .sh-time { font-size: 15px; font-weight: 600; color: #15304a; }
+  .sh-note { flex-basis: 100%; font-size: 13px; color: var(--muted); }
+  .s-morning { background: #e3f4ee; color: #0f6b52; }
+  .s-evening { background: #e8f0fe; color: #2f5bb7; }
+  .s-night { background: #efeafc; color: #5b3fb5; }
+  .s-off { background: #f2f5f6; color: #6b7a80; }
+  .s-leave { background: var(--orange-soft); color: #a35a00; }
+  .s-none { background: #fff; color: #9aa7ab; border: 1px dashed #d5dde0; }
+  .vc { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 600; color: var(--primary); text-decoration: none; white-space: nowrap; }
+  .vc svg { width: 16px; height: 16px; }
+  .vc.zero { color: #9aa7ab; font-weight: 500; }
+  .tag-today { font-size: 11.5px; font-weight: 700; color: var(--primary); background: #fff; border: 1px solid #bfe3d3; border-radius: 6px; padding: 1px 7px; }
+  .cal { padding: 16px 20px 20px; }
+  .cal-h, .cal-g { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+  .cal-h span { text-align: center; font-size: 12.5px; font-weight: 700; color: var(--muted); padding: 4px 0; }
+  .cell { min-height: 92px; border: 1px solid #e7ecee; border-radius: 12px; padding: 8px; display: flex; flex-direction: column; gap: 6px; background: #fff; }
+  .cell.out { background: #fafbfb; border-style: dashed; }
+  .cell.out > * { opacity: .45; }
+  .cell.today { border-color: var(--teal); box-shadow: inset 0 0 0 1px var(--teal); }
+  .cell .n { font-size: 14px; font-weight: 700; color: #15304a; }
+  .cell.today .n { color: var(--primary); }
+  .cell .chip { display: block; padding: 3px 6px; border-radius: 6px; font-size: 11.5px; font-weight: 700; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cell .chip small { display: block; font-weight: 500; font-size: 11px; opacity: .9; }
+  .cell .vis { font-size: 11.5px; color: var(--primary); font-weight: 600; margin-top: auto; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 14px; padding: 0 20px 18px; font-size: 12.5px; color: #44545a; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+  .empty-sc { margin: 16px 20px 20px; padding: 26px 16px; text-align: center; color: var(--muted); font-size: 14px; border: 1px dashed #d5dde0; border-radius: 12px; }
+  .empty-sc b { display: block; color: #15304a; font-size: 15px; margin-bottom: 4px; }
+  @media (max-width: 900px) {
+    .sum { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .nav2 { margin-inline-start: 0; width: 100%; justify-content: space-between; }
+    .nav2 b { min-width: 0; flex: 1; }
+  }
+  @media (max-width: 600px) {
+    .sc-head { padding: 16px; }
+    .sc-head h1 { font-size: 21px; }
+    .sc-bar, .sum, .days, .cal { padding-left: 12px; padding-right: 12px; }
+    .seg { width: 100%; } .seg button { flex: 1; }
+    .day { grid-template-columns: 58px minmax(0, 1fr); gap: 12px; padding: 10px 12px; }
+    .day .vc { grid-column: 2; }
+    .dd b { font-size: 19px; }
+    .cal-h, .cal-g { gap: 3px; }
+    .cell { min-height: 64px; padding: 5px 3px; border-radius: 8px; gap: 3px; }
+    .cell .n { font-size: 12.5px; text-align: center; }
+    .cell .chip { font-size: 10px; padding: 2px 3px; text-align: center; }
+    .cell .chip small { display: none; }
+    .cell .vis { font-size: 10px; text-align: center; }
+    .legend { padding: 0 12px 16px; }
+  }
+  .sc-note { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); padding: 0 4px; }
+  .sc-note svg { width: 16px; height: 16px; flex: none; }
+  .num { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <a class="logo" href="doctor-visits.html" aria-label="Mada care">
+      <img src="assets/mada-logo.png" alt="" width="301" height="320">
+      <span><b>Mada care</b><small data-i18n="tagline">Caring Like Family</small></span>
+    </a>
+    <nav class="menu" id="menu" aria-label="Doctor portal"></nav>
+    <div class="support" id="support"></div>
+    <svg class="side-art" viewBox="0 0 170 220" fill="none" stroke="currentColor" stroke-width="22" aria-hidden="true"><circle cx="40" cy="40" r="22" fill="currentColor" stroke="none"/><path d="M40 210c-50-40-60-90-30-110s60 0 60 30-40 40-60 20"/><path d="M60 120c30-40 90-30 95 10s-40 70-115 80"/></svg>
+  </aside>
+
+  <div>
+    <header class="top">
+      <button class="lang-btn" id="langToggle" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>
+        <span data-i18n="otherLang">العربية</span>
+      </button>
+      <button class="bell" type="button" id="bell" data-i18n-aria="notifications" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+      </button>
+      <span class="sep" aria-hidden="true"></span>
+      <div class="user" id="user">
+        <button class="user-btn" id="userBtn" type="button" aria-haspopup="menu" aria-expanded="false">
+          <span class="ava" id="avatar"></span>
+          <span class="user-meta"><span class="u-name" id="userName"></span><span class="u-spec" id="userSpec"></span></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="user-menu" role="menu">
+          <a href="doctor-account.html" role="menuitem" data-i18n="profile">My Account</a>
+          <a href="doctor-login.html" role="menuitem" id="logout" data-i18n="logout">Log out</a>
+        </div>
+      </div>
+    </header>
+    <main><div class="sc" id="vw"></div></main>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="auth.js"></script>
+<script src="orders.js"></script>
+<script src="doctor-portal.js"></script>
+<script>
+  const me = MadaAuth.requireAuth("doctor");
+  const $ = id => document.getElementById(id), esc = DrPortal.esc;
+  // Doctor Portal > My Schedule (doctor-schedule.html). View only: the doctor sees their working days and shift times
+  // for a week or a month. Schedules are set by MADA CARE management in the scheduling system; nothing is edited here.
+  // MadaStore "mada-dr-schedule": { [doctorId]: { "YYYY-MM-DD": { shift: "morning"|"evening"|"night"|"off"|"leave", from: "HH:MM", to: "HH:MM", note } } }.
+  // TODO: read the doctor's published schedule from the scheduling system instead of MadaStore.
+  const SHIFTS = { morning: ["08:00", "16:00"], evening: ["16:00", "24:00"], night: ["00:00", "08:00"] };
+  // SAMPLE DATA ONLY: the demo doctor's weekly pattern, used when no schedule has been published for a day.
+  // Sunday to Thursday morning, Saturday evening, Friday off.
+  const SAMPLE = { D01: ["morning", "morning", "morning", "morning", "morning", "off", "evening"] };
+  const docId = me && (me.doctorId || me.staffId);
+  function shiftOn(ymd) {
+    let pub = null; try { pub = ((MadaStore.getJSON("mada-dr-schedule") || {})[docId] || {})[ymd] || null; } catch (e) {}
+    if (pub) return { ...pub, from: pub.from || (SHIFTS[pub.shift] || [])[0], to: pub.to || (SHIFTS[pub.shift] || [])[1] };
+    const pat = SAMPLE[docId]; if (!pat) return null;
+    const s = pat[parse(ymd).getDay()]; return { shift: s, from: (SHIFTS[s] || [])[0], to: (SHIFTS[s] || [])[1] };
+  }
+  const hasSchedule = () => { if (SAMPLE[docId]) return true; try { return !!Object.keys((MadaStore.getJSON("mada-dr-schedule") || {})[docId] || {}).length; } catch (e) { return false; } };
+  const hours = s => { if (!s || !s.from || !s.to) return 0; const m = x => +x.slice(0, 2) * 60 + +x.slice(3); let d = m(s.to) - m(s.from); if (d <= 0) d += 1440; return d / 60; };
+  // This doctor's booked visits on a day (not cancelled).
+  const visitsOn = ymd => MadaOrders.all().filter(o => o.booking && o.booking.doctorId === docId && o.appointment && o.appointment.date === ymd && o.status !== "cancelled").length;
+
+  const I18N = {
+    en: {
+      tagline: "Caring Like Family", otherLang: "العربية", profile: "My Account", logout: "Log out", notifications: "Notifications",
+      noNotes: "No new notifications.", soonMsg: "This section is coming soon.",
+      title: "My Schedule", sub: "Your working days and shift times, as set by MADA CARE management.", ro: "View only",
+      week: "Week", month: "Month", prev: "Previous", next: "Next", today: "Today",
+      sWork: "Working days", sHours: "Working hours", sOff: "Days off", sVisits: "Booked visits",
+      sh_morning: "Morning Shift", sh_evening: "Evening Shift", sh_night: "Night Shift", sh_off: "Day Off", sh_leave: "On Leave", sh_none: "Not scheduled",
+      ab_morning: "Morning", ab_evening: "Evening", ab_night: "Night", ab_off: "Off", ab_leave: "Leave", ab_none: "—",
+      visits1: "1 visit", visitsN: "{n} visits", visits0: "No visits", todayTag: "Today",
+      noneT: "Your schedule has not been published yet", noneS: "Once MADA CARE management publishes your schedule, your working days and shifts will appear here.",
+      changeNote: "To change a shift or request leave, contact MADA CARE management through Contact Support in My Account."
+    },
+    ar: {
+      tagline: "رعاية كالعائلة", otherLang: "English", profile: "حسابي", logout: "تسجيل الخروج", notifications: "الإشعارات",
+      noNotes: "ما فيه إشعارات جديدة.", soonMsg: "هذا القسم بيتوفر قريباً.",
+      title: "جدولي", sub: "أيام دوامك وأوقات فتراتك، مثل ما حددتها إدارة مدى كير.", ro: "عرض فقط",
+      week: "أسبوع", month: "شهر", prev: "السابق", next: "التالي", today: "اليوم",
+      sWork: "أيام الدوام", sHours: "ساعات الدوام", sOff: "أيام الإجازة", sVisits: "الزيارات المحجوزة",
+      sh_morning: "الفترة الصباحية", sh_evening: "الفترة المسائية", sh_night: "الفترة الليلية", sh_off: "إجازة", sh_leave: "في إجازة رسمية", sh_none: "غير مجدول",
+      ab_morning: "صباحي", ab_evening: "مسائي", ab_night: "ليلي", ab_off: "إجازة", ab_leave: "إجازة رسمية", ab_none: "—",
+      visits1: "زيارة وحدة", visitsN: "{n} زيارات", visits0: "ما فيه زيارات", todayTag: "اليوم",
+      noneT: "جدولك ما انشر للحين", noneS: "أول ما تنشر إدارة مدى كير جدولك، بتظهر هنا أيام دوامك وفتراتك.",
+      changeNote: "لتغيير فترة أو طلب إجازة، تواصل مع إدارة مدى كير من التواصل مع الدعم في صفحة حسابي."
+    }
+  };
+  let current = "en", mode = "week", anchor = new Date();
+  const t = () => I18N[current];
+  const tx = (k, v) => t()[k].replace(/\{(\w+)\}/g, (_, x) => v[x]);
+  const svg = (p, w) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 1.9}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+  const IC = { cal: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>', lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+    l: '<path d="M15 18l-6-6 6-6"/>', r: '<path d="m9 6 6 6-6 6"/>', sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+    moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>', off: '<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>', leave: '<path d="M3 20h18M5 20l7-14 7 14"/>', steth: '<path d="M6 3v6a4 4 0 0 0 8 0V3"/><path d="M10 13v2a5 5 0 0 0 10 0v-2"/><circle cx="20" cy="11" r="2"/>', info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>' };
+  const SH_IC = { morning: IC.sun, evening: IC.moon, night: IC.moon, off: IC.off, leave: IC.leave };
+  const loc = () => current === "ar" ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB";
+  const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const parse = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+  const weekStart = d => addDays(new Date(d.getFullYear(), d.getMonth(), d.getDate()), -d.getDay()); // Sunday
+  const today = ymd(new Date());
+  const tm = s => { if (!s) return ""; const [h, m] = s.split(":").map(Number); return new Date(2000, 0, 1, h % 24, m).toLocaleTimeString(current === "ar" ? "ar-SA-u-nu-latn" : "en-US", { hour: "numeric", minute: "2-digit" }); };
+  const range = s => s && s.from && s.to ? `<span class="sh-time" dir="ltr">${esc(tm(s.from))} – ${esc(tm(s.to))}</span>` : "";
+
+  function days() {
+    if (mode === "week") { const s = weekStart(anchor); return Array.from({ length: 7 }, (_, i) => addDays(s, i)); }
+    const first = new Date(anchor.getFullYear(), anchor.getMonth(), 1), last = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0);
+    return Array.from({ length: last.getDate() }, (_, i) => addDays(first, i));
+  }
+  function label() {
+    if (mode === "month") return anchor.toLocaleDateString(loc(), { month: "long", year: "numeric" });
+    const s = weekStart(anchor), e = addDays(s, 6), o = { day: "numeric", month: "short" };
+    return `${s.toLocaleDateString(loc(), o)} – ${e.toLocaleDateString(loc(), { ...o, year: "numeric" })}`;
+  }
+  const isCurrent = () => mode === "week" ? ymd(weekStart(anchor)) === ymd(weekStart(new Date())) : anchor.getFullYear() === new Date().getFullYear() && anchor.getMonth() === new Date().getMonth();
+
+  function render() {
+    const list = days(), sch = hasSchedule();
+    const sums = list.reduce((a, d) => { const k = ymd(d), s = shiftOn(k); if (s && SHIFTS[s.shift]) { a.work++; a.hours += hours(s); } else if (s && (s.shift === "off" || s.shift === "leave")) a.off++; a.visits += visitsOn(k); return a; }, { work: 0, hours: 0, off: 0, visits: 0 });
+    const head = `<section class="card sc-head"><span class="ic">${svg(IC.cal)}</span><div><h1>${t().title}</h1><p>${t().sub}</p></div><span class="ro-tag">${svg(IC.lock, 2)}${t().ro}</span></section>`;
+    const bar = `<div class="sc-bar"><div class="seg" role="group">${["week", "month"].map(m => `<button type="button" data-mode="${m}" aria-pressed="${m === mode}">${t()[m]}</button>`).join("")}</div>
+      <div class="nav2"><button type="button" class="ib ar" data-step="-1" aria-label="${t().prev}">${svg(IC.l, 2.2)}</button><b>${esc(label())}</b><button type="button" class="ib ar" data-step="1" aria-label="${t().next}">${svg(IC.r, 2.2)}</button>
+      <button type="button" class="btn-today" id="goToday" ${isCurrent() ? "disabled" : ""}>${t().today}</button></div></div>`;
+    if (!sch) { $("vw").innerHTML = head + `<section class="card">${bar}<div class="empty-sc"><b>${t().noneT}</b>${t().noneS}</div></section>`; return; }
+    const sum = `<div class="sum"><div><small>${t().sWork}</small><b class="num">${sums.work}</b></div><div><small>${t().sHours}</small><b class="num">${Math.round(sums.hours * 10) / 10}</b></div><div><small>${t().sOff}</small><b class="num">${sums.off}</b></div><div><small>${t().sVisits}</small><b class="num">${sums.visits}</b></div></div>`;
+    const vtxt = n => n === 0 ? t().visits0 : n === 1 ? t().visits1 : tx("visitsN", { n });
+    let body;
+    if (mode === "week") {
+      body = `<div class="days">${list.map(d => { const k = ymd(d), s = shiftOn(k), sh = s ? s.shift : "none", n = visitsOn(k);
+        return `<div class="day ${k === today ? "today" : ""} ${k < today ? "past" : ""}"><div class="dd"><small>${esc(d.toLocaleDateString(loc(), { weekday: "short" }))}</small><b class="num">${d.getDate()}</b></div>
+          <div class="sh"><span class="sh-t s-${sh}">${SH_IC[sh] ? svg(SH_IC[sh], 2) : ""}${t()["sh_" + sh]}</span>${SHIFTS[sh] ? range(s) : ""}${k === today ? `<span class="tag-today">${t().todayTag}</span>` : ""}${s && s.note ? `<span class="sh-note">${esc(s.note)}</span>` : ""}</div>
+          ${n ? `<a class="vc" href="doctor-visits.html">${svg(IC.steth)}${vtxt(n)}</a>` : `<span class="vc zero">${vtxt(0)}</span>`}</div>`; }).join("")}</div>`;
+    } else {
+      const lead = list[0].getDay(), cells = [];
+      for (let i = 0; i < lead; i++) cells.push(null);
+      list.forEach(d => cells.push(d));
+      while (cells.length % 7) cells.push(null);
+      const wd = Array.from({ length: 7 }, (_, i) => addDays(weekStart(new Date()), i).toLocaleDateString(loc(), { weekday: "short" }));
+      body = `<div class="cal"><div class="cal-h">${wd.map(w => `<span>${esc(w)}</span>`).join("")}</div><div class="cal-g">${cells.map(d => { if (!d) return `<div class="cell out" aria-hidden="true"></div>`;
+          const k = ymd(d), s = shiftOn(k), sh = s ? s.shift : "none", n = visitsOn(k);
+          return `<div class="cell ${k === today ? "today" : ""}" title="${esc(d.toLocaleDateString(loc(), { weekday: "long", day: "numeric", month: "long" }) + " · " + t()["sh_" + sh] + (SHIFTS[sh] ? ` ${tm(s.from)} – ${tm(s.to)}` : ""))}">
+            <span class="n num">${d.getDate()}</span><span class="chip s-${sh}">${t()["ab_" + sh]}${SHIFTS[sh] ? `<small dir="ltr">${esc(tm(s.from))} – ${esc(tm(s.to))}</small>` : ""}</span>${n ? `<span class="vis">${n === 1 ? t().visits1 : tx("visitsN", { n })}</span>` : ""}</div>`; }).join("")}</div></div>
+        <div class="legend">${["morning", "evening", "night", "off", "leave"].map(k => `<span><i class="s-${k}"></i>${t()["sh_" + k]}</span>`).join("")}</div>`;
+    }
+    $("vw").innerHTML = head + `<section class="card">${bar}${sum}${body}</section><p class="sc-note">${svg(IC.info, 2)}${t().changeNote}</p>`;
+  }
+  $("vw").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.mode) { mode = b.dataset.mode; return render(); }
+    if (b.dataset.step) { const n = +b.dataset.step; anchor = mode === "week" ? addDays(anchor, 7 * n) : new Date(anchor.getFullYear(), anchor.getMonth() + n, 1); return render(); }
+    if (b.id === "goToday") { anchor = new Date(); render(); }
+  });
+  window.addEventListener("storage", e => { if (!e.key || e.key === "mada-dr-schedule" || e.key === "mada-orders") render(); });
+
+  document.addEventListener("click", e => { if (e.target.closest("[data-soon]")) { e.preventDefault(); toast(t().soonMsg); } });
+  $("bell").addEventListener("click", () => toast(t().noNotes));
+  function toast(msg) { const el = $("toast"); el.textContent = msg; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 3200); }
+  function setLang(lang) {
+    current = lang;
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+    document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = t()[el.dataset.i18n]);
+    document.querySelectorAll("[data-i18n-aria]").forEach(el => el.setAttribute("aria-label", t()[el.dataset.i18nAria]));
+    document.title = lang === "ar" ? "مدى كير | جدولي" : "Mada Care | My Schedule";
+    DrPortal.render(me, lang, "schedule"); render();
+    try { localStorage.setItem("mada-lang", lang); } catch (e) {}
+  }
+  $("langToggle").addEventListener("click", () => setLang(current === "en" ? "ar" : "en"));
+  const user = $("user"), userBtn = $("userBtn");
+  userBtn.addEventListener("click", e => { e.stopPropagation(); userBtn.setAttribute("aria-expanded", user.classList.toggle("open")); });
+  document.addEventListener("click", () => { user.classList.remove("open"); userBtn.setAttribute("aria-expanded", false); });
+  $("logout").addEventListener("click", e => { e.preventDefault(); MadaAuth.logout(); });
+
+  let saved = "en";
+  try { saved = localStorage.getItem("mada-lang") || "en"; } catch (e) {}
+  setLang(saved);
+</script>
+</body>
+</html>

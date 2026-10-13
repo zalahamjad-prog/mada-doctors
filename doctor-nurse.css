@@ -1,0 +1,50 @@
+/* Nurse Note (doctor-nurse.js) */
+.nu-card { border: 1px solid #e3e8ea; border-radius: 16px; background: #fff; margin-bottom: 16px; overflow: hidden; }
+.nu-card.open { border-color: #5fb3a8; box-shadow: 0 0 0 1px #5fb3a8; }
+.nu-ch { display: flex; align-items: center; gap: 14px; padding: 14px 18px; background: #f5f8f9; }
+.nu-ch > div { flex: 1; min-width: 0; }
+.nu-ch b { display: block; font-size: 18px; color: #15304a; }
+.nu-ch small { display: block; font-size: 13.5px; color: #6b7a80; margin-top: 2px; }
+.nu-n0 { width: 44px; height: 44px; border-radius: 50%; background: #3f8a6c; color: #fff; font-weight: 700; font-size: 14px; display: grid; place-items: center; flex: none; }
+.nu-n0.done { background: var(--teal, #12a37f); }
+.nu-n0 svg { width: 20px; height: 20px; }
+.nu-ch .hx-btn svg { width: 16px; height: 16px; }
+.nu-cb { padding: 18px; }
+.nu-by { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 14px; padding: 8px 12px; border-radius: 10px; background: #eef4fd; color: #2c3d50; font-size: 14px; }
+.nu-by svg { width: 18px; height: 18px; color: #2f6fd6; }
+.nu-byf { max-width: 360px; margin-bottom: 16px; }
+.nu-lh { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+.nu-lh label { font-size: 15px; font-weight: 700; color: #15304a; }
+.nu-full { display: inline-flex; align-items: center; gap: 8px; border: 0; background: none; padding: 4px 2px; font: inherit; font-size: 14.5px; font-weight: 600; color: #15304a; cursor: pointer; }
+.nu-full svg { width: 20px; height: 20px; color: #2f6fd6; }
+.nu-full:hover { color: #2f6fd6; }
+.nu .hx-area textarea { min-height: 130px; background: #fafbfb; }
+.nu-acts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 16px; margin-top: 16px; }
+.nu-acts .hx-btn { width: 100%; justify-content: center; }
+.nu-acts .hx-btn svg { width: 18px; height: 18px; }
+.hx-btn.nu-save { background: #3f8a8a; border-color: #3f8a8a; color: #fff; }
+.hx-btn.nu-save:hover { background: #357676; }
+.nu-txt { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; line-height: 1.75; color: #2c3d43; }
+.nu-none { margin: 4px 0 18px; }
+.nu-ov { position: fixed; inset: 0; z-index: 60; background: rgba(16,35,43,.42); }
+.nu-fm { position: fixed; z-index: 61; inset: 24px; max-width: 980px; margin: 0 auto; background: #fff; border-radius: 18px; box-shadow: 0 24px 60px rgba(16,35,43,.3); display: flex; flex-direction: column; overflow: hidden; }
+.nu-fh { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-bottom: 1px solid #eef2f3; }
+.nu-fh .ex-tic { width: 52px; height: 52px; }
+.nu-fh .ex-tic svg { width: 26px; height: 26px; }
+.nu-fh > div { flex: 1; min-width: 0; }
+.nu-fh b { display: block; font-size: 19px; color: #15304a; }
+.nu-fh small { display: block; font-size: 13.5px; color: #6b7a80; margin-top: 2px; }
+.nu-fb { flex: 1; padding: 18px 20px; display: flex; flex-direction: column; min-height: 0; }
+.nu-fb .hx-area { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.nu-fb .hx-area textarea { flex: 1; resize: none; font-size: 16px; line-height: 1.8; }
+.nu-ff { display: flex; justify-content: flex-end; padding: 14px 20px; border-top: 1px solid #eef2f3; }
+@media (max-width: 900px) {
+  .nu-ch { padding: 12px; gap: 10px; flex-wrap: wrap; }
+  .nu-ch b { font-size: 16px; }
+  .nu-n0 { width: 38px; height: 38px; }
+  .nu-cb { padding: 12px; }
+  .nu-acts { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .nu-acts .nu-save { order: -1; }
+  .nu-fm { inset: 0; border-radius: 0; }
+  .nu-ff .hx-btn { width: 100%; justify-content: center; }
+}

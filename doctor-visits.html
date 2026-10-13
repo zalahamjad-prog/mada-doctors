@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="assets/mada-logo.png">
+<title>Mada Care | My Visits</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #0b6b5c; --primary-soft: #e6f3ef; --teal: #12a37f; --navy: #0b3a55;
+    --ink: #10232b; --muted: #6b7a80; --border: #e3e8ea; --page: #f6f8f9;
+    --orange: #d97706; --orange-soft: #fef3e2;
+    --font: "Inter", "Tajawal", system-ui, sans-serif;
+  }
+  [dir="rtl"] { --font: "Tajawal", "Inter", system-ui, sans-serif; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--page); color: var(--ink); min-height: 100vh; }
+  button { font: inherit; color: inherit; }
+  [hidden] { display: none !important; }
+  .app { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 100vh; }
+
+  /* Sidebar */
+  .side { position: sticky; top: 0; height: 100vh; background: #fff; border-inline-end: 1px solid var(--border); padding: 18px 14px; display: flex; flex-direction: column; gap: 22px; overflow: hidden; }
+  .logo { display: flex; align-items: center; gap: 8px; padding: 0 6px; text-decoration: none; color: var(--ink); }
+  .logo img { height: 40px; width: auto; }
+  .logo b { display: block; font-size: 18px; font-weight: 600; line-height: 1.1; }
+  .logo small { font-size: 10.5px; color: var(--primary); }
+  .menu { display: grid; gap: 4px; }
+  .menu a { display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 14px; border-radius: 10px; text-decoration: none; color: #2c3d43; font-size: 14px; font-weight: 500; }
+  .menu a svg { width: 21px; height: 21px; flex: none; }
+  .menu a:hover { background: #f3f6f7; }
+  .menu a[aria-current="page"] { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
+  .menu a.soon { color: #8a979c; cursor: default; }
+  .menu a.soon:hover { background: none; }
+  .soon-tag { margin-inline-start: auto; height: 18px; padding: 0 7px; border-radius: 9px; background: var(--orange-soft); color: var(--orange); font-size: 10.5px; font-weight: 600; line-height: 18px; }
+  .support { order: 3; display: flex; align-items: center; gap: 12px; padding: 14px 8px 0; border-top: 1px solid var(--border); font-size: 13px; }
+  .support svg { width: 26px; height: 26px; color: #2c3d43; flex: none; }
+  .support b { display: block; font-weight: 600; }
+  .support a { color: var(--muted); text-decoration: none; }
+  .side-art { order: 2; margin-top: auto; margin-inline-start: -14px; width: 170px; color: #e3f2ee; }
+  [dir="rtl"] .side-art { transform: scaleX(-1); }
+
+  /* Top bar */
+  .top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: flex-end; gap: 14px; height: 76px; padding: 0 28px; background: rgba(246,248,249,.92); backdrop-filter: blur(6px); border-bottom: 1px solid var(--border); }
+  .lang-btn { display: flex; align-items: center; gap: 6px; background: none; border: 0; cursor: pointer; font-size: 13px; color: #44545a; padding: 8px; border-radius: 8px; }
+  .lang-btn:hover, .bell:hover { background: #eef2f3; }
+  .lang-btn svg { width: 16px; height: 16px; }
+  .bell { position: relative; width: 42px; height: 42px; border: 0; background: none; border-radius: 50%; cursor: pointer; display: grid; place-items: center; color: #2c3d43; }
+  .bell svg { width: 23px; height: 23px; }
+  .sep { width: 1px; height: 34px; background: var(--border); }
+  .user { position: relative; }
+  .user-btn { display: flex; align-items: center; gap: 12px; background: none; border: 0; cursor: pointer; padding: 4px 6px; border-radius: 12px; text-align: start; }
+  .user-btn:hover { background: #eef2f3; }
+  .ava { width: 50px; height: 50px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; font-weight: 700; font-size: 16px; overflow: hidden; flex: none; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--border); }
+  .ava img { width: 100%; height: 100%; object-fit: cover; }
+  .u-name { display: block; font-size: 14px; font-weight: 600; }
+  .u-spec { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .user-btn > svg { width: 16px; height: 16px; color: #44545a; }
+  .user-menu { position: absolute; top: 110%; inset-inline-end: 0; min-width: 180px; background: #fff; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 24px rgba(16,35,43,.08); padding: 6px; display: none; }
+  .user.open .user-menu { display: block; }
+  .user-menu a { display: block; padding: 9px 10px; border-radius: 6px; font-size: 13px; color: var(--ink); text-decoration: none; }
+  .user-menu a:hover { background: var(--primary-soft); color: var(--primary); }
+
+  /* Content */
+  main { padding: 22px 28px 32px; }
+  .stage { position: relative; overflow: hidden; min-height: calc(100vh - 76px - 54px); border-radius: 18px; border: 1px solid var(--border); background: radial-gradient(circle at 0 0, #e9f5f1 0, rgba(233,245,241,0) 220px), linear-gradient(160deg, #ffffff 55%, #fff3e8 100%); display: grid; place-items: center; padding: 40px 20px; }
+  .stage::after { content: ""; position: absolute; width: 360px; height: 360px; border-radius: 50%; inset-inline-end: -120px; bottom: -150px; background: rgba(253,214,180,.35); }
+  .empty { position: relative; z-index: 1; display: grid; justify-items: center; text-align: center; max-width: 560px; }
+  .empty-art { width: 330px; max-width: 100%; height: auto; margin-bottom: 18px; }
+  .empty h1 { font-size: 30px; font-weight: 700; color: #15304a; letter-spacing: -.3px; }
+  .empty p { margin-top: 10px; font-size: 16px; color: var(--muted); line-height: 1.6; }
+  .rule { width: 60px; height: 4px; border-radius: 2px; background: var(--teal); margin: 26px 0; }
+  .quote { display: flex; align-items: flex-start; gap: 12px; padding: 16px 22px; border-radius: 12px; background: rgba(230,243,239,.75); font-size: 17px; font-weight: 500; color: #15304a; line-height: 1.5; text-align: start; }
+  .quote span.q { font-size: 34px; line-height: .9; color: var(--teal); font-weight: 700; font-family: Georgia, serif; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 60; background: var(--ink); color: #fff; padding: 11px 18px; border-radius: 10px; font-size: 13px; max-width: calc(100% - 32px); }
+
+  /* My Visits */
+  .panel { background: #fff; border: 1px solid var(--border); border-radius: 18px; }
+  .p-head { display: flex; align-items: center; gap: 18px; padding: 22px 26px; border-bottom: 1px solid #eef2f3; }
+  .p-icon { width: 64px; height: 64px; border-radius: 50%; background: var(--primary-soft); color: var(--teal); display: grid; place-items: center; flex: none; }
+  .p-icon svg { width: 30px; height: 30px; }
+  .p-head h1 { font-size: 28px; font-weight: 700; color: #15304a; }
+  .p-head p { font-size: 15px; color: var(--muted); margin-top: 4px; }
+  .tools { display: flex; gap: 14px; padding: 18px 22px 6px; }
+  .search { flex: 1; display: flex; align-items: center; gap: 10px; height: 50px; padding: 0 16px; border: 1px solid var(--border); border-radius: 10px; background: #fff; min-width: 0; }
+  .search:focus-within, .dates:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(18,163,127,.12); outline: 0; }
+  .search svg { width: 20px; height: 20px; color: #3d4f57; flex: none; }
+  .search input { flex: 1; min-width: 0; border: 0; outline: 0; font: inherit; font-size: 14px; background: none; }
+  .vtabs { display: flex; gap: 4px; margin: 0 0 18px; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
+  .vtabs::-webkit-scrollbar { display: none; }
+  .vtabs button { flex: none; display: inline-flex; align-items: center; gap: 8px; height: 48px; padding: 0 18px; border: 0; border-bottom: 3px solid transparent; margin-bottom: -1px; background: none; cursor: pointer; font: inherit; font-size: 15px; font-weight: 600; color: var(--muted); }
+  .vtabs button:hover { color: #15304a; }
+  .vtabs button[aria-selected="true"] { color: var(--teal); border-color: var(--teal); }
+  .vtabs .cnt { min-width: 24px; height: 22px; padding: 0 7px; border-radius: 11px; background: #eef2f3; color: #44545a; font-size: 12px; font-weight: 700; display: inline-grid; place-items: center; }
+  .vtabs button[aria-selected="true"] .cnt { background: #e3f4ee; color: #0f6b52; }
+  @media (max-width: 760px) { .vtabs { gap: 0; } .vtabs button { flex: 1 1 0; min-width: 0; flex-direction: column; justify-content: center; gap: 3px; height: 62px; padding: 0 4px; font-size: 12.5px; line-height: 1.2; white-space: normal; text-align: center; } .vtabs .cnt { height: 18px; min-width: 20px; font-size: 11px; } }
+  .tag-on.tag-cancel { background: #fdecec; color: #b42318; }
+  .tag-on.tag-cancel::before { background: #dc2626; }
+  .why { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); max-width: 220px; white-space: normal; }
+  .dates { height: 50px; min-width: 200px; padding: 0 14px; border: 1px solid var(--border); border-radius: 10px; background: #fff; font: inherit; font-size: 14px; font-weight: 500; color: var(--ink); cursor: pointer; }
+  .tbl-wrap { padding: 12px 22px 0; overflow-x: auto; }
+  table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; }
+  thead th { background: #f3f6f8; text-align: start; font-weight: 600; font-size: 13.5px; color: #15304a; padding: 14px 10px; white-space: nowrap; }
+  thead th:first-child { border-start-start-radius: 10px; border-end-start-radius: 10px; }
+  thead th:last-child { border-start-end-radius: 10px; border-end-end-radius: 10px; }
+  tbody td { padding: 12px 10px; border-bottom: 1px solid #eef2f3; color: #44545a; white-space: nowrap; vertical-align: middle; }
+  tbody tr.ongoing td { background: #f2fbf8; }
+  .who { display: flex; align-items: center; gap: 12px; }
+  .who .pa { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+  .who .pa svg { width: 22px; height: 22px; }
+  .pa-0 { background: #e8f0fe; color: #3b82f6; } .pa-1 { background: #e3f6ee; color: #12a37f; } .pa-2 { background: #fdeee2; color: #f08a3c; } .pa-3 { background: #f1eafe; color: #8b5cf6; }
+  .who b { font-weight: 600; color: #15304a; white-space: normal; display: inline-block; min-width: 120px; max-width: 170px; }
+  .when b { display: block; color: #15304a; font-weight: 500; }
+  .when small { font-size: 12px; color: var(--muted); }
+  .num { direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; }
+  .tag-on { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 9px; border-radius: 11px; background: #dff5ec; color: #0f8f6f; font-size: 11.5px; font-weight: 600; margin-top: 4px; }
+  .tag-on::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  a.btn { text-decoration: none; }
+  .tag-pause { background: var(--orange-soft); color: var(--orange); }
+  .acts { display: flex; gap: 8px; justify-content: flex-end; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; font: inherit; font-size: 13.5px; font-weight: 600; white-space: nowrap; }
+  .btn svg { width: 18px; height: 18px; }
+  .btn-light { background: #f6f8fa; border-color: #dfe5e8; color: #15304a; }
+  .btn-light:hover { background: #eef2f4; }
+  .btn-dark { background: var(--navy); color: #fff; }
+  .btn-dark:hover { background: #082d42; }
+  .btn-go { background: var(--teal); color: #fff; }
+  .btn-go:hover { background: #0f8f6f; }
+  .btn-out { background: #fff; border-color: #cfd9dc; color: #15304a; }
+  .foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 22px 26px 24px; font-size: 14px; color: var(--muted); }
+  .pager { display: flex; gap: 8px; }
+  .pager button { width: 42px; height: 42px; border-radius: 10px; border: 1px solid var(--border); background: #fff; cursor: pointer; font: inherit; font-weight: 600; color: #44545a; display: grid; place-items: center; }
+  .pager button svg { width: 18px; height: 18px; }
+  [dir="rtl"] .pager button svg { transform: scaleX(-1); }
+  .pager button[aria-current="page"] { background: #e3f4ee; border-color: #e3f4ee; color: var(--teal); }
+  .pager button:disabled { opacity: .45; cursor: default; }
+  .none { padding: 50px 20px; text-align: center; color: var(--muted); }
+  .none b { display: block; font-size: 17px; color: #15304a; margin-bottom: 6px; }
+
+  /* Popups */
+  .ov { position: fixed; inset: 0; z-index: 50; background: rgba(16,35,43,.42); display: grid; place-items: center; padding: 16px; overflow-y: auto; }
+  .dlg { position: relative; width: 100%; background: #fff; border-radius: 18px; box-shadow: 0 24px 60px rgba(0,0,0,.18); margin: auto; }
+  .x { position: absolute; top: 16px; inset-inline-end: 16px; width: 34px; height: 34px; border: 0; background: none; border-radius: 8px; cursor: pointer; color: #44545a; display: grid; place-items: center; }
+  .x:hover { background: #f1f4f5; }
+  .x svg { width: 20px; height: 20px; }
+  .sw { max-width: 380px; padding: 28px 24px 24px; text-align: center; }
+  .sw .ic { width: 76px; height: 76px; border-radius: 50%; background: #e3f4ee; color: var(--teal); display: grid; place-items: center; margin: 0 auto 14px; }
+  .sw .ic svg { width: 36px; height: 36px; }
+  .sw h3 { font-size: 24px; font-weight: 700; color: #15304a; }
+  .sw p { font-size: 14px; color: #44545a; line-height: 1.6; margin: 10px 0 20px; }
+  .sw .row { display: flex; gap: 10px; }
+  .sw .row .btn { flex: 1; }
+  .tips { max-width: 660px; padding: 22px 28px 24px; }
+  .tips-h { display: flex; gap: 16px; align-items: flex-start; padding-inline-end: 34px; }
+  .tips-h .ic { width: 62px; height: 62px; border-radius: 50%; background: #e3f4ee; color: var(--teal); display: grid; place-items: center; flex: none; }
+  .tips-h .ic svg { width: 30px; height: 30px; }
+  .tips-h h3 { font-size: 25px; font-weight: 700; color: #15304a; }
+  .tips-h p { font-size: 14.5px; color: #44545a; line-height: 1.55; margin-top: 4px; }
+  .tip-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+  .tip { position: relative; border: 1px solid #e7ecee; border-radius: 12px; padding: 14px 12px 14px; text-align: center; background: #fff; }
+  .tip .n { position: absolute; top: 10px; inset-inline-start: 10px; width: 30px; height: 30px; border-radius: 50%; background: #dff5ec; color: #0f8f6f; font-weight: 700; display: grid; place-items: center; font-size: 14px; }
+  .tip .art { width: 72px; height: 72px; margin: 2px auto 8px; display: block; }
+  .tip b { display: block; font-size: 15px; color: #15304a; margin-bottom: 5px; }
+  .tip span { font-size: 12.5px; color: #5d6d78; line-height: 1.5; }
+  .chk { display: flex; align-items: center; gap: 10px; margin: 16px 0 0; font-size: 14px; color: #44545a; cursor: pointer; }
+  .chk input { width: 20px; height: 20px; accent-color: var(--teal); }
+  .tips.compact { max-width: 480px; }
+  .tips.compact .tip-grid, .tips.compact .chk { display: none; }
+  .tips-f { display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #eef2f3; margin-top: 16px; padding-top: 18px; }
+  .tips-f .btn { height: 52px; padding: 0 30px; font-size: 15.5px; }
+  @media (max-width: 900px) {
+    .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; align-content: start; }
+    .side { position: static; height: auto; flex-direction: row; align-items: center; gap: 12px; padding: 10px 12px; border-inline-end: 0; border-bottom: 1px solid var(--border); }
+    .logo { flex: none; }
+    .logo img { height: 34px; }
+    .logo span { display: none; }
+    .menu { display: flex; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+    .menu::-webkit-scrollbar { display: none; }
+    .menu a { flex: none; height: 38px; padding: 0 12px; font-size: 13px; gap: 8px; }
+    .menu a svg { width: 18px; height: 18px; }
+    .side-art, .support { display: none; }
+    .top { height: 66px; padding: 0 12px; gap: 8px; }
+    .user-meta { display: none; }
+    .ava { width: 42px; height: 42px; }
+    main { padding: 14px 12px 24px; }
+    .stage { min-height: 60vh; padding: 32px 16px; }
+    .empty h1 { font-size: 23px; }
+    .empty p { font-size: 14.5px; }
+    .quote { font-size: 15px; padding: 14px 16px; }
+    .p-head { padding: 16px; gap: 12px; }
+    .p-icon { width: 48px; height: 48px; }
+    .p-icon svg { width: 24px; height: 24px; }
+    .p-head h1 { font-size: 22px; }
+    .p-head p { font-size: 13px; }
+    .tools { flex-direction: column; padding: 14px 14px 4px; }
+    .dates { width: 100%; }
+    .tools .search { flex: none; width: 100%; }
+    tbody tr.ongoing { background: #f2fbf8; border-color: #bfe6d8; }
+    tbody tr.ongoing td { background: none; }
+    .tbl-wrap { padding: 8px 14px 0; overflow: visible; }
+    table, tbody, tr, td { display: block; }
+    thead { display: none; }
+    tbody tr { border: 1px solid #e7ecee; border-radius: 12px; padding: 12px; margin-bottom: 12px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px 12px; }
+    tbody td { border: 0; padding: 0; white-space: normal; font-size: 13px; }
+    tbody td[data-l]::before { content: attr(data-l); display: block; font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+    td.c-who, td.c-acts { grid-column: 1 / -1; }
+    .acts { justify-content: stretch; }
+    .acts .btn { flex: 1; padding: 0 10px; }
+    .foot { padding: 14px 16px 18px; }
+    .tip-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tips { padding: 18px 16px; }
+    .tips-h h3 { font-size: 20px; }
+    .tips-f .btn { flex: 1; padding: 0 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <a class="logo" href="doctor-visits.html" aria-label="Mada care">
+      <img src="assets/mada-logo.png" alt="" width="301" height="320">
+      <span><b>Mada care</b><small data-i18n="tagline">Caring Like Family</small></span>
+    </a>
+    <nav class="menu" id="menu" aria-label="Doctor portal"></nav>
+    <div class="support" id="support"></div>
+    <svg class="side-art" viewBox="0 0 170 220" fill="none" stroke="currentColor" stroke-width="22" aria-hidden="true"><circle cx="40" cy="40" r="22" fill="currentColor" stroke="none"/><path d="M40 210c-50-40-60-90-30-110s60 0 60 30-40 40-60 20"/><path d="M60 120c30-40 90-30 95 10s-40 70-115 80"/></svg>
+  </aside>
+
+  <div>
+    <header class="top">
+      <button class="lang-btn" id="langToggle" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>
+        <span data-i18n="otherLang">العربية</span>
+      </button>
+      <button class="bell" type="button" id="bell" data-i18n-aria="notifications" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+      </button>
+      <span class="sep" aria-hidden="true"></span>
+      <div class="user" id="user">
+        <button class="user-btn" id="userBtn" type="button" aria-haspopup="menu" aria-expanded="false">
+          <span class="ava" id="avatar"></span>
+          <span class="user-meta"><span class="u-name" id="userName"></span><span class="u-spec" id="userSpec"></span></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="user-menu" role="menu">
+          <a href="doctor-account.html" role="menuitem" data-i18n="profile">My Account</a>
+          <a href="doctor-login.html" role="menuitem" id="logout" data-i18n="logout">Log out</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel">
+        <div class="p-head">
+          <span class="p-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span>
+          <div><h1 data-i18n="title">My Visits</h1><p data-i18n="sub">View your scheduled visits and access patient files</p></div>
+        </div>
+        <div class="vtabs" role="tablist" id="vtabs" data-i18n-aria="tabsLbl"></div>
+        <div class="tools">
+          <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="search" id="q" data-i18n-ph="searchPh" data-i18n-aria="search" placeholder="Search by patient name, file number, phone number, order number or booking number..." autocomplete="off"></label>
+          <select class="dates" id="when" data-i18n-aria="dateLbl"></select>
+        </div>
+        <div class="tbl-wrap" id="tblWrap">
+          <table>
+            <thead><tr id="thead"></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <div class="none" id="none" hidden></div>
+        <div class="foot"><span id="showing"></span><div class="pager" id="pager"></div></div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- Switch visit -->
+<div class="ov" id="swOv" hidden role="dialog" aria-modal="true" aria-labelledby="swT">
+  <div class="dlg sw">
+    <button type="button" class="x" data-close="swOv" data-i18n-aria="close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 9h13l-3-3M20 15H7l3 3"/></svg></span>
+    <h3 id="swT" data-i18n="swT">Switch Visit?</h3>
+    <p id="swP"></p>
+    <div class="row"><button type="button" class="btn btn-out" data-close="swOv" data-i18n="swNo">No, Keep Current</button><button type="button" class="btn btn-dark" id="swYes" data-i18n="swYes">Yes, Switch Visit</button></div>
+  </div>
+</div>
+
+<!-- Before you start -->
+<div class="ov" id="tipOv" hidden role="dialog" aria-modal="true" aria-labelledby="tipT">
+  <div class="dlg tips">
+    <button type="button" class="x" data-close="tipOv" data-i18n-aria="close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <div class="tips-h">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg></span>
+      <div><h3 id="tipT" data-i18n="tipT">Before You Start This Visit</h3><p data-i18n="tipS">A few friendly reminders to help you get the best information and provide the best care for your patient.</p></div>
+    </div>
+    <div class="tip-grid" id="tipGrid"></div>
+    <label class="chk"><input type="checkbox" id="tipOff"><span data-i18n="tipOff">Don't show these tips again</span></label>
+    <div class="tips-f"><button type="button" class="btn btn-out" data-close="tipOv" data-i18n="cancel">Cancel</button><button type="button" class="btn btn-dark" id="tipGo"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"/></svg><span data-i18n="start">Start Visit</span></button></div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="auth.js"></script>
+<script src="orders.js"></script>
+<script src="doctor-portal.js"></script>
+<script>
+  const me = MadaAuth.requireAuth("doctor");
+  const $ = id => document.getElementById(id), esc = DrPortal.esc;
+  // Visits: paid bookings assigned to this doctor (booking.doctorId) that are not finished or cancelled.
+  // Starting a visit sets order.doctorVisit; only one visit is ongoing at a time (the other one is paused).
+  const myId = me && me.doctorId;
+  if (myId) MadaOrders.seedDoctorDemo(myId); // SAMPLE DATA ONLY
+  const PER = 10;
+  const TIP_KEY = "mada-dr-tips-off-" + myId;
+  const TIPS = [
+    { k: "friendly", art: '<circle cx="36" cy="30" r="16" fill="#fde2c4"/><path d="M20 28c0-10 7-16 16-16s16 6 16 16c-4-6-10-8-16-8s-12 2-16 8z" fill="#3b4b5c"/><path d="M29 34c2 3 5 4 7 4s5-1 7-4" stroke="#7a4b2a" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M14 70c0-12 10-20 22-20s22 8 22 20z" fill="#e9eef3"/><path d="M30 52l6 10 6-10" fill="#5fbf9f"/><path d="M56 22l6-4M58 30h6M56 37l5 3" stroke="#f2b24a" stroke-width="2.4" stroke-linecap="round"/>' },
+    { k: "listen", art: '<circle cx="30" cy="34" r="14" fill="#fde2c4"/><path d="M16 32c0-9 6-15 14-15s14 6 14 15c-3-5-8-7-14-7s-11 2-14 7z" fill="#3b4b5c"/><path d="M10 70c0-11 9-18 20-18s20 7 20 18z" fill="#5aa9e6"/><rect x="40" y="12" width="28" height="20" rx="10" fill="#7cc4f2"/><path d="M48 32l-4 6 9-6z" fill="#7cc4f2"/><path d="M47 20h14M47 25h9" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>' },
+    { k: "ask", art: '<rect x="18" y="10" width="36" height="52" rx="5" fill="#fff" stroke="#3b4b5c" stroke-width="3"/><rect x="28" y="6" width="16" height="9" rx="3" fill="#5fbf9f"/><path d="M25 26l3 3 5-6M25 38l3 3 5-6M25 50l3 3 5-6" stroke="#12a37f" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M38 27h10M38 39h10M38 51h10" stroke="#3b4b5c" stroke-width="2.4" stroke-linecap="round"/>' },
+    { k: "clarify", art: '<circle cx="32" cy="30" r="17" fill="none" stroke="#1f3a4f" stroke-width="5"/><path d="M45 43l15 15" stroke="#1f3a4f" stroke-width="7" stroke-linecap="round"/>' },
+    { k: "empathy", art: '<rect x="8" y="16" width="34" height="26" rx="13" fill="#5fbf9f"/><path d="M18 42l-3 8 9-8z" fill="#5fbf9f"/><circle cx="18" cy="29" r="2.4" fill="#fff"/><circle cx="25" cy="29" r="2.4" fill="#fff"/><circle cx="32" cy="29" r="2.4" fill="#fff"/><rect x="34" y="28" width="30" height="22" rx="11" fill="#c5ccd6"/><path d="M56 50l3 7-8-7z" fill="#c5ccd6"/><circle cx="43" cy="39" r="2" fill="#5b6b78"/><circle cx="49" cy="39" r="2" fill="#5b6b78"/><circle cx="55" cy="39" r="2" fill="#5b6b78"/>' },
+    { k: "summary", art: '<rect x="16" y="10" width="38" height="50" rx="4" fill="#fff" stroke="#3b4b5c" stroke-width="3"/><path d="M24 22h22M24 30h22M24 38h16M24 46h12" stroke="#9aa7b5" stroke-width="2.4" stroke-linecap="round"/><circle cx="52" cy="54" r="11" fill="#12a37f"/><path d="M47 54l3.5 3.5 6.5-7" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round"/>' }
+  ];
+  const ICON = {
+    person: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    folder: '<path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2.5h8.5A1.5 1.5 0 0 1 21 9v9.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z"/>',
+    play: '<path d="M7 4.5v15l12-7.5z"/>'
+  };
+  const i18n = {
+    en: {
+      tagline: "Caring Like Family", otherLang: "العربية", profile: "My Account", logout: "Log out", notifications: "Notifications", soonMsg: "This section is coming next.", noNotes: "No notifications yet.",
+      title: "My Visits", sub: "View your scheduled visits and access patient files", search: "Search",
+      searchPh: "Search by patient name, file number, phone number, order number or booking number...", dateLbl: "Visit date",
+      d_all: "All Dates", d_today: "Today", d_tomorrow: "Tomorrow", d_week: "Next 7 Days", d_done: "Completed Visits", doneTag: "Completed", tabsLbl: "Visit status", tab_up: "Upcoming Visits", tab_done: "Completed Visits", tab_cancel: "Cancelled Visits",
+      medReport: "Medical Report", d_past7: "Last 7 Days", d_past30: "Last 30 Days", cancelTag: "Cancelled", cCancel: "Cancelled At", cancelNoneT: "No cancelled visits", cancelNoneS: "Visits cancelled by the patient or MADA CARE will appear here.", openVisit: "Open Visit", cDone: "Completed At",
+      doneNoneT: "No completed visits yet", doneNoneS: "Visits you finish will appear here.",
+      cName: "Patient Name", cFile: "Medical File No.", cMobile: "Mobile Number", cOrder: "Order Number", cBooking: "Booking Number", cTime: "Visit Time", cActs: "Actions",
+      viewFile: "View Patient File", start: "Start Visit", cont: "Continue Visit", resume: "Resume Visit", ongoing: "Ongoing", paused: "Paused",
+      today: "Today", tomorrow: "Tomorrow", showing: "Showing {a} of {b} visits", showing1: "Showing 1 of 1 visit",
+      noneT: "No visits yet", noneS: "Visits booked for you by the call center will appear here.", noMatchT: "No matching visits", noMatchS: "Try another search or date.",
+      prev: "Previous page", next: "Next page", close: "Close", cancel: "Cancel",
+      swT: "Switch Visit?", swP: "You have an ongoing visit with {n}. Do you want to switch to this visit instead?", swNo: "No, Keep Current", swYes: "Yes, Switch Visit",
+      tipT: "Before You Start This Visit", tipS: "A few friendly reminders to help you get the best information and provide the best care for your patient.", tipOff: "Don't show these tips again", readyT: "Ready to Start?", readyS: "You are about to start the visit with {n}. Make sure you are with the patient.",
+      t_friendly: "Be Friendly", s_friendly: "Greet the patient with a smile and create a comfortable environment.",
+      t_listen: "Listen Actively", s_listen: "Allow the patient to share their concerns without interruption.",
+      t_ask: "Ask Open Questions", s_ask: "Explore the main complaint and relevant history in the patient's own words.",
+      t_clarify: "Clarify Important Details", s_clarify: "Ask about onset, duration, location, severity, and associated symptoms.",
+      t_empathy: "Be Empathetic", s_empathy: "Show understanding and reassure the patient.",
+      t_summary: "Summarize & Confirm", s_summary: "Repeat key points to make sure you have the correct information.",
+      started: "Visit with {n} started.", switched: "Switched to the visit with {n}.", workNext: "The visit workspace is the next step.", fileNext: "The patient file in the Doctor Portal is the next step."
+    },
+    ar: {
+      tagline: "رعاية كالعائلة", otherLang: "English", profile: "حسابي", logout: "تسجيل الخروج", notifications: "الإشعارات", soonMsg: "هذا القسم هو الخطوة الجاية.", noNotes: "ما فيه إشعارات للحين.",
+      title: "زياراتي", sub: "شوف زياراتك المحجوزة وافتح ملفات المرضى", search: "بحث",
+      searchPh: "ابحث باسم المريض، رقم الملف، الجوال، رقم الطلب أو رقم الحجز...", dateLbl: "تاريخ الزيارة",
+      d_all: "كل التواريخ", d_today: "اليوم", d_tomorrow: "بكرة", d_week: "الأيام السبعة الجاية", d_done: "الزيارات المكتملة", doneTag: "مكتملة", tabsLbl: "حالة الزيارة", tab_up: "الزيارات القادمة", tab_done: "الزيارات المكتملة", tab_cancel: "الزيارات الملغية",
+      medReport: "التقرير الطبي", d_past7: "آخر 7 أيام", d_past30: "آخر 30 يوم", cancelTag: "ملغية", cCancel: "وقت الإلغاء", cancelNoneT: "ما فيه زيارات ملغية", cancelNoneS: "الزيارات اللي يلغيها المريض أو مدى كير بتظهر هنا.", openVisit: "فتح الزيارة", cDone: "وقت الإنهاء",
+      doneNoneT: "ما فيه زيارات مكتملة للحين", doneNoneS: "الزيارات اللي تنهيها بتظهر هنا.",
+      cName: "اسم المريض", cFile: "رقم الملف الطبي", cMobile: "رقم الجوال", cOrder: "رقم الطلب", cBooking: "رقم الحجز", cTime: "وقت الزيارة", cActs: "الإجراءات",
+      viewFile: "ملف المريض", start: "بدء الزيارة", cont: "متابعة الزيارة", resume: "استئناف الزيارة", ongoing: "جارية", paused: "متوقفة",
+      today: "اليوم", tomorrow: "بكرة", showing: "عرض {a} من {b} زيارة", showing1: "عرض زيارة واحدة",
+      noneT: "ما فيه زيارات للحين", noneS: "الزيارات اللي يحجزها لك الكول سنتر بتظهر هنا.", noMatchT: "ما فيه زيارات مطابقة", noMatchS: "جرّب بحث أو تاريخ ثاني.",
+      prev: "الصفحة السابقة", next: "الصفحة التالية", close: "إغلاق", cancel: "إلغاء",
+      swT: "تبديل الزيارة؟", swP: "عندك زيارة جارية مع {n}. تبي تنتقل لهذي الزيارة بدالها؟", swNo: "لا، أكمل الحالية", swYes: "نعم، بدّل الزيارة",
+      tipT: "قبل ما تبدأ الزيارة", tipS: "شوية تذكيرات تساعدك تاخذ أفضل معلومات وتقدم أفضل رعاية لمريضك.", tipOff: "لا تعرض هذي النصائح مرة ثانية", readyT: "جاهز تبدأ؟", readyS: "بتبدأ الزيارة مع {n}. تأكد إنك عند المريض.",
+      t_friendly: "كن ودود", s_friendly: "رحّب بالمريض بابتسامة وخلّ الجو مريح.",
+      t_listen: "استمع باهتمام", s_listen: "خلّ المريض يشرح اللي عنده بدون مقاطعة.",
+      t_ask: "اسأل أسئلة مفتوحة", s_ask: "افهم الشكوى الرئيسية والتاريخ المرضي بكلام المريض نفسه.",
+      t_clarify: "وضّح التفاصيل المهمة", s_clarify: "اسأل عن بداية الأعراض ومدتها ومكانها وشدتها والأعراض المصاحبة.",
+      t_empathy: "تعاطف مع المريض", s_empathy: "أظهر تفهمك وطمّن المريض.",
+      t_summary: "لخّص وتأكد", s_summary: "أعد النقاط المهمة عشان تتأكد إن معلوماتك صحيحة.",
+      started: "بدأت الزيارة مع {n}.", switched: "انتقلت للزيارة مع {n}.", workNext: "صفحة الزيارة هي الخطوة الجاية.", fileNext: "ملف المريض في بوابة الطبيب هو الخطوة الجاية."
+    }
+  };
+  let current = "en", page = 1, pending = null;
+  const t = () => i18n[current];
+  const tx = (k, v) => t()[k].replace(/\{(\w+)\}/g, (_, n) => v[n]);
+  const T = v => MadaOrders.text(v, current);
+  const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const dayOff = n => { const d = new Date(); d.setDate(d.getDate() + n); return ymd(d); };
+
+  const visits = () => MadaOrders.all().filter(o => o.bookingId && o.booking && o.booking.doctorId === myId && o.appointment && !["completed", "cancelled"].includes(o.status) && !(o.doctorVisit && o.doctorVisit.status === "done"))
+    .sort((a, b) => (a.appointment.date + String(a.appointment.minute).padStart(4, "0")).localeCompare(b.appointment.date + String(b.appointment.minute).padStart(4, "0")));
+  // Completed Visits: this doctor's finished visits, newest first.
+  const doneVisits = () => MadaOrders.all().filter(o => o.booking && o.booking.doctorId === myId && o.doctorVisit && o.doctorVisit.status === "done")
+    .sort((a, b) => String(b.doctorVisit.completedAt || "").localeCompare(String(a.doctorVisit.completedAt || "")));
+  // Cancelled Visits: this doctor's booked visits that were cancelled, newest first.
+  const cancelAt = o => (o.closure && o.closure.at) || (o.cancelRequest && o.cancelRequest.at) || o.updatedAt || "";
+  const cancelledVisits = () => MadaOrders.all().filter(o => o.booking && o.booking.doctorId === myId && o.status === "cancelled")
+    .sort((a, b) => String(cancelAt(b)).localeCompare(String(cancelAt(a))));
+  const cancelWhy = o => { const k = o.cancelRequest && o.cancelRequest.reason, r = k && MadaOrders.CANCEL_REASONS[k]; return r ? r[current] : ""; };
+  const TABS = { up: ["all", "today", "tomorrow", "week"], done: ["all", "today", "past7", "past30"], cancel: ["all", "today", "past7", "past30"] };
+  let tab = "up";
+  const ongoing = () => visits().find(o => o.doctorVisit && o.doctorVisit.status === "ongoing") || null;
+
+  function whenTxt(a) {
+    const [y, m, d] = a.date.split("-").map(Number), dt = new Date(y, m - 1, d, Math.floor(a.minute / 60), a.minute % 60);
+    const loc = current === "ar" ? "ar-SA-u-nu-latn-ca-gregory" : "en-US";
+    const time = dt.toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit" });
+    const day = a.date === dayOff(0) ? t().today : a.date === dayOff(1) ? t().tomorrow : dt.toLocaleDateString(loc, { weekday: "short", day: "numeric", month: "short" });
+    return `<b class="num">${esc(time)}</b><small>${esc(day)}</small>`;
+  }
+  function doneTxt(at) {
+    if (!at) return "—";
+    const dt = new Date(at), loc = current === "ar" ? "ar-SA-u-nu-latn-ca-gregory" : "en-US";
+    return `<b class="num">${esc(dt.toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit" }))}</b><small>${esc(dt.toLocaleDateString(loc, { day: "numeric", month: "short", year: "numeric" }))}</small>`;
+  }
+  function render() {
+    const q = $("q").value.trim().toLowerCase(), w = $("when").value, isDone = tab === "done", isCan = tab === "cancel";
+    const all = isDone ? doneVisits() : isCan ? cancelledVisits() : visits();
+    const lists = { up: visits(), done: doneVisits(), cancel: cancelledVisits() };
+    $("vtabs").innerHTML = Object.keys(TABS).map(k => `<button type="button" role="tab" data-tab="${k}" aria-selected="${k === tab}">${t()["tab_" + k]}<span class="cnt num">${lists[k].length}</span></button>`).join("");
+    // Upcoming filters by the appointment day; Completed and Cancelled by when it happened.
+    const past = o => { const d = (isDone ? o.doctorVisit.completedAt : cancelAt(o)) || ""; return d ? ymd(new Date(d)) : ""; };
+    const inDate = o => !isDone && !isCan ? (w === "today" ? o.appointment.date === dayOff(0) : w === "tomorrow" ? o.appointment.date === dayOff(1)
+        : w === "week" ? o.appointment.date >= dayOff(0) && o.appointment.date <= dayOff(7) : true)
+      : w === "today" ? past(o) === dayOff(0) : w === "past7" ? past(o) >= dayOff(-7) : w === "past30" ? past(o) >= dayOff(-30) : true;
+    const list = all.filter(o => inDate(o) && (!q || [T(o.patient), o.mrn, o.mobile, DrPortal.phone(o.mobile), o.id, o.bookingId].filter(Boolean).join(" ").toLowerCase().includes(q)));
+    const pages = Math.max(1, Math.ceil(list.length / PER)); page = Math.min(page, pages);
+    const shown = list.slice((page - 1) * PER, page * PER);
+    $("thead").innerHTML = ["cName", "cFile", "cMobile", "cOrder", "cBooking", isDone ? "cDone" : isCan ? "cCancel" : "cTime"].map(k => `<th>${t()[k]}</th>`).join("") + `<th style="text-align:end">${t().cActs}</th>`;
+    $("rows").innerHTML = shown.map((o, i) => {
+      const dv = o.doctorVisit || {}, on = dv.status === "ongoing", ps = dv.status === "paused";
+      const ix = all.indexOf(o) % 4;
+      return `<tr class="${on ? "ongoing" : ""}">
+        <td class="c-who"><div class="who"><span class="pa pa-${ix}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">${ICON.person}</svg></span><span><b>${esc(T(o.patient) || "—")}</b>${isDone ? `<br><span class="tag-on">${t().doneTag}</span>` : isCan ? `<br><span class="tag-on tag-cancel">${t().cancelTag}</span>` : on ? `<br><span class="tag-on">${t().ongoing}</span>` : ps ? `<br><span class="tag-on tag-pause">${t().paused}</span>` : ""}</span></div></td>
+        <td data-l="${esc(t().cFile)}"><span class="num">${esc(o.mrn || "—")}</span></td>
+        <td data-l="${esc(t().cMobile)}"><span class="num">${esc(DrPortal.phone(o.mobile) || "—")}</span></td>
+        <td data-l="${esc(t().cOrder)}"><span class="num">${esc(o.id)}</span></td>
+        <td data-l="${esc(t().cBooking)}"><span class="num">${esc(o.bookingId)}</span></td>
+        <td data-l="${esc(t()[isDone ? "cDone" : isCan ? "cCancel" : "cTime"])}" class="when">${isDone ? doneTxt(o.doctorVisit.completedAt) : isCan ? doneTxt(cancelAt(o)) + (cancelWhy(o) ? `<span class="why">${esc(cancelWhy(o))}</span>` : "") : whenTxt(o.appointment)}</td>
+        <td class="c-acts"><div class="acts">
+          ${isDone ? `<a class="btn btn-light" href="doctor-patient.html?mrn=${encodeURIComponent(o.mrn || "")}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">${ICON.folder}</svg>${t().viewFile}</a>
+          <a class="btn btn-light" href="doctor-reports.html?id=${encodeURIComponent(o.id)}">${t().medReport}</a>
+          <a class="btn btn-dark" href="doctor-visit.html?id=${encodeURIComponent(o.id)}&view=1">${t().openVisit}</a>` : isCan ? (o.mrn ? `<a class="btn btn-light" href="doctor-patient.html?mrn=${encodeURIComponent(o.mrn)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">${ICON.folder}</svg>${t().viewFile}</a>` : "") : `<button type="button" class="btn btn-light" data-file="${esc(o.id)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">${ICON.folder}</svg>${t().viewFile}</button>
+          <button type="button" class="btn ${on ? "btn-go" : "btn-dark"}" data-start="${esc(o.id)}"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${ICON.play}</svg>${on ? t().cont : ps ? t().resume : t().start}</button>`}
+        </div></td></tr>`;
+    }).join("");
+    $("tblWrap").hidden = !list.length;
+    $("none").hidden = !!list.length;
+    $("none").innerHTML = isDone && !all.length ? `<b>${t().doneNoneT}</b>${t().doneNoneS}` : isCan && !all.length ? `<b>${t().cancelNoneT}</b>${t().cancelNoneS}` : all.length ? `<b>${t().noMatchT}</b>${t().noMatchS}` : `<b>${t().noneT}</b>${t().noneS}`;
+    $("showing").textContent = list.length === 1 ? t().showing1 : tx("showing", { a: shown.length, b: list.length });
+    const arrow = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="${d}"/></svg>`;
+    $("pager").innerHTML = `<button type="button" data-pg="${page - 1}" ${page === 1 ? "disabled" : ""} aria-label="${t().prev}">${arrow("M15 18l-6-6 6-6")}</button>` +
+      Array.from({ length: pages }, (_, i) => `<button type="button" data-pg="${i + 1}" ${i + 1 === page ? 'aria-current="page"' : ""}>${i + 1}</button>`).join("") +
+      `<button type="button" data-pg="${page + 1}" ${page === pages ? "disabled" : ""} aria-label="${t().next}">${arrow("M9 6l6 6-6 6")}</button>`;
+  }
+
+  // Start Visit: switch away from another ongoing visit first, then the reminders (unless turned off), then start.
+  function startFlow(id) {
+    const o = MadaOrders.get(id), cur = ongoing();
+    if (cur && cur.id === id) return location.href = "doctor-visit.html?id=" + encodeURIComponent(id);
+    pending = id;
+    if (cur) { $("swP").textContent = tx("swP", { n: T(cur.patient) }); open("swOv"); return; }
+    tipsOrStart();
+  }
+  function tipsOrStart() {
+    let off = false; try { off = MadaStore.get(TIP_KEY) === "1"; } catch (e) {}
+    // With the tips turned off, the same popup still asks the doctor to confirm, without the tips.
+    const n = T(MadaOrders.get(pending).patient);
+    $("tipOv").querySelector(".tips").classList.toggle("compact", off);
+    $("tipT").textContent = off ? t().readyT : t().tipT;
+    $("tipOv").querySelector(".tips-h p").textContent = off ? tx("readyS", { n }) : t().tipS;
+    $("tipOff").checked = false; open("tipOv");
+  }
+  function begin() {
+    const now = new Date().toISOString(), cur = ongoing(), o = MadaOrders.get(pending);
+    if (cur && cur.id !== pending) MadaOrders.update(cur.id, { doctorVisit: { ...cur.doctorVisit, status: "paused", pausedAt: now } });
+    MadaOrders.update(pending, { doctorVisit: { ...(o.doctorVisit || {}), status: "ongoing", startedAt: (o.doctorVisit && o.doctorVisit.startedAt) || now, resumedAt: o.doctorVisit ? now : undefined } });
+    try { sessionStorage.setItem("mada-dr-toast", tx(cur ? "switched" : "started", { n: T(o.patient) })); } catch (e) {}
+    location.href = "doctor-visit.html?id=" + encodeURIComponent(pending);
+  }
+  $("swYes").addEventListener("click", () => { close("swOv"); tipsOrStart(); });
+  $("tipGo").addEventListener("click", () => { if ($("tipOff").checked) MadaStore.set(TIP_KEY, "1"); close("tipOv"); begin(); });
+  function open(id) { $(id).hidden = false; const f = $(id).querySelector(".btn-dark"); if (f) f.focus(); }
+  function close(id) { $(id).hidden = true; }
+  document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => { close(b.dataset.close); pending = null; }));
+  document.querySelectorAll(".ov").forEach(ov => ov.addEventListener("click", e => { if (e.target === ov) { close(ov.id); pending = null; } }));
+  document.addEventListener("keydown", e => { if (e.key === "Escape") document.querySelectorAll(".ov:not([hidden])").forEach(ov => { close(ov.id); pending = null; }); });
+
+  $("rows").addEventListener("click", e => {
+    const s = e.target.closest("[data-start]"), f = e.target.closest("[data-file]");
+    if (s) startFlow(s.dataset.start);
+    else if (f) { const o = MadaOrders.get(f.dataset.file); if (o && o.mrn) location.href = "doctor-patient.html?mrn=" + encodeURIComponent(o.mrn); else toast(t().fileNext); }
+  });
+  $("pager").addEventListener("click", e => { const b = e.target.closest("[data-pg]"); if (b && !b.disabled) { page = +b.dataset.pg; render(); } });
+  $("q").addEventListener("input", () => { page = 1; render(); });
+  $("when").addEventListener("change", () => { page = 1; render(); });
+  function setTab(k, focus) {
+    tab = k; page = 1; fillWhen("all");
+    const u = new URL(location.href); u.searchParams.delete("when"); if (k === "up") u.searchParams.delete("tab"); else u.searchParams.set("tab", k); history.replaceState(null, "", u);
+    render(); if (focus) $("vtabs").querySelector(`[data-tab="${k}"]`).focus();
+  }
+  $("vtabs").addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if (b && b.dataset.tab !== tab) setTab(b.dataset.tab); });
+  $("vtabs").addEventListener("keydown", e => { const ks = Object.keys(TABS), i = ks.indexOf(tab), rtl = current === "ar";
+    const d = e.key === "ArrowRight" ? (rtl ? -1 : 1) : e.key === "ArrowLeft" ? (rtl ? 1 : -1) : 0; if (d) { e.preventDefault(); setTab(ks[(i + d + ks.length) % ks.length], true); } });
+  function fillWhen(w) { $("when").innerHTML = TABS[tab].map(k => `<option value="${k}">${t()["d_" + k]}</option>`).join(""); $("when").value = TABS[tab].includes(w) ? w : "all"; }
+  window.addEventListener("storage", e => { if (!e.key || e.key === "mada-orders") render(); });
+  document.addEventListener("click", e => { if (e.target.closest("[data-soon]")) { e.preventDefault(); toast(t().soonMsg); } });
+  $("bell").addEventListener("click", () => toast(t().noNotes));
+  function toast(msg) { const el = $("toast"); el.textContent = msg; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 2800); }
+
+  function setLang(lang) {
+    current = lang;
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+    document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = t()[el.dataset.i18n]);
+    document.querySelectorAll("[data-i18n-ph]").forEach(el => el.placeholder = t()[el.dataset.i18nPh]);
+    document.querySelectorAll("[data-i18n-aria]").forEach(el => el.setAttribute("aria-label", t()[el.dataset.i18nAria]));
+    document.title = lang === "ar" ? "مدى كير | زياراتي" : "Mada Care | My Visits";
+    fillWhen($("when").value || "all");
+    $("tipGrid").innerHTML = TIPS.map((x, i) => `<div class="tip"><span class="n">${i + 1}</span><svg class="art" viewBox="0 0 72 72" aria-hidden="true">${x.art}</svg><b>${t()["t_" + x.k]}</b><span>${t()["s_" + x.k]}</span></div>`).join("");
+    DrPortal.render(me, lang, "visits"); render();
+    try { localStorage.setItem("mada-lang", lang); } catch (e) {}
+  }
+  $("langToggle").addEventListener("click", () => setLang(current === "en" ? "ar" : "en"));
+  const user = $("user"), userBtn = $("userBtn");
+  userBtn.addEventListener("click", e => { e.stopPropagation(); userBtn.setAttribute("aria-expanded", user.classList.toggle("open")); });
+  document.addEventListener("click", () => { user.classList.remove("open"); userBtn.setAttribute("aria-expanded", false); });
+  $("logout").addEventListener("click", e => { e.preventDefault(); MadaAuth.logout(); });
+
+  let saved = "en";
+  try { saved = localStorage.getItem("mada-lang") || "en"; } catch (e) {}
+  { const sp = new URLSearchParams(location.search), k = sp.get("tab") || (sp.get("when") === "done" ? "done" : ""); if (TABS[k]) tab = k; }
+  setLang(saved);
+</script>
+</body>
+</html>

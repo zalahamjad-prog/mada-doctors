@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="assets/mada-logo.png">
+<title>Mada Care | My Account</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="doctor-patient.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #0b6b5c; --primary-soft: #e6f3ef; --teal: #12a37f; --navy: #0b3a55;
+    --ink: #10232b; --muted: #6b7a80; --border: #e3e8ea; --page: #f6f8f9;
+    --orange: #d97706; --orange-soft: #fef3e2;
+    --font: "Inter", "Tajawal", system-ui, sans-serif;
+  }
+  [dir="rtl"] { --font: "Tajawal", "Inter", system-ui, sans-serif; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--page); color: var(--ink); min-height: 100vh; }
+  button { font: inherit; color: inherit; }
+  [hidden] { display: none !important; }
+  .app { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 100vh; }
+
+  /* Sidebar */
+  .side { position: sticky; top: 0; height: 100vh; background: #fff; border-inline-end: 1px solid var(--border); padding: 18px 14px; display: flex; flex-direction: column; gap: 22px; overflow: hidden; }
+  .logo { display: flex; align-items: center; gap: 8px; padding: 0 6px; text-decoration: none; color: var(--ink); }
+  .logo img { height: 40px; width: auto; }
+  .logo b { display: block; font-size: 18px; font-weight: 600; line-height: 1.1; }
+  .logo small { font-size: 10.5px; color: var(--primary); }
+  .menu { display: grid; gap: 4px; }
+  .menu a { display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 14px; border-radius: 10px; text-decoration: none; color: #2c3d43; font-size: 14px; font-weight: 500; }
+  .menu a svg { width: 21px; height: 21px; flex: none; }
+  .menu a:hover { background: #f3f6f7; }
+  .menu a[aria-current="page"] { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
+  .menu a.soon { color: #8a979c; cursor: default; }
+  .menu a.soon:hover { background: none; }
+  .soon-tag { margin-inline-start: auto; height: 18px; padding: 0 7px; border-radius: 9px; background: var(--orange-soft); color: var(--orange); font-size: 10.5px; font-weight: 600; line-height: 18px; }
+  .support { order: 3; display: flex; align-items: center; gap: 12px; padding: 14px 8px 0; border-top: 1px solid var(--border); font-size: 13px; }
+  .support svg { width: 26px; height: 26px; color: #2c3d43; flex: none; }
+  .support b { display: block; font-weight: 600; }
+  .support a { color: var(--muted); text-decoration: none; }
+  .side-art { order: 2; margin-top: auto; margin-inline-start: -14px; width: 170px; color: #e3f2ee; }
+  [dir="rtl"] .side-art { transform: scaleX(-1); }
+
+  /* Top bar */
+  .top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: flex-end; gap: 14px; height: 76px; padding: 0 28px; background: rgba(246,248,249,.92); backdrop-filter: blur(6px); border-bottom: 1px solid var(--border); }
+  .lang-btn { display: flex; align-items: center; gap: 6px; background: none; border: 0; cursor: pointer; font-size: 13px; color: #44545a; padding: 8px; border-radius: 8px; }
+  .lang-btn:hover, .bell:hover { background: #eef2f3; }
+  .lang-btn svg { width: 16px; height: 16px; }
+  .bell { position: relative; width: 42px; height: 42px; border: 0; background: none; border-radius: 50%; cursor: pointer; display: grid; place-items: center; color: #2c3d43; }
+  .bell svg { width: 23px; height: 23px; }
+  .sep { width: 1px; height: 34px; background: var(--border); }
+  .user { position: relative; }
+  .user-btn { display: flex; align-items: center; gap: 12px; background: none; border: 0; cursor: pointer; padding: 4px 6px; border-radius: 12px; text-align: start; }
+  .user-btn:hover { background: #eef2f3; }
+  .ava { width: 50px; height: 50px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; font-weight: 700; font-size: 16px; overflow: hidden; flex: none; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--border); }
+  .ava img { width: 100%; height: 100%; object-fit: cover; }
+  .u-name { display: block; font-size: 14px; font-weight: 600; }
+  .u-spec { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .user-btn > svg { width: 16px; height: 16px; color: #44545a; }
+  .user-menu { position: absolute; top: 110%; inset-inline-end: 0; min-width: 180px; background: #fff; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 24px rgba(16,35,43,.08); padding: 6px; display: none; }
+  .user.open .user-menu { display: block; }
+  .user-menu a { display: block; padding: 9px 10px; border-radius: 6px; font-size: 13px; color: var(--ink); text-decoration: none; }
+  .user-menu a:hover { background: var(--primary-soft); color: var(--primary); }
+
+  /* Content */
+  main { padding: 22px 28px 32px; }
+  .stage { position: relative; overflow: hidden; min-height: calc(100vh - 76px - 54px); border-radius: 18px; border: 1px solid var(--border); background: radial-gradient(circle at 0 0, #e9f5f1 0, rgba(233,245,241,0) 220px), linear-gradient(160deg, #ffffff 55%, #fff3e8 100%); display: grid; place-items: center; padding: 40px 20px; }
+  .stage::after { content: ""; position: absolute; width: 360px; height: 360px; border-radius: 50%; inset-inline-end: -120px; bottom: -150px; background: rgba(253,214,180,.35); }
+  .empty { position: relative; z-index: 1; display: grid; justify-items: center; text-align: center; max-width: 560px; }
+  .empty-art { width: 330px; max-width: 100%; height: auto; margin-bottom: 18px; }
+  .empty h1 { font-size: 30px; font-weight: 700; color: #15304a; letter-spacing: -.3px; }
+  .empty p { margin-top: 10px; font-size: 16px; color: var(--muted); line-height: 1.6; }
+  .rule { width: 60px; height: 4px; border-radius: 2px; background: var(--teal); margin: 26px 0; }
+  .quote { display: flex; align-items: flex-start; gap: 12px; padding: 16px 22px; border-radius: 12px; background: rgba(230,243,239,.75); font-size: 17px; font-weight: 500; color: #15304a; line-height: 1.5; text-align: start; }
+  .quote span.q { font-size: 34px; line-height: .9; color: var(--teal); font-weight: 700; font-family: Georgia, serif; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 60; background: var(--ink); color: #fff; padding: 11px 18px; border-radius: 10px; font-size: 13px; max-width: calc(100% - 32px); }
+
+  .num { direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; }
+  .ov { position: fixed; inset: 0; z-index: 50; background: rgba(16,35,43,.42); display: grid; place-items: center; padding: 16px; overflow-y: auto; }
+  .dlg { position: relative; width: 100%; background: #fff; border-radius: 18px; box-shadow: 0 24px 60px rgba(0,0,0,.18); margin: auto; }
+  @media (max-width: 900px) {
+    .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; align-content: start; }
+    .side { position: static; height: auto; flex-direction: row; align-items: center; gap: 12px; padding: 10px 12px; border-inline-end: 0; border-bottom: 1px solid var(--border); }
+    .logo { flex: none; }
+    .logo img { height: 34px; }
+    .logo span { display: none; }
+    .menu { display: flex; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+    .menu::-webkit-scrollbar { display: none; }
+    .menu a { flex: none; height: 38px; padding: 0 12px; font-size: 13px; gap: 8px; }
+    .menu a svg { width: 18px; height: 18px; }
+    .side-art, .support { display: none; }
+    .top { height: 66px; padding: 0 12px; gap: 8px; }
+    .user-meta { display: none; }
+    .ava { width: 42px; height: 42px; }
+    main { padding: 14px 12px 24px; }
+  }
+
+  /* My Account */
+  .ac { max-width: 1040px; }
+  .ac-head h1 { font-size: 22px; font-weight: 700; color: #15304a; }
+  .ac-head { border-bottom: 0; }
+  .ac-me { display: flex; align-items: center; gap: 18px; padding: 22px 24px; }
+  .ac-me h1 { font-size: 24px; font-weight: 700; color: #15304a; }
+  .ac-me p { font-size: 14px; color: var(--muted); margin-top: 2px; }
+  .ac-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .ac-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border: 1px solid var(--line, #e3e8ee); border-radius: 999px; font-size: 12.5px; background: #f8fafb; }
+  .ac-chip small { color: var(--muted); font-size: 12px; }
+  .ac-chip b { color: #15304a; font-weight: 700; }
+  .ac-st { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 700; }
+  .ac-st i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .ac-st.on { background: #e3f4ee; color: #0f7a55; }
+  .ac-st.on i { box-shadow: 0 0 0 3px rgba(15,122,85,.18); }
+  .ac-st.off { background: #fdecec; color: #c0392b; }
+  .ac-sub { font-size: 14px; color: var(--muted); margin: -4px 4px 0; }
+  .ac-ava { border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; font-weight: 700; font-size: 22px; overflow: hidden; flex: none; border: 3px solid #fff; box-shadow: 0 0 0 1px var(--border); }
+  .ac-ava img { width: 100%; height: 100%; object-fit: cover; }
+  .ac-list { display: grid; gap: 12px; }
+  .ac-row { display: flex; align-items: center; gap: 14px; padding: 18px 20px; text-decoration: none; color: inherit; font: inherit; text-align: start; width: 100%; cursor: pointer; }
+  .ac-row:hover { border-color: #bfe3d3; background: #fbfefd; }
+  .ac-row .ic { width: 48px; height: 48px; border-radius: 14px; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; flex: none; }
+  .ac-row .ic svg { width: 23px; height: 23px; }
+  .ac-n { width: 26px; height: 26px; border-radius: 50%; background: #f2f5f6; color: #5d6d78; font-size: 12.5px; font-weight: 700; display: grid; place-items: center; flex: none; }
+  .ac-tx { flex: 1; min-width: 0; }
+  .ac-tx b { display: block; font-size: 16px; color: #15304a; }
+  .ac-tx small { display: block; font-size: 13.5px; color: var(--muted); margin-top: 3px; line-height: 1.45; }
+  .ac-go svg { width: 20px; height: 20px; color: #8a979c; display: block; }
+  [dir="rtl"] .ac-go svg { transform: scaleX(-1); }
+  .ac-out .ic { background: #fdecec; color: #c0392b; }
+  .ac-out b { color: #c0392b; }
+  .ac-prof { display: flex; gap: 28px; align-items: flex-start; }
+  .ac-photo { display: grid; justify-items: center; gap: 8px; flex: none; }
+  .ac-photo .ac-ava { font-size: 36px; }
+  .ac-photo small { font-size: 12.5px; color: var(--muted); }
+  .ac-grid { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .ac-kv { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid #eef2f3; border-radius: 12px; background: #fafbfc; min-width: 0; }
+  .ac-kv .ic { width: 36px; height: 36px; border-radius: 10px; background: #fff; border: 1px solid #e7ecee; color: #5d6d78; display: grid; place-items: center; flex: none; }
+  .ac-kv .ic svg { width: 18px; height: 18px; }
+  .ac-kv > span:last-child { min-width: 0; }
+  .ac-kv small { display: block; font-size: 12px; color: var(--muted); }
+  .ac-kv b { display: block; font-size: 15px; font-weight: 600; color: #15304a; margin-top: 2px; overflow-wrap: anywhere; }
+  .ac-kv b.nf { color: #9aa7ab; font-weight: 500; }
+  .ac-kv b.ar { direction: rtl; text-align: start; unicode-bidi: plaintext; font-family: "Tajawal", var(--font); }
+  .ac-kv b.en { direction: ltr; unicode-bidi: plaintext; text-align: start; }
+  .ac-doc { padding: 26px 30px; line-height: 1.8; font-size: 15px; color: #2c3d43; }
+  .ac-doc p + p { margin-top: 12px; }
+  .ac-doc section { padding-top: 18px; margin-top: 18px; border-top: 1px solid #eef2f3; }
+  .ac-doc section:first-of-type { border-top: 0; margin-top: 10px; }
+  .ac-doc h2 { display: flex; align-items: center; gap: 10px; font-size: 17px; color: #15304a; margin-bottom: 6px; }
+  .ac-doc h2 span { width: 26px; height: 26px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); font-size: 13px; display: grid; place-items: center; flex: none; }
+  .ac-meta { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+  .ac-intro { padding: 28px 30px 24px; font-size: 15.5px; line-height: 1.85; color: #15304a; text-align: start; }
+  .ac-intro-ic { width: 76px; height: 76px; margin: 0 auto 18px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; box-shadow: 0 0 0 8px #f3faf7; }
+  .ac-intro-ic svg { width: 36px; height: 36px; }
+  .ac-intro p + p { margin-top: 12px; }
+  .ac-intro .ac-meta { margin: 16px 0 0; text-align: center; }
+  .ac-acc { padding: 4px 26px; }
+  .ac-acc details, .ac-acc-row { border-top: 1px solid #edf1f2; }
+  .ac-acc details:first-child, .ac-acc-row:first-child { border-top: 0; }
+  .ac-acc summary, .ac-acc-row { display: flex; align-items: center; gap: 14px; min-height: 64px; padding: 14px 0; cursor: pointer; list-style: none; font-size: 15.5px; font-weight: 600; color: #15304a; }
+  .ac-acc-row { cursor: default; color: #6b7a80; font-weight: 500; }
+  .ac-acc summary::-webkit-details-marker { display: none; }
+  .ac-acc summary span { flex: 1; }
+  .ac-acc summary svg { width: 22px; height: 22px; color: var(--teal, #12a37f); flex: none; transition: transform .2s; }
+  .ac-acc details[open] summary { color: var(--primary); }
+  .ac-acc details[open] summary svg { transform: rotate(180deg); }
+  .ac-acc summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 6px; }
+  .ac-acc-b { padding: 0 0 18px; font-size: 14.5px; line-height: 1.85; color: #2c3d43; }
+  .ac-acc-b p + p { margin-top: 10px; }
+  @media (max-width: 700px) { .ac-intro { padding: 22px 18px; } .ac-acc { padding: 2px 18px; } }
+  .ac-pend { display: flex; gap: 12px; padding: 16px 18px; border-radius: 12px; background: var(--orange-soft); color: #8a4b0f; font-size: 14px; line-height: 1.6; }
+  .ac-pend svg { width: 20px; height: 20px; flex: none; margin-top: 2px; }
+  .ac-pend b { display: block; }
+  .ac-form .fq:last-of-type { border-bottom: 0; }
+  .ac-lead { font-size: 14px; color: var(--muted); margin-bottom: 14px; }
+  .ac-count { font-size: 12.5px; color: var(--muted); text-align: end; }
+  .ac-narrow { max-width: 620px; }
+  .ac-pw { position: relative; }
+  .ac-pw .pin { padding-inline-end: 50px; }
+  .ac-eye { position: absolute; inset-inline-end: 6px; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border: 0; border-radius: 8px; background: none; color: #6b7a80; display: grid; place-items: center; cursor: pointer; }
+  .ac-eye svg { width: 19px; height: 19px; }
+  .ac-eye.on { color: var(--primary); background: var(--primary-soft); }
+  .ac-rules { list-style: none; display: grid; gap: 6px; margin-top: 8px; font-size: 13px; color: var(--muted); }
+  .ac-rules li { display: flex; align-items: center; gap: 8px; }
+  .ac-rules li::before { content: ""; width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #c9d4d7; flex: none; box-sizing: border-box; }
+  .ac-rules li.ok { color: var(--ink); }
+  .ac-rules li.ok::before { border: 0; background: #12a37f url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2'%3E%3Cpath d='m6 12 4 4 8-8'/%3E%3C/svg%3E") center / 11px no-repeat; }
+  .ac-rules li.bad { color: #d14343; }
+  .ac-rules li.bad::before { border-color: #d14343; }
+  .vd-ic { width: 76px; height: 76px; border-radius: 50%; background: #e3f4ee; color: var(--teal); display: grid; place-items: center; margin: 0 auto 14px; box-shadow: 0 0 0 10px #f1faf6; }
+  .vd-ic svg { width: 36px; height: 36px; }
+  .vd-ic.out { background: #fdecec; color: #c0392b; box-shadow: 0 0 0 10px #fef5f5; }
+  .ac-sent { padding: 30px 26px 24px; text-align: center; }
+  .ac-sent h2 { font-size: 22px; color: #15304a; }
+  .ac-sent > p { font-size: 14.5px; color: #44545a; margin-top: 6px; }
+  .ac-ref { display: inline-grid; gap: 4px; margin: 18px auto 0; padding: 14px 26px; border: 1px dashed #7cc4a4; border-radius: 14px; background: #f6fbf9; }
+  .ac-ref small { font-size: 12.5px; color: var(--muted); }
+  .ac-ref b { font-size: 24px; color: var(--primary); letter-spacing: .5px; }
+  .ac-ref span { font-size: 12.5px; color: var(--muted); }
+  .ac-sum { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; max-width: 520px; margin: 18px auto 0; text-align: start; }
+  .ac-sum div { padding: 10px 14px; border: 1px solid #eef2f3; border-radius: 10px; min-width: 0; }
+  .ac-sum dt { font-size: 12px; color: var(--muted); }
+  .ac-sum dd { font-size: 14px; font-weight: 600; color: #15304a; margin-top: 2px; overflow-wrap: anywhere; }
+  .ac-sent .pfoot { justify-content: center; border-top: 0; }
+  .ac-dlg { max-width: 420px; padding: 28px 24px 20px; text-align: center; }
+  .ac-dlg h3 { font-size: 20px; color: #15304a; }
+  .ac-dlg p { font-size: 14px; color: #44545a; margin-top: 6px; line-height: 1.6; }
+  .ac-dlg .pfoot { justify-content: center; border-top: 0; }
+  .ac-dlg .pfoot .pb { flex: 1; }
+  @media (max-width: 900px) {
+    .ac-prof { flex-direction: column; align-items: stretch; }
+    .ac-grid, .ac-sum { grid-template-columns: minmax(0, 1fr); }
+    .ac-doc { padding: 18px 16px; }
+    .ac-row { padding: 14px; gap: 10px; }
+    .ac-n { display: none; }
+    .ac-me { padding: 16px; }
+    .ac-me h1 { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <a class="logo" href="doctor-visits.html" aria-label="Mada care">
+      <img src="assets/mada-logo.png" alt="" width="301" height="320">
+      <span><b>Mada care</b><small data-i18n="tagline">Caring Like Family</small></span>
+    </a>
+    <nav class="menu" id="menu" aria-label="Doctor portal"></nav>
+    <div class="support" id="support"></div>
+    <svg class="side-art" viewBox="0 0 170 220" fill="none" stroke="currentColor" stroke-width="22" aria-hidden="true"><circle cx="40" cy="40" r="22" fill="currentColor" stroke="none"/><path d="M40 210c-50-40-60-90-30-110s60 0 60 30-40 40-60 20"/><path d="M60 120c30-40 90-30 95 10s-40 70-115 80"/></svg>
+  </aside>
+
+  <div>
+    <header class="top">
+      <button class="lang-btn" id="langToggle" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>
+        <span data-i18n="otherLang">العربية</span>
+      </button>
+      <button class="bell" type="button" id="bell" data-i18n-aria="notifications" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+      </button>
+      <span class="sep" aria-hidden="true"></span>
+      <div class="user" id="user">
+        <button class="user-btn" id="userBtn" type="button" aria-haspopup="menu" aria-expanded="false">
+          <span class="ava" id="avatar"></span>
+          <span class="user-meta"><span class="u-name" id="userName"></span><span class="u-spec" id="userSpec"></span></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="user-menu" role="menu">
+          <a href="doctor-account.html" role="menuitem" data-i18n="profile">My Account</a>
+          <a href="doctor-login.html" role="menuitem" id="logout" data-i18n="logout">Log out</a>
+        </div>
+      </div>
+    </header>
+    <main><div id="vw"></div></main>
+  </div>
+</div>
+<div class="ov" id="acOv" hidden role="dialog" aria-modal="true" aria-labelledby="acOvT"></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="auth.js"></script>
+<script src="doctor-portal.js"></script>
+<script>
+  const me = MadaAuth.requireAuth("doctor");
+  const $ = id => document.getElementById(id), esc = DrPortal.esc;
+  // Doctor Portal > My Account (doctor-account.html). Each section is its own page: #profile, #terms, #privacy, #support, #security, #password.
+  // My Profile shows the staff record as saved (view only; changes go through the administration).
+  // Contact Support requests are kept in MadaStore "mada-support": [{ ref, type, subject, description, by, staffId, at, status: "open" }].
+  // TODO: send support requests to the support team's ticketing system and use its reference number.
+
+  // Approved policy text, written by MADA CARE management on the admin Policies page (policies.html).
+  // MadaStore "mada-policies": { terms|privacy: { version, date, intro: {en, ar}, sections: [{ title: {en, ar}, text: {en, ar} }], updatedAt } }.
+  // Nothing is shown in place of the approved text until it is published there.
+  const policy = k => { try { const d = (MadaStore.getJSON("mada-policies") || {})[k]; return d && d.sections && d.sections.length ? d : null; } catch (e) { return null; } };
+  const TYPES = ["tech", "admin", "clinical", "complaint", "other"];
+  const RULES = { len: v => v.length >= 8, mix: v => /[a-z]/i.test(v) && /\d/.test(v), up: v => /[A-Z]/.test(v), sym: v => /[^A-Za-z0-9]/.test(v) };
+  const PAGES = ["profile", "terms", "privacy", "support", "security"];
+  const IC = {
+    back: '<path d="M15 18l-6-6 6-6"/>', chev: '<path d="m9 6 6 6-6 6"/>', check: '<path d="m5 12 5 5 9-10"/>', x: '<path d="M6 6l12 12M18 6 6 18"/>',
+    user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    terms: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 12h7M9 16h7"/>',
+    privacy: '<path d="M12 3 5 6v5c0 4.5 3 8.5 7 10 4-1.5 7-5.5 7-10V6z"/><rect x="9" y="11" width="6" height="5" rx="1"/><path d="M10.5 11V9.5a1.5 1.5 0 0 1 3 0V11"/>',
+    support: '<path d="M4 13v-1a8 8 0 0 1 16 0v1"/><rect x="3" y="13" width="4" height="6" rx="1.5"/><rect x="17" y="13" width="4" height="6" rx="1.5"/><path d="M19 19c0 1.5-2 2.5-5 2.5"/>',
+    lock: '<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.3"/>',
+    key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3M15 8l2 2"/>',
+    logout: '<path d="M15 4h4v16h-4"/><path d="M10 17l5-5-5-5M15 12H3"/>',
+    phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
+    mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>', id: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="11" r="2"/><path d="M5.5 16c.6-1.4 1.7-2 3-2s2.4.6 3 2M14 10h4M14 14h3"/>',
+    steth: '<path d="M6 3v6a4 4 0 0 0 8 0V3"/><path d="M10 13v2a5 5 0 0 0 10 0v-2"/><circle cx="20" cy="11" r="2"/>', badge: '<circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 7 5-3 5 3-1.5-7"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>', eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+    gender: '<circle cx="10" cy="14" r="5"/><path d="M14 10l6-6M15 4h5v5"/>', send: '<path d="M4 12 20 4l-6 16-3-7z"/><path d="m11 13 9-9"/>'
+  };
+  const svg = (p, w) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 1.8}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+
+  const I18N = {
+    en: {
+      tagline: "Caring Like Family", otherLang: "العربية", profile: "My Account", logout: "Log out", notifications: "Notifications", soonMsg: "This section is coming next.", noNotes: "No notifications yet.",
+      accT: "My Account", accS: "Your profile, policies, support and account security.", back: "My Account",
+      p_profile: "My Profile", d_profile: "Your personal and professional information.",
+      p_terms: "Terms & Conditions", d_terms: "Terms governing your use of the system and your professional responsibilities.",
+      p_privacy: "Privacy & Confidentiality", d_privacy: "Patient privacy, medical records and secure handling of patient information.",
+      p_support: "Contact Support", d_support: "Send a request to the MADA CARE support team.",
+      p_security: "Security & Password", d_security: "Change your password or log out.",
+      viewOnly: "This information is view only. To correct anything, contact the administration through Contact Support.",
+      persT: "Personal Information", profT: "Professional Information", photo: "Staff Photo", nameAr: "Full Name (Arabic)", nameEn: "Full Name (English)", mobile: "Mobile Number", email: "Email",
+      idType: "ID Type", idNo: "ID Number", gender: "Gender", specialty: "Specialty", license: "SCFHS License Number", empNo: "Employee No.", classNo: "Classification No.", st_active: "Active", st_off: "Inactive", id_national: "National ID", id_iqama: "Iqama", g_m: "Male", g_f: "Female", notOnFile: "Not on file",
+      pendT: "Approved text not added yet", pendS: "This page shows the approved MADA CARE policy text only. It will appear here once MADA CARE management provides it.",
+      version: "Version {v}", effective: "Effective {d}",
+      s_privacy: "Patient Privacy & Confidentiality", s_records: "Protection of Medical Records", s_access: "Authorized Access to Patient Information", s_docs: "Secure Handling of Patient Documents & Images",
+      supS: "Tell us what you need and the support team will follow up with you.", reqType: "Request Type", t_tech: "Technical Issue", t_admin: "Administrative Request", t_clinical: "Clinical / Operational Inquiry", t_complaint: "Complaint", t_other: "Other",
+      subject: "Subject", subjectPh: "A short title for your request", desc: "Description", descPh: "Describe the issue or request in detail", submit: "Submit Request",
+      typeReq: "Choose the request type.", subjReq: "Enter a subject.", descReq: "Describe your request (at least 10 characters).", fixErr: "Check the highlighted fields.",
+      sentT: "Request Submitted", sentS: "Your request has been sent to the MADA CARE support team.", refNo: "Reference Number", keepRef: "Keep this number to follow up on your request.",
+      another: "Submit Another Request", toAcc: "Back to My Account", storeErr: "Couldn't send. Try again.",
+      changePw: "Change Password", changePwS: "Update the password you use to log in.", logoutS: "Sign out of the Doctor Portal on this device.",
+      logoutQ: "Log out of the Doctor Portal?", logoutQS: "You will need your employee ID and password to log in again.", cancel: "Cancel",
+      curPw: "Current Password", newPw: "New Password", confPw: "Confirm New Password", save: "Save Changes", show: "Show password",
+      rLen: "At least 8 characters", rMix: "Include a mix of letters and numbers", rUp: "Include at least one uppercase letter", rSym: "Include at least one special character (e.g. ! @ # $)",
+      curReq: "Enter your current password.", curBad: "The current password is not correct.", rulesErr: "The new password doesn't meet the requirements.", sameErr: "Choose a password different from your current one.",
+      matchErr: "The passwords don't match.", pwDone: "Password updated. Use your new password next time you log in."
+    },
+    ar: {
+      tagline: "رعاية كالعائلة", otherLang: "English", profile: "حسابي", logout: "تسجيل الخروج", notifications: "الإشعارات", soonMsg: "هذا القسم هو الخطوة الجاية.", noNotes: "ما فيه إشعارات للحين.",
+      accT: "حسابي", accS: "ملفك الشخصي والسياسات والدعم وأمان الحساب.", back: "حسابي",
+      p_profile: "ملفي الشخصي", d_profile: "معلوماتك الشخصية والمهنية.",
+      p_terms: "الشروط والأحكام", d_terms: "الشروط المنظمة لاستخدامك للنظام ومسؤولياتك المهنية.",
+      p_privacy: "الخصوصية والسرية", d_privacy: "خصوصية المريض والسجلات الطبية والتعامل الآمن مع معلوماته.",
+      p_support: "التواصل مع الدعم", d_support: "أرسل طلب لفريق دعم مدى كير.",
+      p_security: "الأمان وكلمة المرور", d_security: "غيّر كلمة المرور أو سجّل خروج.",
+      viewOnly: "هذه المعلومات للعرض فقط. لتصحيح أي معلومة تواصل مع الإدارة من خلال التواصل مع الدعم.",
+      persT: "المعلومات الشخصية", profT: "المعلومات المهنية", photo: "صورة الموظف", nameAr: "الاسم الكامل (عربي)", nameEn: "الاسم الكامل (إنجليزي)", mobile: "رقم الجوال", email: "البريد الإلكتروني",
+      idType: "نوع الهوية", idNo: "رقم الهوية", gender: "الجنس", specialty: "التخصص", license: "رقم ترخيص الهيئة السعودية للتخصصات الصحية", empNo: "الرقم الوظيفي", classNo: "رقم التصنيف", st_active: "نشط", st_off: "غير نشط", id_national: "هوية وطنية", id_iqama: "إقامة", g_m: "ذكر", g_f: "أنثى", notOnFile: "غير مسجل",
+      pendT: "النص المعتمد ما انضاف للحين", pendS: "هذه الصفحة تعرض نص سياسة مدى كير المعتمد فقط، وبيظهر هنا أول ما توفره إدارة مدى كير.",
+      version: "الإصدار {v}", effective: "يسري من {d}",
+      s_privacy: "خصوصية المريض وسرية معلوماته", s_records: "حماية السجلات الطبية", s_access: "الوصول المصرح به لمعلومات المريض", s_docs: "التعامل الآمن مع مستندات وصور المريض",
+      supS: "قول لنا وش تحتاج وفريق الدعم بيتابع معك.", reqType: "نوع الطلب", t_tech: "مشكلة تقنية", t_admin: "طلب إداري", t_clinical: "استفسار طبي / تشغيلي", t_complaint: "شكوى", t_other: "أخرى",
+      subject: "الموضوع", subjectPh: "عنوان مختصر لطلبك", desc: "الوصف", descPh: "اشرح المشكلة أو الطلب بالتفصيل", submit: "إرسال الطلب",
+      typeReq: "اختر نوع الطلب.", subjReq: "اكتب الموضوع.", descReq: "اشرح طلبك (10 أحرف على الأقل).", fixErr: "راجع الخانات المحددة.",
+      sentT: "انرسل الطلب", sentS: "انرسل طلبك لفريق دعم مدى كير.", refNo: "الرقم المرجعي", keepRef: "احتفظ بهذا الرقم عشان تتابع طلبك.",
+      another: "إرسال طلب آخر", toAcc: "رجوع لحسابي", storeErr: "ما قدرنا نرسل. حاول مرة ثانية.",
+      changePw: "تغيير كلمة المرور", changePwS: "حدّث كلمة المرور اللي تدخل فيها.", logoutS: "اطلع من بوابة الطبيب على هذا الجهاز.",
+      logoutQ: "تبي تسجل خروج من بوابة الطبيب؟", logoutQS: "بتحتاج الرقم الوظيفي وكلمة المرور عشان تدخل مرة ثانية.", cancel: "إلغاء",
+      curPw: "كلمة المرور الحالية", newPw: "كلمة المرور الجديدة", confPw: "تأكيد كلمة المرور الجديدة", save: "حفظ التغييرات", show: "إظهار كلمة المرور",
+      rLen: "8 أحرف على الأقل", rMix: "تحتوي على حروف وأرقام", rUp: "تحتوي على حرف كبير واحد على الأقل", rSym: "تحتوي على رمز خاص واحد على الأقل (مثل ! @ # $)",
+      curReq: "اكتب كلمة المرور الحالية.", curBad: "كلمة المرور الحالية غير صحيحة.", rulesErr: "كلمة المرور الجديدة ما تحقق الشروط.", sameErr: "اختر كلمة مرور مختلفة عن الحالية.",
+      matchErr: "كلمتا المرور غير متطابقتين.", pwDone: "تم تحديث كلمة المرور. استخدم الجديدة في الدخول الجاي."
+    }
+  };
+  let current = "en";
+  const t = () => I18N[current];
+  const tx = (k, v) => t()[k].replace(/\{(\w+)\}/g, (_, n) => v[n]);
+  const route = () => { const h = location.hash.slice(1); return PAGES.includes(h) || h === "password" ? h : ""; };
+  let page = route(), sup = null, supTried = false, sent = null, pw = null, pwTried = false, pwErr = {};
+
+  // ---------- shared ----------
+  const head = (k, ic) => `<a class="pt-back" href="#account">${svg(IC.back, 2)}${t().back}</a>
+    <section class="pt-card ps-h ac-head"><span class="ic">${svg(ic)}</span><div><h1>${t()["p_" + k] || t().changePw}</h1><p>${t()["d_" + k] || t().changePwS}</p></div></section>`;
+  const nameOf = v => v && typeof v === "object" ? v[current] || v.en : v || "";
+
+  function hub() {
+    const ic = { profile: IC.user, terms: IC.terms, privacy: IC.privacy, support: IC.support, security: IC.lock };
+    return `<section class="pt-card ac-me">${avatar(64)}<div><span class="ph-tag">${svg(IC.user, 2)}${t().accT}</span><h1>${esc(nameOf(me.name))}</h1><p>${esc(me.specialty ? nameOf(me.specialty) : nameOf(me.role))}</p>${idChips()}</div></section>
+      <p class="ac-sub">${t().accS}</p>
+      <nav class="ac-list" aria-label="${t().accT}">${PAGES.map((k, i) => `<a class="pt-card ac-row" href="#${k}"><span class="ac-n">${i + 1}</span><span class="ic">${svg(ic[k])}</span><span class="ac-tx"><b>${t()["p_" + k]}</b><small>${t()["d_" + k]}</small></span><span class="ac-go">${svg(IC.chev, 2)}</span></a>`).join("")}</nav>`;
+  }
+  // Employee number, SCFHS classification number and account status from the staff record.
+  function idChips() {
+    const p = me.profile || {}, rec = me.staffId ? MadaStore.getJSON("mada-staff", []).find(s => s.id === me.staffId) : null;
+    const active = !rec || rec.status === "active";
+    const chip = (l, v) => `<span class="ac-chip"><small>${l}</small><b class="num" dir="ltr">${v ? esc(v) : "—"}</b></span>`;
+    return `<div class="ac-chips">${chip(t().empNo, p.empNo || me.staffId)}${chip(t().classNo, p.license)}<span class="ac-st ${active ? "on" : "off"}"><i></i>${active ? t().st_active : t().st_off}</span></div>`;
+  }
+  const avatar = sz => `<span class="ac-ava" style="width:${sz}px;height:${sz}px">${me.photo ? `<img src="${esc(me.photo)}" alt="${esc(t().photo)}">` : esc(me.initials[current])}</span>`;
+
+  function profile() {
+    const p = me.profile || {}, nm = p.name || me.name;
+    const kv = (ic, l, v, cls) => `<div class="ac-kv"><span class="ic">${svg(ic)}</span><span><small>${l}</small><b class="${v ? cls || "" : "nf"}">${v ? esc(v) : t().notOnFile}</b></span></div>`;
+    return `${head("profile", IC.user)}
+      <div class="nf-note">${svg(IC.info)}<span>${t().viewOnly}</span></div>
+      <section class="pt-card"><div class="ps-h"><span class="ic">${svg(IC.user)}</span><div><h2>${t().persT}</h2></div></div>
+        <div class="ps-b ac-prof"><div class="ac-photo">${avatar(120)}<small>${t().photo}</small></div>
+          <div class="ac-grid">${kv(IC.user, t().nameAr, nm.ar, "ar")}${kv(IC.user, t().nameEn, nm.en, "en")}${kv(IC.phone, t().mobile, DrPortal.phone(p.mobile), "num")}${kv(IC.mail, t().email, p.email, "num")}
+            ${kv(IC.id, t().idType, p.idType ? t()["id_" + p.idType] || p.idType : "")}${kv(IC.id, t().idNo, p.idNumber, "num")}${kv(IC.gender, t().gender, p.gender ? t()["g_" + p.gender] : "")}</div></div></section>
+      <section class="pt-card"><div class="ps-h"><span class="ic">${svg(IC.steth)}</span><div><h2>${t().profT}</h2></div></div>
+        <div class="ps-b"><div class="ac-grid">${kv(IC.steth, t().specialty, me.specialty ? nameOf(me.specialty) : "")}${kv(IC.badge, t().license, p.license, "num")}</div></div></section>`;
+  }
+
+  // Policy pages: only the approved text published on the admin Policies page is shown.
+  // A blank line starts a new paragraph. A section missing the current language falls back to the other one.
+  const paras = txt => String(txt).split(/\n\s*\n/).map(x => x.trim()).filter(Boolean).map(x => `<p>${esc(x).replace(/\n/g, "<br>")}</p>`).join("");
+  const pending = () => `<div class="ac-pend">${svg(IC.info, 2)}<span><b>${t().pendT}</b>${t().pendS}</span></div>`;
+  const meta = d => d.version || d.date ? `<p class="ac-meta">${[d.version && tx("version", { v: esc(d.version) }), d.date && tx("effective", { d: esc(fmtDate(d.date)) })].filter(Boolean).join(" · ")}</p>` : "";
+  const fmtDate = iso => new Date(iso + "T00:00").toLocaleDateString(current === "ar" ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { day: "numeric", month: "long", year: "numeric" });
+  const pick = s => { const o = current === "en" ? "ar" : "en", l = s.title[current] && s.text[current] ? current : o; return { title: s.title[l], text: s.text[l], dir: l === "ar" ? "rtl" : "ltr" }; };
+  // Layout: an introduction card (when written), then one row per section that opens and closes.
+  const chev = '<path d="m6 9 6 6 6-6"/>';
+  const secs = list => `<div class="pt-card ac-acc">${list.map(s => { const x = pick(s);
+    return `<details dir="${x.dir}"><summary><span>${esc(x.title)}</span>${svg(chev, 2)}</summary><div class="ac-acc-b">${paras(x.text)}</div></details>`; }).join("")}</div>`;
+  function intro(d, ic) {
+    const it = d.intro || {}, l = it[current] ? current : it.en ? "en" : it.ar ? "ar" : null;
+    return `<article class="pt-card ac-intro"><span class="ac-intro-ic">${svg(ic, 1.6)}</span>${l ? `<div dir="${l === "ar" ? "rtl" : "ltr"}">${paras(it[l])}</div>` : ""}${meta(d)}</article>`;
+  }
+  function doc(k, ic) {
+    const d = policy(k);
+    if (d) return `${head(k, ic)}${intro(d, ic)}${secs(d.sections)}`;
+    return `${head(k, ic)}<article class="pt-card ac-doc">${pending()}</article>`;
+  }
+  const terms = () => doc("terms", IC.terms), privacy = () => doc("privacy", IC.privacy);
+
+  // Contact Support
+  const supErrs = () => ({ type: !sup.type, subject: !sup.subject.trim(), desc: sup.desc.trim().length < 10 });
+  function support() {
+    if (sent) return `${head("support", IC.support)}<section class="pt-card ac-sent"><span class="vd-ic">${svg(IC.check, 2.4)}</span><h2>${t().sentT}</h2><p>${t().sentS}</p>
+      <div class="ac-ref"><small>${t().refNo}</small><b class="num">${esc(sent.ref)}</b><span>${t().keepRef}</span></div>
+      <dl class="ac-sum"><div><dt>${t().reqType}</dt><dd>${t()["t_" + sent.type]}</dd></div><div><dt>${t().subject}</dt><dd>${esc(sent.subject)}</dd></div></dl>
+      <div class="pfoot"><a class="pb out" href="#account">${t().toAcc}</a><button type="button" class="pb dark" id="supAgain">${t().another}</button></div></section>`;
+    if (!sup) sup = { type: "", subject: "", desc: "" };
+    const e = supTried ? supErrs() : {};
+    return `${head("support", IC.support)}<section class="pt-card ps-b ac-form"><p class="ac-lead">${t().supS}</p>
+      <div class="fq"><span class="fl">${t().reqType} <span class="req">*</span></span><div class="chs ${e.type ? "bad" : ""}" role="radiogroup">${TYPES.map(k => `<button type="button" class="ch" role="radio" aria-checked="${sup.type === k}" data-type="${k}"><span class="bx rd">${svg(IC.check, 3)}</span>${t()["t_" + k]}</button>`).join("")}</div>${e.type ? `<span class="perr">${t().typeReq}</span>` : ""}</div>
+      <div class="fq"><div class="pf"><label for="supSubj">${t().subject} <span class="req">*</span></label><input class="pin ${e.subject ? "bad" : ""}" id="supSubj" maxlength="100" value="${esc(sup.subject)}" placeholder="${esc(t().subjectPh)}" autocomplete="off" dir="auto">${e.subject ? `<span class="perr">${t().subjReq}</span>` : ""}</div></div>
+      <div class="fq"><div class="pf"><label for="supDesc">${t().desc} <span class="req">*</span></label><textarea class="pta ${e.desc ? "bad" : ""}" id="supDesc" maxlength="1000" rows="6" placeholder="${esc(t().descPh)}" dir="auto">${esc(sup.desc)}</textarea>
+        <span class="ac-count"><span id="supCnt">${sup.desc.length}</span> / 1000</span>${e.desc ? `<span class="perr">${t().descReq}</span>` : ""}</div></div>
+      <div class="pfoot"><a class="pb out" href="#account">${t().cancel}</a><button type="button" class="pb dark" id="supGo">${svg(IC.send)}${t().submit}</button></div></section>`;
+  }
+  function nextRef() {
+    const y = new Date().getFullYear(), list = MadaStore.getJSON("mada-support", []);
+    const n = list.filter(r => String(r.ref).startsWith(`SUP-${y}-`)).reduce((m, r) => Math.max(m, parseInt(r.ref.split("-")[2], 10) || 0), 0) + 1;
+    return `SUP-${y}-${String(n).padStart(4, "0")}`;
+  }
+
+  // Security & Password
+  function security() {
+    return `${head("security", IC.lock)}<div class="ac-list">
+      <a class="pt-card ac-row" href="#password"><span class="ic">${svg(IC.key)}</span><span class="ac-tx"><b>${t().changePw}</b><small>${t().changePwS}</small></span><span class="ac-go">${svg(IC.chev, 2)}</span></a>
+      <button type="button" class="pt-card ac-row ac-out" id="acLogout"><span class="ic">${svg(IC.logout)}</span><span class="ac-tx"><b>${t().logout}</b><small>${t().logoutS}</small></span><span class="ac-go">${svg(IC.chev, 2)}</span></button></div>`;
+  }
+  const pwField = (id, label, val, err, extra) => `<div class="fq"><div class="pf"><label for="${id}">${label} <span class="req">*</span></label>
+    <div class="ac-pw"><input class="pin ${err ? "bad" : ""}" id="${id}" type="password" value="${esc(val)}" autocomplete="${id === "pwCur" ? "current-password" : "new-password"}" dir="ltr"><button type="button" class="ac-eye" data-eye="${id}" aria-label="${t().show}">${svg(IC.eye)}</button></div>${extra || ""}${err ? `<span class="perr">${err}</span>` : ""}</div></div>`;
+  function password() {
+    if (!pw) pw = { cur: "", next: "", conf: "" };
+    const rules = `<ul class="ac-rules" id="pwRules">${Object.keys(RULES).map(k => `<li data-r="${k}" class="${RULES[k](pw.next) ? "ok" : pwTried ? "bad" : ""}">${t()["r" + k[0].toUpperCase() + k.slice(1)]}</li>`).join("")}</ul>`;
+    return `<a class="pt-back" href="#security">${svg(IC.back, 2)}${t().p_security}</a>
+      <section class="pt-card ps-h ac-head"><span class="ic">${svg(IC.key)}</span><div><h1>${t().changePw}</h1><p>${t().changePwS}</p></div></section>
+      <section class="pt-card ps-b ac-form ac-narrow">${pwField("pwCur", t().curPw, pw.cur, pwErr.cur)}${pwField("pwNew", t().newPw, pw.next, pwErr.next, rules)}${pwField("pwConf", t().confPw, pw.conf, pwErr.conf)}
+        <div class="pfoot"><a class="pb out" href="#security">${t().cancel}</a><button type="button" class="pb dark" id="pwSave">${svg(IC.check, 2.2)}${t().save}</button></div></section>`;
+  }
+  function logoutDlg() {
+    $("acOv").innerHTML = `<div class="dlg ac-dlg"><span class="vd-ic out">${svg(IC.logout, 2)}</span><h3 id="acOvT">${t().logoutQ}</h3><p>${t().logoutQS}</p>
+      <div class="pfoot"><button type="button" class="pb out" id="loCancel">${t().cancel}</button><button type="button" class="pb dark" id="loGo">${svg(IC.logout)}${t().logout}</button></div></div>`;
+    $("acOv").hidden = false; $("loCancel").focus();
+  }
+  const closeDlg = () => { $("acOv").hidden = true; $("acOv").innerHTML = ""; };
+
+  function render() {
+    page = route();
+    const body = page === "profile" ? profile() : page === "terms" ? terms() : page === "privacy" ? privacy() : page === "support" ? support() : page === "security" ? security() : page === "password" ? password() : hub();
+    $("vw").innerHTML = `<div class="pt-page ac">${body}</div>`;
+    document.title = (current === "ar" ? "مدى كير | " : "Mada Care | ") + (page === "password" ? t().changePw : page ? t()["p_" + page] : t().accT);
+  }
+  function readInputs() {
+    if (sup && $("supSubj")) { sup.subject = $("supSubj").value; sup.desc = $("supDesc").value; }
+    if (pw && $("pwCur")) { pw.cur = $("pwCur").value; pw.next = $("pwNew").value; pw.conf = $("pwConf").value; }
+  }
+  window.addEventListener("hashchange", () => { readInputs(); const p = route(); if (p !== "support") { sent = null; supTried = false; } if (p !== "password") { pw = null; pwTried = false; pwErr = {}; } render(); window.scrollTo(0, 0); });
+
+  document.addEventListener("click", e => {
+    const el = e.target.closest("button, a"); if (!el) return;
+    if (el.dataset.type) { readInputs(); sup.type = el.dataset.type; render(); const b = document.querySelector(`[data-type="${el.dataset.type}"]`); if (b) b.focus(); return; }
+    if (el.dataset.eye) { const i = $(el.dataset.eye), show = i.type === "password"; i.type = show ? "text" : "password"; el.classList.toggle("on", show); return; }
+    if (el.id === "supGo") {
+      readInputs(); supTried = true;
+      if (Object.values(supErrs()).some(Boolean)) { render(); toast(t().fixErr); const b = document.querySelector(".ac .bad"); if (b) b.scrollIntoView({ block: "center" }); return; }
+      const rec = { ref: nextRef(), type: sup.type, subject: sup.subject.trim(), description: sup.desc.trim(), by: me.name, user: me.username, staffId: me.staffId || null, portal: "doctor", at: new Date().toISOString(), status: "open" };
+      try { const list = MadaStore.getJSON("mada-support", []); list.push(rec); MadaStore.setJSON("mada-support", list); } catch (err) { return toast(t().storeErr); }
+      sent = rec; sup = null; supTried = false; $("toast").hidden = true; render(); window.scrollTo(0, 0); return;
+    }
+    if (el.id === "supAgain") { sent = null; render(); $("supSubj").focus(); return; }
+    if (el.id === "acLogout") return logoutDlg();
+    if (el.id === "loCancel") return closeDlg();
+    if (el.id === "loGo") return MadaAuth.logout();
+    if (el.id === "pwSave") {
+      readInputs(); pwTried = true;
+      const rulesOk = Object.values(RULES).every(r => r(pw.next));
+      pwErr = { cur: !pw.cur ? t().curReq : "", next: !rulesOk ? t().rulesErr : pw.next === pw.cur ? t().sameErr : "", conf: rulesOk && pw.next !== pw.conf ? t().matchErr : "" };
+      if (!pwErr.cur && !pwErr.next && !pwErr.conf) {
+        const res = MadaAuth.updatePassword(pw.cur, pw.next);
+        if (res === "bad-current") pwErr.cur = t().curBad;
+        else if (res) { pw = null; pwTried = false; pwErr = {}; toast(t().pwDone); location.hash = "security"; return; }
+        else pwErr.cur = t().storeErr;
+      }
+      render(); toast(t().fixErr); const b = document.querySelector(".ac .bad"); if (b) b.focus(); return;
+    }
+  });
+  document.addEventListener("input", e => {
+    if (e.target.id === "supDesc") $("supCnt").textContent = e.target.value.length;
+    if (e.target.id === "pwNew") document.querySelectorAll("#pwRules li").forEach(li => { const ok = RULES[li.dataset.r](e.target.value); li.classList.toggle("ok", ok); li.classList.toggle("bad", pwTried && !ok); });
+  });
+  $("acOv").addEventListener("click", e => { if (e.target === $("acOv")) closeDlg(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("acOv").hidden) closeDlg(); });
+
+  document.addEventListener("click", e => { if (e.target.closest("[data-soon]")) { e.preventDefault(); toast(t().soonMsg); } });
+  $("bell").addEventListener("click", () => toast(t().noNotes));
+  function toast(msg) { const el = $("toast"); el.textContent = msg; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 3200); }
+  function setLang(lang) {
+    readInputs();
+    current = lang;
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+    document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = t()[el.dataset.i18n]);
+    document.querySelectorAll("[data-i18n-aria]").forEach(el => el.setAttribute("aria-label", t()[el.dataset.i18nAria]));
+    DrPortal.render(me, lang, "account"); render();
+    try { localStorage.setItem("mada-lang", lang); } catch (e) {}
+  }
+  $("langToggle").addEventListener("click", () => setLang(current === "en" ? "ar" : "en"));
+  const user = $("user"), userBtn = $("userBtn");
+  userBtn.addEventListener("click", e => { e.stopPropagation(); userBtn.setAttribute("aria-expanded", user.classList.toggle("open")); });
+  document.addEventListener("click", () => { user.classList.remove("open"); userBtn.setAttribute("aria-expanded", false); });
+  $("logout").addEventListener("click", e => { e.preventDefault(); MadaAuth.logout(); });
+
+  let saved = "en";
+  try { saved = localStorage.getItem("mada-lang") || "en"; } catch (e) {}
+  setLang(saved);
+</script>
+</body>
+</html>

@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="assets/mada-logo.png">
+<title>Mada Care | Patients</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #0b6b5c; --primary-soft: #e6f3ef; --teal: #12a37f; --navy: #0b3a55;
+    --ink: #10232b; --muted: #6b7a80; --border: #e3e8ea; --page: #f6f8f9;
+    --orange: #d97706; --orange-soft: #fef3e2;
+    --font: "Inter", "Tajawal", system-ui, sans-serif;
+  }
+  [dir="rtl"] { --font: "Tajawal", "Inter", system-ui, sans-serif; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--page); color: var(--ink); min-height: 100vh; }
+  button { font: inherit; color: inherit; }
+  [hidden] { display: none !important; }
+  .app { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 100vh; }
+
+  /* Sidebar */
+  .side { position: sticky; top: 0; height: 100vh; background: #fff; border-inline-end: 1px solid var(--border); padding: 18px 14px; display: flex; flex-direction: column; gap: 22px; overflow: hidden; }
+  .logo { display: flex; align-items: center; gap: 8px; padding: 0 6px; text-decoration: none; color: var(--ink); }
+  .logo img { height: 40px; width: auto; }
+  .logo b { display: block; font-size: 18px; font-weight: 600; line-height: 1.1; }
+  .logo small { font-size: 10.5px; color: var(--primary); }
+  .menu { display: grid; gap: 4px; }
+  .menu a { display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 14px; border-radius: 10px; text-decoration: none; color: #2c3d43; font-size: 14px; font-weight: 500; }
+  .menu a svg { width: 21px; height: 21px; flex: none; }
+  .menu a:hover { background: #f3f6f7; }
+  .menu a[aria-current="page"] { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
+  .menu a.soon { color: #8a979c; cursor: default; }
+  .menu a.soon:hover { background: none; }
+  .soon-tag { margin-inline-start: auto; height: 18px; padding: 0 7px; border-radius: 9px; background: var(--orange-soft); color: var(--orange); font-size: 10.5px; font-weight: 600; line-height: 18px; }
+  .support { order: 3; display: flex; align-items: center; gap: 12px; padding: 14px 8px 0; border-top: 1px solid var(--border); font-size: 13px; }
+  .support svg { width: 26px; height: 26px; color: #2c3d43; flex: none; }
+  .support b { display: block; font-weight: 600; }
+  .support a { color: var(--muted); text-decoration: none; }
+  .side-art { order: 2; margin-top: auto; margin-inline-start: -14px; width: 170px; color: #e3f2ee; }
+  [dir="rtl"] .side-art { transform: scaleX(-1); }
+
+  /* Top bar */
+  .top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: flex-end; gap: 14px; height: 76px; padding: 0 28px; background: rgba(246,248,249,.92); backdrop-filter: blur(6px); border-bottom: 1px solid var(--border); }
+  .lang-btn { display: flex; align-items: center; gap: 6px; background: none; border: 0; cursor: pointer; font-size: 13px; color: #44545a; padding: 8px; border-radius: 8px; }
+  .lang-btn:hover, .bell:hover { background: #eef2f3; }
+  .lang-btn svg { width: 16px; height: 16px; }
+  .bell { position: relative; width: 42px; height: 42px; border: 0; background: none; border-radius: 50%; cursor: pointer; display: grid; place-items: center; color: #2c3d43; }
+  .bell svg { width: 23px; height: 23px; }
+  .sep { width: 1px; height: 34px; background: var(--border); }
+  .user { position: relative; }
+  .user-btn { display: flex; align-items: center; gap: 12px; background: none; border: 0; cursor: pointer; padding: 4px 6px; border-radius: 12px; text-align: start; }
+  .user-btn:hover { background: #eef2f3; }
+  .ava { width: 50px; height: 50px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; font-weight: 700; font-size: 16px; overflow: hidden; flex: none; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--border); }
+  .ava img { width: 100%; height: 100%; object-fit: cover; }
+  .u-name { display: block; font-size: 14px; font-weight: 600; }
+  .u-spec { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .user-btn > svg { width: 16px; height: 16px; color: #44545a; }
+  .user-menu { position: absolute; top: 110%; inset-inline-end: 0; min-width: 180px; background: #fff; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 24px rgba(16,35,43,.08); padding: 6px; display: none; }
+  .user.open .user-menu { display: block; }
+  .user-menu a { display: block; padding: 9px 10px; border-radius: 6px; font-size: 13px; color: var(--ink); text-decoration: none; }
+  .user-menu a:hover { background: var(--primary-soft); color: var(--primary); }
+
+  /* Content */
+  main { padding: 22px 28px 32px; }
+  .stage { position: relative; overflow: hidden; min-height: calc(100vh - 76px - 54px); border-radius: 18px; border: 1px solid var(--border); background: radial-gradient(circle at 0 0, #e9f5f1 0, rgba(233,245,241,0) 220px), linear-gradient(160deg, #ffffff 55%, #fff3e8 100%); display: grid; place-items: center; padding: 40px 20px; }
+  .stage::after { content: ""; position: absolute; width: 360px; height: 360px; border-radius: 50%; inset-inline-end: -120px; bottom: -150px; background: rgba(253,214,180,.35); }
+  .empty { position: relative; z-index: 1; display: grid; justify-items: center; text-align: center; max-width: 560px; }
+  .empty-art { width: 330px; max-width: 100%; height: auto; margin-bottom: 18px; }
+  .empty h1 { font-size: 30px; font-weight: 700; color: #15304a; letter-spacing: -.3px; }
+  .empty p { margin-top: 10px; font-size: 16px; color: var(--muted); line-height: 1.6; }
+  .rule { width: 60px; height: 4px; border-radius: 2px; background: var(--teal); margin: 26px 0; }
+  .quote { display: flex; align-items: flex-start; gap: 12px; padding: 16px 22px; border-radius: 12px; background: rgba(230,243,239,.75); font-size: 17px; font-weight: 500; color: #15304a; line-height: 1.5; text-align: start; }
+  .quote span.q { font-size: 34px; line-height: .9; color: var(--teal); font-weight: 700; font-family: Georgia, serif; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 60; background: var(--ink); color: #fff; padding: 11px 18px; border-radius: 10px; font-size: 13px; max-width: calc(100% - 32px); }
+
+  .num { direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; }
+  .ov { position: fixed; inset: 0; z-index: 50; background: rgba(16,35,43,.42); display: grid; place-items: center; padding: 16px; overflow-y: auto; }
+  .dlg { position: relative; width: 100%; background: #fff; border-radius: 18px; box-shadow: 0 24px 60px rgba(0,0,0,.18); margin: auto; }
+  @media (max-width: 900px) {
+    .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; align-content: start; }
+    .side { position: static; height: auto; flex-direction: row; align-items: center; gap: 12px; padding: 10px 12px; border-inline-end: 0; border-bottom: 1px solid var(--border); }
+    .logo { flex: none; }
+    .logo img { height: 34px; }
+    .logo span { display: none; }
+    .menu { display: flex; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+    .menu::-webkit-scrollbar { display: none; }
+    .menu a { flex: none; height: 38px; padding: 0 12px; font-size: 13px; gap: 8px; }
+    .menu a svg { width: 18px; height: 18px; }
+    .side-art, .support { display: none; }
+    .top { height: 66px; padding: 0 12px; gap: 8px; }
+    .user-meta { display: none; }
+    .ava { width: 42px; height: 42px; }
+    main { padding: 14px 12px 24px; }
+  }
+
+  /* Patients */
+  .pp { max-width: 1240px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 18px; }
+  .pp-head { display: flex; align-items: center; gap: 16px; padding: 22px 24px; flex-wrap: wrap; border-bottom: 1px solid #eef2f3; }
+  .pp-head .ic { width: 56px; height: 56px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; flex: none; }
+  .pp-head .ic svg { width: 26px; height: 26px; }
+  .pp-head h1 { font-size: 24px; font-weight: 700; color: #15304a; }
+  .pp-head p { font-size: 14px; color: var(--muted); margin-top: 2px; }
+  .pp-head > div { flex: 1; min-width: 220px; }
+  .cnt-tag { display: inline-flex; align-items: center; height: 30px; padding: 0 12px; border-radius: 15px; background: #eef2f3; color: #44545a; font-size: 13px; font-weight: 600; }
+  .tools { display: flex; gap: 12px; padding: 18px 22px 0; flex-wrap: wrap; }
+  .search { flex: 1; min-width: 240px; display: flex; align-items: center; gap: 10px; height: 50px; padding: 0 16px; border: 1px solid var(--border); border-radius: 10px; background: #fff; }
+  .search:focus-within, .sel:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(18,163,127,.12); outline: 0; }
+  .search svg { width: 20px; height: 20px; color: #3d4f57; flex: none; }
+  .search input { flex: 1; min-width: 0; border: 0; outline: 0; font: inherit; font-size: 14px; background: none; }
+  .sel { height: 50px; min-width: 190px; padding: 0 14px; border: 1px solid var(--border); border-radius: 10px; background: #fff; font: inherit; font-size: 14px; font-weight: 500; color: var(--ink); cursor: pointer; }
+  .ftabs { display: flex; gap: 4px; padding: 14px 22px 0; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
+  .ftabs button { flex: none; display: inline-flex; align-items: center; gap: 8px; height: 46px; padding: 0 16px; border: 0; border-bottom: 3px solid transparent; margin-bottom: -1px; background: none; cursor: pointer; font: inherit; font-size: 14.5px; font-weight: 600; color: var(--muted); }
+  .ftabs button[aria-selected="true"] { color: var(--teal); border-color: var(--teal); }
+  .ftabs .n { min-width: 24px; height: 22px; padding: 0 7px; border-radius: 11px; background: #eef2f3; color: #44545a; font-size: 12px; font-weight: 700; display: inline-grid; place-items: center; }
+  .ftabs button[aria-selected="true"] .n { background: #e3f4ee; color: #0f6b52; }
+  .tbl { padding: 14px 22px 6px; overflow-x: auto; }
+  table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; }
+  thead th { text-align: start; font-size: 13px; font-weight: 600; color: #15304a; background: #f1f5f8; padding: 14px 12px; white-space: nowrap; }
+  thead th:first-child { border-start-start-radius: 12px; border-end-start-radius: 12px; }
+  thead th:last-child { border-start-end-radius: 12px; border-end-end-radius: 12px; text-align: end; }
+  tbody td { padding: 14px 12px; border-bottom: 1px solid #eef2f3; vertical-align: middle; color: #2c3d43; }
+  tbody tr:hover td { background: #fafcfc; }
+  .who { display: flex; align-items: center; gap: 12px; }
+  .pa { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 14px; font-weight: 700; flex: none; }
+  .pa-m { background: #e8eefc; color: #3b5bdb; } .pa-f { background: #fde8f1; color: #b4236c; } .pa-x { background: #eef2f3; color: #44545a; }
+  .who b { display: block; font-size: 14.5px; color: #15304a; }
+  .who small { display: block; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .fam { display: inline-flex; margin-top: 4px; height: 20px; padding: 0 7px; border-radius: 6px; background: #eef1f7; color: #4b5d86; font-size: 11px; font-weight: 700; align-items: center; }
+  .num { font-variant-numeric: tabular-nums; letter-spacing: .2px; }
+  .dt b { display: block; font-weight: 600; color: #15304a; white-space: nowrap; }
+  tbody td .num { white-space: nowrap; }
+  .dt small { font-size: 12px; color: var(--muted); }
+  .dt.none { color: #9aa7ab; }
+  .nx { color: #0f6b52; }
+  .acts { text-align: end; white-space: nowrap; }
+  .btn-o { display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 16px; border-radius: 10px; background: var(--navy); color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; }
+  .btn-o svg { width: 18px; height: 18px; }
+  .btn-o:hover { background: #082d42; }
+  .none-box { margin: 18px 22px 22px; padding: 30px 16px; text-align: center; color: var(--muted); font-size: 14px; border: 1px dashed #d5dde0; border-radius: 12px; }
+  .none-box b { display: block; color: #15304a; font-size: 15.5px; margin-bottom: 4px; }
+  .foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 22px 18px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+  .pager { display: flex; gap: 6px; }
+  .pager button { min-width: 36px; height: 36px; border: 1px solid #d9e1e3; border-radius: 9px; background: #fff; cursor: pointer; font-size: 13.5px; display: grid; place-items: center; }
+  .pager button svg { width: 15px; height: 15px; }
+  [dir="rtl"] .pager .ar svg { transform: scaleX(-1); }
+  .pager button[aria-current="page"] { background: #e3f4ee; border-color: #bfe3d3; color: #0f6b52; font-weight: 700; }
+  .pager button:disabled { opacity: .4; cursor: default; }
+  .pp-note { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); padding: 0 4px; }
+  .pp-note svg { width: 16px; height: 16px; flex: none; }
+  @media (max-width: 1240px) {
+    .tbl { padding: 10px 14px 4px; }
+    tbody { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; }
+    tbody tr { margin-bottom: 0 !important; }
+    thead { display: none; }
+    table, tbody { display: block; }
+    tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px 14px; padding: 14px; border: 1px solid #e7ecee; border-radius: 14px; margin-bottom: 10px; }
+    tbody td { padding: 0; border: 0; min-width: 0; }
+    tbody tr:hover td { background: none; }
+    tbody td[data-l]::before { content: attr(data-l); display: block; font-size: 11.5px; color: var(--muted); margin-bottom: 3px; }
+    td.c-who, td.acts { grid-column: 1 / -1; }
+    .acts .btn-o { width: 100%; justify-content: center; }
+  }
+  @media (max-width: 600px) {
+    .pp-head { padding: 16px; }
+    .pp-head h1 { font-size: 21px; }
+    .tools, .ftabs { padding-left: 12px; padding-right: 12px; }
+    .search, .sel { min-width: 0; width: 100%; flex: none; }
+    .ftabs button { flex: 1 1 0; padding: 0 6px; font-size: 13px; justify-content: center; }
+    .foot { padding: 10px 14px 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <a class="logo" href="doctor-visits.html" aria-label="Mada care">
+      <img src="assets/mada-logo.png" alt="" width="301" height="320">
+      <span><b>Mada care</b><small data-i18n="tagline">Caring Like Family</small></span>
+    </a>
+    <nav class="menu" id="menu" aria-label="Doctor portal"></nav>
+    <div class="support" id="support"></div>
+    <svg class="side-art" viewBox="0 0 170 220" fill="none" stroke="currentColor" stroke-width="22" aria-hidden="true"><circle cx="40" cy="40" r="22" fill="currentColor" stroke="none"/><path d="M40 210c-50-40-60-90-30-110s60 0 60 30-40 40-60 20"/><path d="M60 120c30-40 90-30 95 10s-40 70-115 80"/></svg>
+  </aside>
+
+  <div>
+    <header class="top">
+      <button class="lang-btn" id="langToggle" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>
+        <span data-i18n="otherLang">العربية</span>
+      </button>
+      <button class="bell" type="button" id="bell" data-i18n-aria="notifications" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+      </button>
+      <span class="sep" aria-hidden="true"></span>
+      <div class="user" id="user">
+        <button class="user-btn" id="userBtn" type="button" aria-haspopup="menu" aria-expanded="false">
+          <span class="ava" id="avatar"></span>
+          <span class="user-meta"><span class="u-name" id="userName"></span><span class="u-spec" id="userSpec"></span></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="user-menu" role="menu">
+          <a href="doctor-account.html" role="menuitem" data-i18n="profile">My Account</a>
+          <a href="doctor-login.html" role="menuitem" id="logout" data-i18n="logout">Log out</a>
+        </div>
+      </div>
+    </header>
+    <main><div class="pp" id="vw"></div></main>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="auth.js"></script>
+<script src="orders.js"></script>
+<script src="patients.js"></script>
+<script src="doctor-portal.js"></script>
+<script>
+  const me = MadaAuth.requireAuth("doctor");
+  if (me && me.doctorId) MadaOrders.seedDoctorDemo(me.doctorId); // SAMPLE DATA ONLY
+  const $ = id => document.getElementById(id), esc = DrPortal.esc;
+  // Doctor Portal > Patients (doctor-patients.html): every patient this doctor may open, with a link to their medical file.
+  // A doctor may open the file of:
+  //  - a patient with a visit booked with this doctor (upcoming, completed or cancelled),
+  //  - a family member registered on the same mobile number as one of those patients (also reachable from the patient file),
+  //  - a file this doctor opened from the Doctor Portal.
+  // TODO: the backend decides which files a doctor may open and returns only those.
+  const docId = me && (me.doctorId || me.staffId);
+  const nm = v => v && typeof v === "object" ? v : { en: v || "", ar: v || "" };
+  function build() {
+    const mine = MadaOrders.all().filter(o => o.booking && o.booking.doctorId === docId && o.mrn), map = new Map(), today = ymd(new Date());
+    const add = (fileNo, base) => { if (!map.has(fileNo)) map.set(fileNo, { fileNo, visits: [], last: "", next: "", family: false, ...base }); return map.get(fileNo); };
+    mine.forEach(o => {
+      const f = MadaPatients.get(o.mrn) || MadaPatients.sample(o.mrn) || {};
+      const r = add(o.mrn, { name: nm(f.name || o.patient), mobile: f.mobile || o.mobile, gender: f.gender || null, dob: f.dateOfBirth || null, age: f.age || f.approxAge || null, idNumber: f.idNumber || "" });
+      r.visits.push(o);
+      const d = o.appointment && o.appointment.date, done = o.doctorVisit && o.doctorVisit.status === "done";
+      if (done) { const c = String(o.doctorVisit.completedAt || d || "").slice(0, 10); if (c > r.last) r.last = c; }
+      else if (d && d >= today && o.status !== "cancelled" && (!r.next || d + pad(o.appointment.minute) < r.next)) { r.next = d + pad(o.appointment.minute); r.nextMin = o.appointment.minute; }
+    });
+    const mobiles = new Set([...map.values()].map(r => r.mobile).filter(Boolean)), myName = me && me.name && me.name.en;
+    MadaPatients.all().forEach(f => {
+      const opened = f.source === "doctor" && f.createdBy && nm(f.createdBy).en === myName;
+      if (map.has(f.fileNo) || !(mobiles.has(f.mobile) || opened)) return;
+      const holder = [...map.values()].find(r => r.mobile === f.mobile && r.visits.length);
+      add(f.fileNo, { name: nm(f.name), mobile: f.mobile, gender: f.gender || null, dob: f.dateOfBirth || null, age: f.approxAge || null, idNumber: f.idNumber || "", family: !!holder, holder: holder && holder.name });
+    });
+    return [...map.values()];
+  }
+  const pad = m => String(m || 0).padStart(4, "0");
+  const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+  const I18N = {
+    en: {
+      tagline: "Caring Like Family", otherLang: "العربية", profile: "My Account", logout: "Log out", notifications: "Notifications",
+      noNotes: "No new notifications.", soonMsg: "This section is coming soon.",
+      title: "Patients", sub: "All patients whose medical file you can open.", count1: "1 patient", countN: "{n} patients",
+      searchPh: "Search by name, file number, mobile or ID number", search: "Search",
+      f_all: "All Patients", f_up: "Upcoming Visit", f_seen: "Seen Before", f_fam: "Family Members",
+      s_name: "Sort: Name", s_last: "Sort: Last Visit", s_next: "Sort: Next Visit", sortLbl: "Sort",
+      cName: "Patient", cFile: "Medical File No.", cMobile: "Mobile Number", cAge: "Age · Gender", cLast: "Last Visit", cNext: "Next Visit", cVisits: "Visits", cActs: "Action",
+      open: "Open Patient File", none: "—", years: "{n} Years", g_m: "Male", g_f: "Female", famOf: "Family of {n}", famTag: "Family member",
+      today: "Today", tomorrow: "Tomorrow", noneT: "No patients yet", noneS: "Patients appear here once a visit is booked with you.", noMatchT: "No matching patients", noMatchS: "Try another name, file number or mobile number.",
+      showing: "Showing {a} of {b}", prev: "Previous page", next: "Next page",
+      note: "You can view each patient's file. Changes to personal details are made from the patient file."
+    },
+    ar: {
+      tagline: "رعاية كالعائلة", otherLang: "English", profile: "حسابي", logout: "تسجيل الخروج", notifications: "الإشعارات",
+      noNotes: "ما فيه إشعارات جديدة.", soonMsg: "هذا القسم بيتوفر قريباً.",
+      title: "المرضى", sub: "كل المرضى اللي تقدر تفتح ملفاتهم الطبية.", count1: "مريض واحد", countN: "{n} مرضى",
+      searchPh: "ابحث بالاسم أو رقم الملف أو الجوال أو رقم الهوية", search: "بحث",
+      f_all: "كل المرضى", f_up: "عندهم زيارة قادمة", f_seen: "زرتهم قبل", f_fam: "أفراد العائلة",
+      s_name: "الترتيب: الاسم", s_last: "الترتيب: آخر زيارة", s_next: "الترتيب: الزيارة القادمة", sortLbl: "الترتيب",
+      cName: "المريض", cFile: "رقم الملف الطبي", cMobile: "رقم الجوال", cAge: "العمر · الجنس", cLast: "آخر زيارة", cNext: "الزيارة القادمة", cVisits: "الزيارات", cActs: "الإجراء",
+      open: "فتح ملف المريض", none: "—", years: "{n} سنة", g_m: "ذكر", g_f: "أنثى", famOf: "من عائلة {n}", famTag: "فرد من العائلة",
+      today: "اليوم", tomorrow: "بكرة", noneT: "ما فيه مرضى للحين", noneS: "يظهر المرضى هنا أول ما تنحجز لك زيارة.", noMatchT: "ما فيه مريض مطابق", noMatchS: "جرب اسم أو رقم ملف أو جوال ثاني.",
+      showing: "عرض {a} من {b}", prev: "الصفحة السابقة", next: "الصفحة التالية",
+      note: "تقدر تشوف ملف كل مريض. تعديل البيانات الشخصية يكون من داخل ملف المريض."
+    }
+  };
+  let current = "en", filt = "all", sort = "name", q = "", page = 1;
+  const PER = 10;
+  const t = () => I18N[current];
+  const tx = (k, v) => t()[k].replace(/\{(\w+)\}/g, (_, x) => v[x]);
+  const svg = (p, w) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 1.9}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+  const IC = { users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20v-1a6.5 6.5 0 0 1 13 0v1"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14a6.5 6.5 0 0 1 3 5.5v.5"/>', search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+    folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>', info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>', l: '<path d="M15 18l-6-6 6-6"/>', r: '<path d="m9 6 6 6-6 6"/>' };
+  const loc = () => current === "ar" ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB";
+  const fmtD = s => { const [y, m, d] = s.slice(0, 10).split("-").map(Number); return new Date(y, m - 1, d).toLocaleDateString(loc(), { day: "numeric", month: "short", year: "numeric" }); };
+  const initials = n => n.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+  const ageOf = r => r.dob ? MadaPatients.ageOf(r.dob) : r.age;
+  function nextTxt(r) {
+    if (!r.next) return `<span class="dt none">${t().none}</span>`;
+    const d = r.next.slice(0, 10), td = ymd(new Date()), tm = ymd(new Date(Date.now() + 864e5)), m = r.nextMin || 0;
+    const time = new Date(2000, 0, 1, Math.floor(m / 60), m % 60).toLocaleTimeString(current === "ar" ? "ar-SA-u-nu-latn" : "en-US", { hour: "numeric", minute: "2-digit" });
+    return `<span class="dt nx"><b class="num">${d === td ? t().today : d === tm ? t().tomorrow : esc(fmtD(d))}</b><small class="num">${esc(time)}</small></span>`;
+  }
+  function render() {
+    const all = build(), ql = q.trim().toLowerCase();
+    const counts = { all: all.length, up: all.filter(r => r.next).length, seen: all.filter(r => r.last).length, fam: all.filter(r => r.family).length };
+    const pass = r => (filt === "all" || (filt === "up" && r.next) || (filt === "seen" && r.last) || (filt === "fam" && r.family))
+      && (!ql || [r.name.en, r.name.ar, r.fileNo, r.mobile, DrPortal.phone(r.mobile), r.idNumber].filter(Boolean).join(" ").toLowerCase().includes(ql));
+    const list = all.filter(pass).sort((a, b) => sort === "last" ? (b.last || "").localeCompare(a.last || "") : sort === "next" ? (a.next || "9").localeCompare(b.next || "9") : a.name[current].localeCompare(b.name[current], current));
+    const pages = Math.max(1, Math.ceil(list.length / PER)); page = Math.min(page, pages);
+    const shown = list.slice((page - 1) * PER, page * PER);
+    const rows = shown.map(r => { const a = ageOf(r), g = r.gender;
+      return `<tr><td class="c-who"><div class="who"><span class="pa pa-${g || "x"}">${esc(initials(r.name.en || r.name.ar))}</span><span><b>${esc(r.name[current] || r.name.en)}</b>${r.family ? `<span class="fam">${r.holder ? esc(tx("famOf", { n: r.holder[current] || r.holder.en })) : t().famTag}</span>` : ""}</span></div></td>
+        <td data-l="${esc(t().cFile)}"><span class="num">${esc(r.fileNo)}</span></td>
+        <td data-l="${esc(t().cMobile)}"><span class="num" dir="ltr">${esc(DrPortal.phone(r.mobile) || t().none)}</span></td>
+        <td data-l="${esc(t().cAge)}">${[a != null && a !== "" ? tx("years", { n: a }) : "", g ? t()["g_" + g] : ""].filter(Boolean).join(" · ") || t().none}</td>
+        <td data-l="${esc(t().cLast)}">${r.last ? `<span class="dt"><b class="num">${esc(fmtD(r.last))}</b></span>` : `<span class="dt none">${t().none}</span>`}</td>
+        <td data-l="${esc(t().cNext)}">${nextTxt(r)}</td>
+        <td data-l="${esc(t().cVisits)}"><span class="num">${r.visits.length}</span></td>
+        <td class="acts"><a class="btn-o" href="doctor-patient.html?mrn=${encodeURIComponent(r.fileNo)}&back=patients">${svg(IC.folder)}${t().open}</a></td></tr>`; }).join("");
+    $("vw").innerHTML = `<section class="card">
+        <div class="pp-head"><span class="ic">${svg(IC.users)}</span><div><h1>${t().title}</h1><p>${t().sub}</p></div><span class="cnt-tag">${all.length === 1 ? t().count1 : tx("countN", { n: all.length })}</span></div>
+        <div class="tools"><label class="search">${svg(IC.search, 2)}<input type="search" id="q" value="${esc(q)}" placeholder="${esc(t().searchPh)}" aria-label="${t().search}" autocomplete="off"></label>
+          <select class="sel" id="sort" aria-label="${t().sortLbl}">${["name", "last", "next"].map(k => `<option value="${k}" ${k === sort ? "selected" : ""}>${t()["s_" + k]}</option>`).join("")}</select></div>
+        <div class="ftabs" role="tablist">${["all", "up", "seen", "fam"].map(k => `<button type="button" role="tab" data-f="${k}" aria-selected="${k === filt}">${t()["f_" + k]}<span class="n num">${counts[k]}</span></button>`).join("")}</div>
+        ${list.length ? `<div class="tbl"><table><thead><tr>${["cName", "cFile", "cMobile", "cAge", "cLast", "cNext", "cVisits", "cActs"].map(k => `<th>${t()[k]}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div>
+        <div class="foot"><span>${tx("showing", { a: shown.length, b: list.length })}</span>${pages > 1 ? `<div class="pager"><button type="button" class="ar" data-pg="${page - 1}" ${page === 1 ? "disabled" : ""} aria-label="${t().prev}">${svg(IC.l, 2)}</button>${Array.from({ length: pages }, (_, i) => `<button type="button" data-pg="${i + 1}" ${i + 1 === page ? 'aria-current="page"' : ""}>${i + 1}</button>`).join("")}<button type="button" class="ar" data-pg="${page + 1}" ${page === pages ? "disabled" : ""} aria-label="${t().next}">${svg(IC.r, 2)}</button></div>` : ""}</div>`
+        : `<div class="none-box">${all.length ? `<b>${t().noMatchT}</b>${t().noMatchS}` : `<b>${t().noneT}</b>${t().noneS}`}</div>`}
+      </section><p class="pp-note">${svg(IC.info, 2)}${t().note}</p>`;
+  }
+  $("vw").addEventListener("input", e => { if (e.target.id !== "q") return; q = e.target.value; page = 1; const pos = e.target.selectionStart; render(); const i = $("q"); i.focus(); i.setSelectionRange(pos, pos); });
+  $("vw").addEventListener("change", e => { if (e.target.id === "sort") { sort = e.target.value; page = 1; render(); } });
+  $("vw").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.f) { filt = b.dataset.f; page = 1; history.replaceState(null, "", filt === "all" ? location.pathname : "#" + filt); return render(); }
+    if (b.dataset.pg && !b.disabled) { page = +b.dataset.pg; render(); }
+  });
+  window.addEventListener("storage", e => { if (!e.key || e.key === "mada-orders" || e.key === "mada-patients") render(); });
+
+  document.addEventListener("click", e => { if (e.target.closest("[data-soon]")) { e.preventDefault(); toast(t().soonMsg); } });
+  $("bell").addEventListener("click", () => toast(t().noNotes));
+  function toast(msg) { const el = $("toast"); el.textContent = msg; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 3200); }
+  function setLang(lang) {
+    current = lang;
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+    document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = t()[el.dataset.i18n]);
+    document.querySelectorAll("[data-i18n-aria]").forEach(el => el.setAttribute("aria-label", t()[el.dataset.i18nAria]));
+    document.title = lang === "ar" ? "مدى كير | المرضى" : "Mada Care | Patients";
+    DrPortal.render(me, lang, "patients"); render();
+    try { localStorage.setItem("mada-lang", lang); } catch (e) {}
+  }
+  $("langToggle").addEventListener("click", () => setLang(current === "en" ? "ar" : "en"));
+  const user = $("user"), userBtn = $("userBtn");
+  userBtn.addEventListener("click", e => { e.stopPropagation(); userBtn.setAttribute("aria-expanded", user.classList.toggle("open")); });
+  document.addEventListener("click", () => { user.classList.remove("open"); userBtn.setAttribute("aria-expanded", false); });
+  $("logout").addEventListener("click", e => { e.preventDefault(); MadaAuth.logout(); });
+
+  let saved = "en";
+  try { saved = localStorage.getItem("mada-lang") || "en"; } catch (e) {}
+  { const h = location.hash.slice(1); if (["up", "seen", "fam"].includes(h)) filt = h; }
+  setLang(saved);
+</script>
+</body>
+</html>
