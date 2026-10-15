@@ -154,6 +154,84 @@
     .ov-b { padding: 8px; }
     .ov-h .btn { flex: 1; }
   }
+  /* report status + approval screen */
+  .st-tag { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 13px; font-size: 12px; font-weight: 700; margin-top: 6px; }
+  .st-tag i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .st-tag.pend { background: var(--orange-soft); color: var(--orange); }
+  .st-tag.ok { background: #e3f4ee; color: #0f6b52; }
+  .cnt-tag.pend { background: var(--orange-soft); color: var(--orange); }
+  .btn-pri { background: var(--primary); color: #fff; } .btn-pri:hover { background: #095a4d; }
+  .ed { max-width: 1320px; display: grid; gap: 16px; }
+  .ed-top { display: flex; align-items: center; gap: 14px 18px; flex-wrap: wrap; padding: 18px 22px; }
+  .ed-back { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--primary); text-decoration: none; background: none; border: 0; cursor: pointer; padding: 0; }
+  .ed-back svg { width: 16px; height: 16px; } [dir="rtl"] .ed-back svg { transform: scaleX(-1); }
+  .ed-tt { flex: 1; min-width: 240px; }
+  .ed-tt h1 { font-size: 22px; font-weight: 700; color: #15304a; margin-top: 4px; }
+  .ed-tt p { font-size: 13.5px; color: var(--muted); margin-top: 2px; }
+  .ed-acts { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .seg { display: inline-flex; padding: 3px; border-radius: 10px; background: #eef2f3; gap: 2px; }
+  .seg button { height: 36px; padding: 0 14px; border: 0; border-radius: 8px; background: none; font: inherit; font-size: 13px; font-weight: 600; color: #44545a; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: #fff; color: var(--primary); box-shadow: 0 1px 3px rgba(16,35,43,.12); }
+  .seg-l { font-size: 12.5px; color: var(--muted); }
+  .ed-grid { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 16px; align-items: start; }
+  .ed-side { display: grid; gap: 14px; position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; padding-bottom: 4px; }
+  .eb { padding: 16px 18px; }
+  .eb h2 { font-size: 15px; font-weight: 700; color: #15304a; }
+  .eb > p { font-size: 12.5px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+  .stl { display: grid; gap: 6px; margin-top: 12px; }
+  .sti { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border: 1px solid #e7ecee; border-radius: 10px; cursor: pointer; }
+  .sti:hover { background: #fbfefd; border-color: #bfe3d3; }
+  .sti.on { border-color: #bfe3d3; background: #f6fbf9; }
+  .sti input { width: 18px; height: 18px; accent-color: var(--primary); flex: none; }
+  .sti .n { width: 26px; height: 26px; border-radius: 7px; background: #eef2f3; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; color: #44545a; flex: none; }
+  .sti.on .n { background: #e3f4ee; color: #0f6b52; }
+  .sti .nm { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 600; color: #15304a; }
+  .sti .nm small { display: block; font-size: 11.5px; font-weight: 500; color: #9aa7ab; }
+  .chip-ed { font-size: 11px; font-weight: 700; color: #1d4ed8; background: #e8eefc; border-radius: 8px; padding: 2px 7px; white-space: nowrap; }
+  .rst { border: 0; background: none; color: var(--primary); font: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer; padding: 2px 4px; white-space: nowrap; }
+  .rst:hover { text-decoration: underline; }
+  .ins-q { font-size: 13px; color: #15304a; margin-top: 10px; }
+  .eb .seg { margin-top: 8px; }
+  .fld { display: grid; gap: 6px; margin-top: 10px; }
+  .fld label { font-size: 12.5px; font-weight: 600; color: #15304a; }
+  .in { width: 100%; height: 42px; padding: 0 12px; border: 1px solid #d5dde0; border-radius: 9px; font: inherit; font-size: 14px; background: #fff; outline: 0; }
+  textarea.in { height: auto; min-height: 90px; padding: 10px 12px; line-height: 1.6; resize: vertical; }
+  .in:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(18,163,127,.12); }
+  .in.bad { border-color: #dc2626; }
+  .ferr { font-size: 12px; color: #dc2626; }
+  .stamp-box { margin-top: 10px; height: 110px; border: 1px dashed #cfd9dc; border-radius: 10px; display: grid; place-items: center; background: #fbfcfc; overflow: hidden; }
+  .stamp-box img { max-height: 100px; max-width: 100%; object-fit: contain; }
+  .stamp-box span { font-size: 12.5px; color: #8a979c; text-align: center; padding: 0 14px; line-height: 1.5; }
+  .cs { border: 1px solid #e7ecee; border-radius: 12px; padding: 12px; margin-top: 10px; display: grid; gap: 8px; }
+  .cs-h { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .cs-x { border: 0; background: none; color: #dc2626; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+  .cs-x svg { width: 14px; height: 14px; }
+  .add-sec { margin-top: 10px; width: 100%; border-style: dashed; }
+  .ed-prev { background: #eef2f3; border-radius: 18px; padding: 16px; min-width: 0; }
+  .ed-hint { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #44545a; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; }
+  .ed-hint svg { width: 16px; height: 16px; color: var(--primary); flex: none; }
+  .ed-prev .mr-doc { box-shadow: 0 6px 24px rgba(16,35,43,.12); border-radius: 0 0 12px 12px; padding-bottom: 4px; }
+  .mr-ed { border-radius: 8px; outline: 1px dashed transparent; outline-offset: 4px; cursor: text; transition: outline-color .15s; }
+  .mr-ed:hover { outline-color: #9fd3bf; }
+  .mr-ed:focus { outline: 2px solid var(--teal); background: #fbfefd; }
+  .mr-ed.edited { outline-color: #a9bff5; }
+  .saved-note { font-size: 12px; color: var(--muted); }
+  .cf { width: min(480px, 100%); padding: 22px; display: grid; gap: 12px; }
+  .cf h2 { font-size: 18px; color: #15304a; }
+  .cf p { font-size: 14px; color: #44545a; line-height: 1.6; }
+  .cf ul { margin: 0; padding-inline-start: 20px; font-size: 13.5px; color: #44545a; display: grid; gap: 4px; }
+  .cf .row { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 6px; }
+  @media (max-width: 1100px) {
+    .ed-grid { grid-template-columns: minmax(0, 1fr); }
+    .ed-side { position: static; max-height: none; overflow: visible; }
+  }
+  @media (max-width: 700px) {
+    .ed-top { padding: 14px; }
+    .ed-acts { width: 100%; }
+    .ed-acts .btn { flex: 1; }
+    .ed-prev { padding: 8px; border-radius: 12px; }
+    .cf .row .btn { flex: 1; }
+  }
 </style>
 </head>
 <body>
@@ -205,15 +283,22 @@
 <script src="doctor-allergy.js"></script>
 <script src="doctor-plan.js"></script>
 <script src="doctor-orders.js"></script>
+<script src="doctor-nurse.js"></script>
+<script src="doctor-edu.js"></script>
+<script src="doctor-idform.js"></script>
+<script src="stamps.js"></script>
 <script src="medical-report.js"></script>
+<script src="alerts.js"></script>
 <script src="doctor-portal.js"></script>
 <script>
   const me = MadaAuth.requireAuth("doctor");
   if (me && me.doctorId) MadaOrders.seedDoctorDemo(me.doctorId); // SAMPLE DATA ONLY
   const $ = id => document.getElementById(id), esc = DrPortal.esc;
   // Doctor Portal > Reports (doctor-reports.html): the medical report of every visit this doctor completed.
-  // The report is built from the patient file and the visit record (medical-report.js); nothing is typed here.
-  // doctor-reports.html?id=ORD-... opens that visit's report straight away (link from the visit and the patient file).
+  // The report is built from the patient file and the visit record (medical-report.js). A finished visit's report waits for the doctor's
+  // approval (Review & Approve): they tick the visit steps that show, can change any section's text, add their own sections and the
+  // insurance company name. Once approved it can be viewed and downloaded; it carries the doctor's stamp (stamps.js, set by the admin).
+  // doctor-reports.html?id=ORD-... opens that visit's report straight away, or its approval screen while it waits for approval.
   const docId = me && (me.doctorId || me.staffId);
   const nm = v => v && typeof v === "object" ? v : { en: v || "", ar: v || "" };
   const mine = () => MadaOrders.all().filter(o => o.booking && o.booking.doctorId === docId && MadaReport.ready(o));
@@ -226,7 +311,21 @@
       searchPh: "Search by patient, file number, visit number or diagnosis", search: "Search", visit: "Visit {n}", noDx: "No diagnosis recorded",
       view: "View Report", dl: "Download PDF", close: "Close", fileNo: "File {n}",
       noneT: "No reports yet", noneS: "A report appears here once you complete a visit.", noMatchT: "No matching reports", noMatchS: "Try another name, file number or diagnosis.",
-      note: "The report is filled from what was written in the visit. To change it, update the visit record.", notFound: "This report was not found."
+      note: "The report is filled from what was written in the visit. Before it is issued you approve it and can choose what shows and change the text.", notFound: "This report was not found.",
+      pending: "Needs approval", approvedT: "Approved", review: "Review & Approve", pendN: "{n} need approval",
+      edTitle: "Review & Approve Report", edSub: "{p} · Visit {v}", back: "Medical Reports", repLang: "Report language", approve: "Approve Report", autoSaved: "Changes are saved as you go.",
+      showT: "What shows in the report", showS: "Tick the visit steps to include. Click any text in the report to change it before you approve.", notRec: "Nothing recorded",
+      edited: "Edited", restore: "Restore", restored: "Original text restored.",
+      insT: "Insurance company", insQ: "Show the insurance company name in the report?", yes: "Yes", no: "No", insName: "Insurance company name", insPh: "Write the company name as on the insurance card",
+      stampT: "Doctor's stamp", stampNone: "No stamp yet. The admin adds it in Staff › Doctor Stamps, and it shows here at once.", stampS: "Shown next to your name at the end of the report.",
+      cusT: "Additional sections", cusS: "Add a heading with your own text. It shows after the visit sections.", addSec: "Add Section", secN: "Section {n}", secTitle: "Heading", secTitlePh: "e.g. Recommendations",
+      secText: "Text", secTextPh: "Write the text under this heading ...", remove: "Remove",
+      hint: "Click a section's text to change it. Changes apply to the {l} report.", l_en: "English", l_ar: "Arabic",
+      e_req: "Required.", e_ins: "Write the insurance company name, or choose No.", e_sec: "Write a heading for this section.", fixErr: "Fix the highlighted fields first.",
+      cfT: "Approve this report?", cfP: "Once approved, the report is issued with your name and stamp and can't be changed.", cfShow: "Visit steps shown: {n}", cfCus: "Additional sections: {n}", cfEd: "Sections with changed text: {n}",
+      cfIns: "Insurance company: {n}", cfNoStamp: "No stamp yet: the report will be issued without it.", cancel: "Cancel", cfOk: "Approve", approvedMsg: "Report approved. You can now download it.", storeErr: "Couldn't save. Try again.",
+      st_arrival: "Patient Information", st_history: "Case History", st_vitals: "Vital Signs", st_exam: "Clinical Examination", st_allergy: "Allergy History", st_assess: "Diagnosis",
+      st_plan: "Treatment Plan & Medications", st_orders: "Orders & Services", st_nurse: "Nurse Note", st_edu: "Family Education", st_idform: "Identity Confirmation"
     },
     ar: {
       tagline: "رعاية كالعائلة", otherLang: "English", profile: "حسابي", logout: "تسجيل الخروج", notifications: "الإشعارات", soonMsg: "هذا القسم بيتوفر قريباً.",
@@ -234,15 +333,30 @@
       searchPh: "ابحث باسم المريض أو رقم الملف أو رقم الزيارة أو التشخيص", search: "بحث", visit: "زيارة {n}", noDx: "ما فيه تشخيص مسجل",
       view: "عرض التقرير", dl: "تحميل PDF", close: "إغلاق", fileNo: "ملف {n}",
       noneT: "ما فيه تقارير للحين", noneS: "يظهر التقرير هنا أول ما تكمّل زيارة.", noMatchT: "ما فيه تقرير مطابق", noMatchS: "جرب اسم أو رقم ملف أو تشخيص ثاني.",
-      note: "التقرير يتعبى من اللي انكتب في الزيارة. لو تبي تغيّر فيه، عدّل سجل الزيارة.", notFound: "ما لقينا هذا التقرير."
+      note: "التقرير يتعبى من اللي انكتب في الزيارة. قبل ما يصدر تعتمده، وتقدر تختار وش يظهر فيه وتعدّل النص.", notFound: "ما لقينا هذا التقرير.",
+      pending: "يحتاج اعتماد", approvedT: "معتمد", review: "مراجعة واعتماد", pendN: "{n} تحتاج اعتماد",
+      edTitle: "مراجعة واعتماد التقرير", edSub: "{p} · زيارة {v}", back: "التقارير الطبية", repLang: "لغة التقرير", approve: "اعتماد التقرير", autoSaved: "التعديلات تنحفظ أول بأول.",
+      showT: "وش يظهر في التقرير", showS: "حدد خطوات الزيارة اللي تظهر. اضغط على أي نص في التقرير وعدّله قبل الاعتماد.", notRec: "ما فيه شي مسجل",
+      edited: "معدّل", restore: "استرجاع", restored: "رجع النص الأصلي.",
+      insT: "شركة التأمين", insQ: "يظهر اسم شركة التأمين في التقرير؟", yes: "نعم", no: "لا", insName: "اسم شركة التأمين", insPh: "اكتب اسم الشركة كما في بطاقة التأمين",
+      stampT: "ختم الطبيب", stampNone: "ما فيه ختم للحين. يضيفه المسؤول من الموظفين › أختام الأطباء، ويظهر هنا على طول.", stampS: "يظهر جنب اسمك في آخر التقرير.",
+      cusT: "أقسام إضافية", cusS: "أضف عنوان ونص من عندك. يظهر بعد أقسام الزيارة.", addSec: "إضافة قسم", secN: "قسم {n}", secTitle: "العنوان", secTitlePh: "مثال: التوصيات",
+      secText: "النص", secTextPh: "اكتب النص تحت هذا العنوان ...", remove: "حذف",
+      hint: "اضغط على نص أي قسم وعدّله. التعديل على التقرير {l}.", l_en: "الإنجليزي", l_ar: "العربي",
+      e_req: "مطلوب.", e_ins: "اكتب اسم شركة التأمين، أو اختر لا.", e_sec: "اكتب عنوان لهذا القسم.", fixErr: "صحّح الحقول المحددة أول.",
+      cfT: "تعتمد هذا التقرير؟", cfP: "بعد الاعتماد يصدر التقرير باسمك وختمك وما يتعدل.", cfShow: "خطوات الزيارة الظاهرة: {n}", cfCus: "الأقسام الإضافية: {n}", cfEd: "أقسام نصها معدّل: {n}",
+      cfIns: "شركة التأمين: {n}", cfNoStamp: "ما فيه ختم للحين: بيصدر التقرير بدونه.", cancel: "إلغاء", cfOk: "اعتماد", approvedMsg: "انعتمد التقرير. تقدر تحمّله الحين.", storeErr: "ما قدرنا نحفظ. حاول مرة ثانية.",
+      st_arrival: "بيانات المريض", st_history: "التاريخ المرضي", st_vitals: "العلامات الحيوية", st_exam: "الفحص السريري", st_allergy: "تاريخ الحساسية", st_assess: "التشخيص",
+      st_plan: "الخطة العلاجية والأدوية", st_orders: "الطلبات والخدمات", st_nurse: "ملاحظة الممرضة", st_edu: "تثقيف الأسرة", st_idform: "تأكيد الهوية"
     }
   };
-  let current = "en", q = "", open = null;
+  let current = "en", q = "", open = null, ed = null;
   const t = () => I18N[current];
   const tx = (k, v) => t()[k].replace(/\{(\w+)\}/g, (_, x) => v[x]);
   const svg = (p, w) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 1.9}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
   const IC = { rep: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 12h6M9 16h4"/>', search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>', eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
-    dl: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>', x: '<path d="M6 6l12 12M18 6 6 18"/>', info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>' };
+    dl: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>', ok: '<path d="m5 12 5 5 9-10"/>', back: '<path d="M19 12H5M11 6l-6 6 6 6"/>', plus: '<path d="M12 5v14M5 12h14"/>',
+    trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>', pen: '<path d="M4 20h4L19 9l-4-4L4 16z"/>', x: '<path d="M6 6l12 12M18 6 6 18"/>', info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>' };
   const loc = () => current === "ar" ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB";
   const fmtD = s => { const d = /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(s + "T00:00") : new Date(s); return d.toLocaleDateString(loc(), { day: "numeric", month: "short", year: "numeric" }); };
   const initials = n => String(n || "").split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
@@ -250,16 +364,18 @@
   const dateOf = o => (o.appointment && o.appointment.date) || o.doctorVisit.completedAt || o.createdAt;
 
   function render() {
+    if (ed) return renderEd();
     const all = mine().sort((a, b) => String(dateOf(b)).localeCompare(String(dateOf(a)))), ql = q.trim().toLowerCase();
     const list = all.filter(o => { const dx = dxOf(o) || {}; return !ql || [nm(o.patient).en, nm(o.patient).ar, o.mrn, o.id, dx.code, dx.en, dx.ar].filter(Boolean).join(" ").toLowerCase().includes(ql); });
     $("vw").innerHTML = `<section class="card">
-      <div class="rp-head"><span class="ic">${svg(IC.rep)}</span><div><h1>${t().title}</h1><p>${t().sub}</p></div><span class="cnt-tag">${all.length === 1 ? t().count1 : tx("countN", { n: all.length })}</span></div>
+      <div class="rp-head"><span class="ic">${svg(IC.rep)}</span><div><h1>${t().title}</h1><p>${t().sub}</p></div><span class="cnt-tag">${all.length === 1 ? t().count1 : tx("countN", { n: all.length })}</span>${(n => n ? `<span class="cnt-tag pend">${esc(tx("pendN", { n }))}</span>` : "")(all.filter(o => !MadaReport.approved(o)).length)}</div>
       <div class="tools"><label class="search">${svg(IC.search, 2)}<input type="search" id="q" value="${esc(q)}" placeholder="${esc(t().searchPh)}" aria-label="${t().search}" autocomplete="off"></label></div>
       ${list.length ? `<div class="rlist">${list.map(o => { const p = nm(o.patient), dx = dxOf(o);
         return `<div class="rrow"><span class="who"><span class="pa">${esc(initials(p.en))}</span><span><b>${esc(p[current] || p.en)}</b><small class="num">${esc(tx("fileNo", { n: o.mrn || "—" }))}</small></span></span>
           <span class="dxc">${dx ? `<b>${dx.code ? `<span class="code">${esc(dx.code)}</span>` : ""}${esc(dx[current] || dx.en)}</b>` : `<small>${t().noDx}</small>`}</span>
-          <span class="vd"><b>${esc(fmtD(dateOf(o)))}</b><small class="num">${esc(tx("visit", { n: o.id }))}</small></span>
-          <span class="acts"><button type="button" class="btn btn-out" data-view="${esc(o.id)}">${svg(IC.eye)}${t().view}</button><button type="button" class="btn btn-dark" data-dl="${esc(o.id)}">${svg(IC.dl, 2)}${t().dl}</button></span></div>`; }).join("")}</div>`
+          <span class="vd"><b>${esc(fmtD(dateOf(o)))}</b><small class="num">${esc(tx("visit", { n: o.id }))}</small>${MadaReport.approved(o) ? `<span class="st-tag ok"><i></i>${t().approvedT}</span>` : `<span class="st-tag pend"><i></i>${t().pending}</span>`}</span>
+          <span class="acts">${MadaReport.approved(o) ? `<button type="button" class="btn btn-out" data-view="${esc(o.id)}">${svg(IC.eye)}${t().view}</button><button type="button" class="btn btn-dark" data-dl="${esc(o.id)}">${svg(IC.dl, 2)}${t().dl}</button>`
+            : `<button type="button" class="btn btn-pri" data-review="${esc(o.id)}">${svg(IC.pen, 2)}${t().review}</button>`}</span></div>`; }).join("")}</div>`
         : `<div class="none-box">${all.length ? `<b>${t().noMatchT}</b>${t().noMatchS}` : `<b>${t().noneT}</b>${t().noneS}`}</div>`}
       </section><p class="rp-note">${svg(IC.info, 2)}${t().note}</p>`;
     if (open) view(open);
@@ -267,23 +383,130 @@
   function view(id) {
     const o = MadaOrders.get(id), ov = $("repOv");
     if (!o || !MadaReport.ready(o) || o.booking.doctorId !== docId) { open = null; ov.hidden = true; return toast(t().notFound); }
+    if (!MadaReport.approved(o)) { open = null; ov.hidden = true; return review(id); }
     open = id;
     ov.innerHTML = `<div class="ov-box" role="dialog" aria-modal="true" aria-label="${esc(MadaReport.L[current].title)}"><div class="ov-h"><b>${esc(MadaReport.L[current].title)} · ${esc(nm(o.patient)[current])}</b>
       <button type="button" class="btn btn-dark" data-dl="${esc(id)}">${svg(IC.dl, 2)}${t().dl}</button><button type="button" class="px" id="repX" aria-label="${t().close}">${svg(IC.x, 2.2)}</button></div>
       <div class="ov-b">${MadaReport.html(o, current)}</div></div>`;
     ov.hidden = false;
   }
-  function closeView() { open = null; const ov = $("repOv"); ov.hidden = true; ov.innerHTML = ""; if (new URLSearchParams(location.search).get("id")) history.replaceState(null, "", location.pathname); }
-  async function dl(id, b) { const o = MadaOrders.get(id); if (!o) return; b.disabled = true; await MadaReport.download(o, current, toast); b.disabled = false; }
+  function closeView() { const conf = !!$("cfOk"); open = null; const ov = $("repOv"); ov.hidden = true; ov.innerHTML = ""; if (!conf && new URLSearchParams(location.search).get("id")) history.replaceState(null, "", location.pathname); }
+  async function dl(id, b) { const o = MadaOrders.get(id); if (!o || !MadaReport.approved(o)) return; b.disabled = true; await MadaReport.download(o, current, toast); b.disabled = false; }
   document.addEventListener("click", e => {
     const b = e.target.closest("button"); if (!b) { if (e.target.id === "repOv") closeView(); return; }
     if (b.dataset.view) return view(b.dataset.view);
+    if (b.dataset.review) return review(b.dataset.review);
     if (b.dataset.dl) return dl(b.dataset.dl, b);
     if (b.id === "repX") return closeView();
+    if (b.id === "cfNo") return closeView();
+    if (b.id === "cfOk") return doApprove();
   });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("repOv").hidden) closeView(); });
   $("vw").addEventListener("input", e => { if (e.target.id !== "q") return; q = e.target.value; const pos = e.target.selectionStart; render(); const i = $("q"); i.focus(); i.setSelectionRange(pos, pos); });
-  window.addEventListener("storage", e => { if (!e.key || e.key === "mada-orders" || e.key === "mada-medical") render(); });
+  window.addEventListener("storage", e => { if (!ed && (!e.key || ["mada-orders", "mada-medical", "mada-doctor-stamps"].includes(e.key))) render(); if (ed && e.key === "mada-doctor-stamps") render(); });
+
+  // ---------- Review & Approve ----------
+  // ed: { id, lang (report language being edited), rp (working copy of order.doctorVisit.report), tried }. Every change is saved straight away.
+  const STEPS = MadaReport.STEP_KEYS;
+  function review(id) {
+    const o = MadaOrders.get(id);
+    if (!o || !MadaReport.ready(o) || o.booking.doctorId !== docId) return toast(t().notFound);
+    if (MadaReport.approved(o)) return view(id);
+    const sv = o.doctorVisit.report || {};
+    ed = { id, lang: current, tried: false, rp: { status: "draft", hidden: sv.hidden || STEPS.filter(k => !MadaReport.stepHas(o, k)), edits: sv.edits || {}, custom: sv.custom || [],
+      insurance: sv.insurance || { show: false, name: "" } } };
+    if (new URLSearchParams(location.search).get("id") !== id) history.pushState(null, "", "?id=" + encodeURIComponent(id));
+    render(); window.scrollTo(0, 0);
+  }
+  function leaveEd() { ed = null; history.replaceState(null, "", location.pathname); render(); window.scrollTo(0, 0); }
+  function saveRp(patch) {
+    const o = MadaOrders.get(ed.id), report = { ...ed.rp, ...(patch || {}), updatedAt: new Date().toISOString() };
+    MadaOrders.update(ed.id, { doctorVisit: { ...o.doctorVisit, report } });
+    if (JSON.stringify(MadaOrders.get(ed.id).doctorVisit.report) !== JSON.stringify(report)) throw new Error(t().storeErr);
+  }
+  const persist = () => { try { saveRp(); } catch (e) { toast(e.message); } };
+  const edErrs = () => {
+    const e = {};
+    if (ed.rp.insurance.show && !String(ed.rp.insurance.name || "").trim()) e.ins = t().e_ins;
+    ed.rp.custom.forEach(c => { if (!String(c.title || "").trim() && String(c.text || "").trim()) e["c_" + c.id] = t().e_sec; });
+    return e;
+  };
+  const editedIn = k => (MadaReport.STEP_SECS[k] || []).some(s => ((ed.rp.edits || {})[ed.lang] || {})[s] != null);
+  function renderEd() {
+    const o = MadaOrders.get(ed.id), p = nm(o.patient), rp = ed.rp, e = ed.tried ? edErrs() : {}, hid = new Set(rp.hidden), stamp = MadaStamps.get(o.booking.doctorId);
+    const seg = (attr, val, opts) => `<div class="seg" role="group">${opts.map(([v, l]) => `<button type="button" ${attr}="${v}" aria-pressed="${String(val) === String(v)}">${l}</button>`).join("")}</div>`;
+    $("vw").innerHTML = `<div class="ed">
+      <section class="card ed-top"><div class="ed-tt"><button type="button" class="ed-back" id="edBack">${svg(IC.back, 2)}${t().back}</button><h1>${t().edTitle}</h1>
+        <p>${esc(tx("edSub", { p: p[current] || p.en, v: o.id }))} · <span class="saved-note">${t().autoSaved}</span></p></div>
+        <div class="ed-acts"><span class="seg-l">${t().repLang}</span>${seg("data-rl", ed.lang, [["en", "English"], ["ar", "العربية"]])}<button type="button" class="btn btn-pri" id="edApprove">${svg(IC.ok, 2.4)}${t().approve}</button></div></section>
+      <div class="ed-grid"><aside class="ed-side">
+        <section class="card eb"><h2>${t().showT}</h2><p>${t().showS}</p><div class="stl">${STEPS.map((k, i) => { const on = !hid.has(k), has = MadaReport.stepHas(o, k);
+          return `<label class="sti ${on ? "on" : ""}"><input type="checkbox" data-step="${k}" ${on ? "checked" : ""}><span class="n">${String(i + 1).padStart(2, "0")}</span>
+            <span class="nm">${t()["st_" + k]}${has ? "" : `<small>${t().notRec}</small>`}</span>${editedIn(k) ? `<span class="chip-ed">${t().edited}</span><button type="button" class="rst" data-restore="${k}">${t().restore}</button>` : ""}</label>`; }).join("")}</div></section>
+        <section class="card eb"><h2>${t().insT}</h2><p class="ins-q">${t().insQ}</p>${seg("data-ins", rp.insurance.show ? 1 : 0, [[1, t().yes], [0, t().no]])}
+          ${rp.insurance.show ? `<div class="fld"><label for="insName">${t().insName} <span style="color:#dc2626">*</span></label><input class="in ${e.ins ? "bad" : ""}" id="insName" maxlength="80" dir="auto" value="${esc(rp.insurance.name || "")}" placeholder="${esc(t().insPh)}">${e.ins ? `<span class="ferr">${e.ins}</span>` : ""}</div>` : ""}</section>
+        <section class="card eb"><h2>${t().stampT}</h2><p>${stamp ? t().stampS : ""}</p><div class="stamp-box">${stamp ? `<img src="${esc(stamp.data)}" alt="${esc(t().stampT)}">` : `<span>${t().stampNone}</span>`}</div></section>
+        <section class="card eb"><h2>${t().cusT}</h2><p>${t().cusS}</p>${rp.custom.map((c, i) => `<div class="cs" data-cs="${c.id}"><div class="cs-h"><span>${esc(tx("secN", { n: i + 1 }))}</span><button type="button" class="cs-x" data-csx="${c.id}">${svg(IC.trash, 2)}${t().remove}</button></div>
+            <div class="fld"><label for="cst_${c.id}">${t().secTitle}</label><input class="in ${e["c_" + c.id] ? "bad" : ""}" id="cst_${c.id}" data-cst="${c.id}" maxlength="80" dir="auto" value="${esc(c.title)}" placeholder="${esc(t().secTitlePh)}">${e["c_" + c.id] ? `<span class="ferr">${e["c_" + c.id]}</span>` : ""}</div>
+            <div class="fld"><label for="csx_${c.id}">${t().secText}</label><textarea class="in" id="csx_${c.id}" data-csv="${c.id}" maxlength="2000" dir="auto" placeholder="${esc(t().secTextPh)}">${esc(c.text)}</textarea></div></div>`).join("")}
+          <button type="button" class="btn btn-out add-sec" id="addSec">${svg(IC.plus, 2.2)}${t().addSec}</button></section>
+      </aside>
+      <section class="ed-prev"><p class="ed-hint">${svg(IC.pen, 2)}${esc(tx("hint", { l: t()["l_" + ed.lang] }))}</p><div id="edDoc">${MadaReport.html(o, ed.lang, { rp, edit: true })}</div></section></div></div>`;
+  }
+  // Redraws only the report preview (keeps the focus while typing in the side panel).
+  const drawPrev = () => { const el = $("edDoc"); if (el) el.innerHTML = MadaReport.html(MadaOrders.get(ed.id), ed.lang, { rp: ed.rp, edit: true }); };
+  let typeT = null;
+  $("vw").addEventListener("change", e => {
+    if (!ed) return;
+    const k = e.target.dataset.step;
+    if (k) { const h = new Set(ed.rp.hidden); e.target.checked ? h.delete(k) : h.add(k); ed.rp.hidden = STEPS.filter(x => h.has(x)); persist(); render(); }
+  });
+  $("vw").addEventListener("input", e => {
+    if (!ed) return;
+    const el = e.target;
+    if (el.id === "insName") ed.rp.insurance = { ...ed.rp.insurance, name: el.value };
+    else if (el.dataset.cst) ed.rp.custom.find(c => c.id === el.dataset.cst).title = el.value;
+    else if (el.dataset.csv) ed.rp.custom.find(c => c.id === el.dataset.csv).text = el.value;
+    else { const sec = el.closest("[data-sec]"); if (!sec) return;
+      // Text typed in the report itself: kept for this report language only.
+      ed.rp.edits = { ...ed.rp.edits, [ed.lang]: { ...(ed.rp.edits[ed.lang] || {}), [sec.dataset.sec]: sec.innerHTML } }; sec.classList.add("edited");
+      clearTimeout(typeT); typeT = setTimeout(() => { persist(); const k = Object.keys(MadaReport.STEP_SECS).find(s => MadaReport.STEP_SECS[s].includes(sec.dataset.sec)); const row = document.querySelector(`[data-step="${k}"]`);
+        if (row && !row.closest(".sti").querySelector(".chip-ed")) row.closest(".sti").insertAdjacentHTML("beforeend", `<span class="chip-ed">${t().edited}</span><button type="button" class="rst" data-restore="${k}">${t().restore}</button>`); }, 400);
+      return; }
+    if (ed.tried) { const bad = edErrs(); el.classList.toggle("bad", !!(el.id === "insName" ? bad.ins : bad["c_" + (el.dataset.cst || "")])); }
+    clearTimeout(typeT); typeT = setTimeout(() => { persist(); drawPrev(); }, 300);
+  });
+  $("vw").addEventListener("click", e => {
+    if (!ed) return;
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.id === "edBack") return leaveEd();
+    if (b.dataset.rl) { ed.lang = b.dataset.rl; return render(); }
+    if (b.dataset.ins) { ed.rp.insurance = { ...ed.rp.insurance, show: b.dataset.ins === "1" }; persist(); render(); if (ed.rp.insurance.show) $("insName").focus(); return; }
+    if (b.dataset.restore) { e.preventDefault(); const ls = { ...(ed.rp.edits[ed.lang] || {}) }; MadaReport.STEP_SECS[b.dataset.restore].forEach(s => delete ls[s]);
+      ed.rp.edits = { ...ed.rp.edits, [ed.lang]: ls }; persist(); render(); return toast(t().restored); }
+    if (b.id === "addSec") { const id = "c" + Date.now().toString(36); ed.rp.custom = [...ed.rp.custom, { id, title: "", text: "" }]; persist(); render(); $("cst_" + id).focus(); return; }
+    if (b.dataset.csx) { ed.rp.custom = ed.rp.custom.filter(c => c.id !== b.dataset.csx); persist(); render(); return; }
+    if (b.id === "edApprove") return askApprove();
+  });
+  function askApprove() {
+    ed.tried = true;
+    if (Object.keys(edErrs()).length) { render(); toast(t().fixErr); const x = document.querySelector(".in.bad"); if (x) { x.scrollIntoView({ block: "center" }); x.focus(); } return; }
+    const o = MadaOrders.get(ed.id), rp = ed.rp, shown = STEPS.filter(k => !rp.hidden.includes(k)).length, cus = rp.custom.filter(c => c.title.trim()).length;
+    const edN = new Set(Object.values(rp.edits || {}).flatMap(x => Object.keys(x || {}))).size, stamp = MadaStamps.get(o.booking.doctorId), ov = $("repOv");
+    ov.innerHTML = `<div class="dlg cf" role="dialog" aria-modal="true" aria-labelledby="cfT"><h2 id="cfT">${t().cfT}</h2><p>${t().cfP}</p>
+      <ul><li>${esc(tx("cfShow", { n: shown }))}</li>${cus ? `<li>${esc(tx("cfCus", { n: cus }))}</li>` : ""}${edN ? `<li>${esc(tx("cfEd", { n: edN }))}</li>` : ""}${rp.insurance.show ? `<li>${esc(tx("cfIns", { n: rp.insurance.name.trim() }))}</li>` : ""}${stamp ? "" : `<li>${t().cfNoStamp}</li>`}</ul>
+      <div class="row"><button type="button" class="btn btn-out" id="cfNo">${t().cancel}</button><button type="button" class="btn btn-pri" id="cfOk">${svg(IC.ok, 2.4)}${t().cfOk}</button></div></div>`;
+    ov.hidden = false; $("cfOk").focus();
+  }
+  function doApprove() {
+    const id = ed.id, rp = ed.rp;
+    rp.custom = rp.custom.filter(c => c.title.trim()).map(c => ({ ...c, title: c.title.trim(), text: c.text.trim() }));
+    rp.insurance = rp.insurance.show ? { show: true, name: rp.insurance.name.trim() } : { show: false, name: "" };
+    try { saveRp({ status: "approved", approvedAt: new Date().toISOString(), approvedBy: me.name }); } catch (e) { return toast(e.message); }
+    $("repOv").hidden = true; $("repOv").innerHTML = ""; ed = null; history.replaceState(null, "", location.pathname);
+    toast(t().approvedMsg); render(); view(id);
+  }
+  window.addEventListener("popstate", () => { const id = new URLSearchParams(location.search).get("id"); if (!id && ed) { ed = null; render(); } });
 
   document.addEventListener("click", e => { if (e.target.closest("[data-soon]")) { e.preventDefault(); toast(t().soonMsg); } });
   function toast(msg) { const el = $("toast"); el.textContent = msg; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 3200); }

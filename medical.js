@@ -50,6 +50,11 @@ const MadaMedical = (() => {
       { code: "TBIL", name: { en: "Total Bilirubin", ar: "البيليروبين الكلي" }, unit: "mg/dL", low: 0.1, high: 1.2, critHigh: 15 }],
     VD25: [{ code: "VITD", name: { en: "Vitamin D (25-OH)", ar: "فيتامين د" }, unit: "ng/mL", low: 30, high: 100, critLow: 10 }]
   };
+  // Result parameters (unit, normal range, critical limits) set on Services > Laboratory replace the samples above.
+  try {
+    const lab = typeof MadaStore !== "undefined" ? MadaStore.getJSON("mada-svc-lab", null) : null;
+    ((lab && lab.tests) || []).forEach(x => { if (x.params && x.params.length) ANALYTES[x.code] = x.params; });
+  } catch (e) {}
   // SAMPLE DATA ONLY: Doctor Portal catalogue code (doctor-orders.js) to the lab's test code above. The lab system sends the real mapping.
   const CATALOG = { "LAB-001": "CBC", "LAB-101": "FBS", "LAB-102": "HBA1C", "LAB-103": "LIPID", "LAB-104": "LFT", "LAB-105": "KFT", "LAB-203": "VD25" };
   const analytesOf = it => (it.tests || []).flatMap(c => ANALYTES[c] || []);

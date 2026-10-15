@@ -4,7 +4,7 @@
 const MadaLabs = (() => {
   // fasting: "none" | "fast" (with hours) | "morning" (morning sample preferred)
   // sample: "blood" | "urine" | "stool"
-  const TESTS = [
+  const DEF_TESTS = [
     { code: "CBC", cat: "hematology", fasting: "none", hours: 6, price: 80, sample: "blood",
       name: { en: "Complete Blood Count (CBC)", ar: "صورة الدم الكاملة (CBC)" },
       alias: "cbc hemoglobin انيميا فقر دم هيموجلوبين",
@@ -120,9 +120,7 @@ const MadaLabs = (() => {
       desc: { en: "Screens for hepatitis B infection.", ar: "فحص الإصابة بالتهاب الكبد الوبائي ب." } }
   ];
 
-  // Package categories, in the order the chips appear.
-  const PKG_CATS = ["diabetes", "checkup", "heart", "thyroid", "vitamins", "elderly", "women", "men"];
-  const PACKAGES = [
+  const DEF_PACKAGES = [
     { id: "diabetes", cat: "diabetes", tag: "recommended", price: 199, fasting: "fast", tests: ["HBA1C", "FBS", "LIPID", "KFT"],
       name: { en: "Diabetes Follow-up Package", ar: "باقة متابعة السكري" } },
     { id: "fullbody", cat: "checkup", tag: "popular", price: 299, fasting: "optional", tests: ["CBC", "LFT", "KFT", "VD25", "THYRP"],
@@ -155,10 +153,51 @@ const MadaLabs = (() => {
       name: { en: "Men's Health Package", ar: "باقة صحة الرجل" } }
   ];
 
-  const byCode = Object.fromEntries(TESTS.map(t => [t.code, t]));
-  const pkgById = Object.fromEntries(PACKAGES.map(p => [p.id, p]));
-  const pkgHours = p => Math.max(...p.tests.map(c => byCode[c].hours));
-  const pkgValue = p => p.tests.reduce((s, c) => s + byCode[c].price, 0);
+  // Categories, in the order the chips appear. type "test" groups individual tests, "package" groups packages.
+  const DEF_CATS = [
+    { id: "hematology", type: "test", name: { en: "Hematology", ar: "أمراض الدم" } },
+    { id: "biochemistry", type: "test", name: { en: "Biochemistry", ar: "الكيمياء الحيوية" } },
+    { id: "hormones", type: "test", name: { en: "Hormones", ar: "الهرمونات" } },
+    { id: "vitamins", type: "test", name: { en: "Vitamins", ar: "الفيتامينات" } },
+    { id: "others", type: "test", name: { en: "Others", ar: "أخرى" } },
+    { id: "diabetes", type: "package", name: { en: "Diabetes", ar: "السكري" } },
+    { id: "checkup", type: "package", name: { en: "General Checkup", ar: "الفحص العام" } },
+    { id: "heart", type: "package", name: { en: "Heart", ar: "القلب" } },
+    { id: "thyroid", type: "package", name: { en: "Thyroid & Hormones", ar: "الغدة والهرمونات" } },
+    { id: "vitamins", type: "package", name: { en: "Vitamins & Anemia", ar: "الفيتامينات وفقر الدم" } },
+    { id: "elderly", type: "package", name: { en: "Elderly & Joints", ar: "كبار السن والمفاصل" } },
+    { id: "women", type: "package", name: { en: "Women", ar: "المرأة" } },
+    { id: "men", type: "package", name: { en: "Men", ar: "الرجل" } }
+  ];
 
-  return { TESTS, PACKAGES, PKG_CATS, byCode, pkgById, pkgHours, pkgValue };
+  // One lab catalogue for the whole system, managed on services-lab.html and kept in MadaStore "mada-svc-lab":
+  // { cats: [{ id, type, name }], tests: [...], packages: [...], updatedAt, updatedBy }. Until it is first saved, the lists above are used.
+  // A test or package with active: false stays on old requests (byCode, pkgById) but is no longer offered.
+  // TODO: move to the backend catalogue (one list for the dashboard and the Doctor Portal).
+  const KEY = "mada-svc-lab";
+  const copy = x => JSON.parse(JSON.stringify(x));
+  const defaults = () => ({ cats: copy(DEF_CATS), tests: copy(DEF_TESTS), packages: copy(DEF_PACKAGES) });
+  const saved = (() => { try { return typeof MadaStore !== "undefined" ? MadaStore.getJSON(KEY, null) : null; } catch (e) { return null; } })();
+  const data = saved && Array.isArray(saved.cats) ? saved : defaults();
+  // Package codes: the sample packages are PKG-0001 to PKG-0015 in list order; new ones get the next number on services-lab.html.
+  DEF_PACKAGES.forEach((p, i) => { p.code = "PKG-" + String(i + 1).padStart(4, "0"); });
+  const defCode = Object.fromEntries(DEF_PACKAGES.map(p => [p.id, p.code]));
+  data.packages.forEach(p => { if (!p.code) p.code = defCode[p.id] || p.id.toUpperCase(); });
+  const CATS = data.cats, ALL_TESTS = data.tests, ALL_PACKAGES = data.packages;
+  const on = x => x.active !== false;
+  const TESTS = ALL_TESTS.filter(on);
+  const PACKAGES = ALL_PACKAGES.filter(on);
+  const TEST_CATS = CATS.filter(c => c.type === "test").map(c => c.id);
+  const PKG_CATS = CATS.filter(c => c.type === "package").map(c => c.id);
+  const catName = (id, type, lang) => { const c = CATS.find(x => x.id === id && (!type || x.type === type)); return c ? (c.name[lang] || c.name.en) : id; };
+
+  const byCode = Object.fromEntries(ALL_TESTS.map(t => [t.code, t]));
+  const pkgById = Object.fromEntries(ALL_PACKAGES.map(p => [p.id, p]));
+  const inPkg = p => p.tests.filter(c => byCode[c]);
+  const pkgHours = p => Math.max(0, ...inPkg(p).map(c => byCode[c].hours || 0));
+  const pkgValue = p => inPkg(p).reduce((s, c) => s + (byCode[c].price || 0), 0);
+  const save = (d, by) => MadaStore.setJSON(KEY, { cats: d.cats, tests: d.tests, packages: d.packages, updatedAt: new Date().toISOString(), updatedBy: by || null });
+  const edit = () => copy({ cats: CATS, tests: ALL_TESTS, packages: ALL_PACKAGES });
+
+  return { TESTS, PACKAGES, PKG_CATS, TEST_CATS, CATS, ALL_TESTS, ALL_PACKAGES, catName, byCode, pkgById, pkgHours, pkgValue, KEY, defaults, edit, save, savedAt: saved && saved.updatedAt };
 })();

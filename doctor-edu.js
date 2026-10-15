@@ -201,5 +201,7 @@ const DrEdu = (() => {
       reset(); ctx.toast(t().saved); ctx.go(ctx.nextKey);
     });
   }
-  return { view, bind, reset, L };
+  // Topic name in a language, for the medical report.
+  const topicIn = (id, l) => (r => r ? r[l === "ar" ? 2 : 1] : id)(ALL().find(r => r[0] === id));
+  return { view, bind, reset, L, topicIn };
 })();

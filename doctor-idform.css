@@ -1,0 +1,47 @@
+/* Patient Identity Confirmation form (doctor-idform.js); signature pad, declaration and header reuse doctor-consent.css */
+.idf-paper { border: 1px solid #e3e8ea; border-radius: 16px; background: #fff; padding: 22px 24px; margin-bottom: 20px; box-shadow: 0 1px 0 rgba(16,35,43,.03); }
+.idf-brand { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding-bottom: 16px; margin-bottom: 18px; border-bottom: 2px solid #0b6b5c; }
+.idf-brand img { width: auto; height: 52px; }
+.idf-bn { display: grid; line-height: 1.2; }
+.idf-bn b { font-size: 18px; color: #10232b; }
+.idf-bn span { font-size: 12px; color: #0b6b5c; }
+.idf-bt { margin-inline-start: auto; text-align: end; }
+.idf-bt h2 { font-size: 18px; color: #15304a; }
+.idf-bt span { display: block; margin-top: 4px; font-size: 13px; color: #5d6d78; }
+.idf-bt b { color: #15304a; font-weight: 600; }
+.idf-note { font-size: 13px; color: #5d6d78; margin-bottom: 16px; }
+.idf-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 18px; margin-bottom: 18px; }
+.idf-f { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.idf-f.wide { grid-column: 1 / -1; }
+.idf-f > label { font-size: 14px; font-weight: 600; color: #15304a; }
+.idf-f .hx-in { height: 50px; font-size: 15px; }
+.idf-f.bad .hx-in { border-color: #dc2626; }
+.idf-err { font-size: 13px; color: #dc2626; }
+.idf-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.idf-seg button { height: 50px; border: 1px solid #e3e8ea; border-radius: 10px; background: #fff; font: inherit; font-size: 15px; font-weight: 600; color: #15304a; cursor: pointer; }
+.idf-seg button[aria-pressed="true"] { background: #ecf8f3; border-color: #7cc4a4; color: #0f6b52; box-shadow: inset 0 0 0 1px #7cc4a4; }
+.idf-f.bad .idf-seg button { border-color: #f0b4b4; }
+.idf-warn { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 18px; padding: 12px 14px; border-radius: 12px; background: #fdf4e3; border: 1px solid #f3dcb0; color: #6b4a12; font-size: 14px; font-weight: 600; }
+.idf-warn svg { width: 20px; height: 20px; color: #a35a00; flex: none; }
+.idf-decl { padding: 16px 18px; border-radius: 14px; background: #eef2f7; border: 1px solid #e1e7ef; margin-bottom: 18px; }
+.idf-decl b { font-size: 15px; color: #15304a; }
+.idf-decl .cs-bi { margin-top: 8px; font-size: 15px; line-height: 1.8; color: #2c3d43; }
+.idf-decl .cs-bi > span { display: block; }
+.idf-sigold { display: block; width: 100%; height: 200px; object-fit: contain; background: #f7f8f9; }
+.idf-dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; margin: 0 0 18px; }
+.idf-dl > div { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px dashed #d5dde0; }
+.idf-dl dt { font-size: 13.5px; color: #6b7a80; flex: none; }
+.idf-dl dd { margin: 0; font-size: 14.5px; font-weight: 600; color: #15304a; text-align: end; min-width: 0; overflow-wrap: anywhere; }
+.idf-num { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; }
+.idf-by { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 14px; font-weight: 600; color: #0f6b52; }
+.idf-by svg { width: 17px; height: 17px; }
+.idf-edit { margin-top: 16px; height: 46px; }
+@media (max-width: 900px) {
+  .idf-paper { padding: 16px; }
+  .idf-grid, .idf-dl { grid-template-columns: minmax(0, 1fr); }
+  .idf-bt { margin-inline-start: 0; text-align: start; flex-basis: 100%; }
+  .idf-brand img { height: 44px; }
+}
+.idf-acts { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.idf-acts .idf-edit { margin-top: 0; }
+@media (max-width: 900px) { .idf-acts > * { flex: 1 1 100%; justify-content: center; } }

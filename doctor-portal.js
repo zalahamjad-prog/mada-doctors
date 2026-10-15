@@ -7,6 +7,7 @@ const DrPortal = (() => {
     { k: "visits", href: "doctor-visits.html", icon: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="m9 15 2 2 4-4"/>' },
     { k: "schedule", href: "doctor-schedule.html", icon: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>' },
     { k: "patients", href: "doctor-patients.html", icon: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20v-1a6.5 6.5 0 0 1 13 0v1"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14a6.5 6.5 0 0 1 3 5.5v.5"/>' },
+    { k: "alerts", href: "doctor-alerts.html", icon: '<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/>' },
     { k: "orders", href: "doctor-orders-list.html", icon: '<path d="M9 4h6v3H9z"/><path d="M15 5.5h3v15H6v-15h3"/><path d="M9 11h6M9 15h4"/>' },
     { k: "consults", icon: '<path d="M6 3v6a4 4 0 0 0 8 0V3"/><path d="M10 13v2a5 5 0 0 0 10 0v-2"/><circle cx="20" cy="11" r="2"/>' },
     { k: "reports", href: "doctor-reports.html", icon: '<path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/>' },
@@ -19,10 +20,10 @@ const DrPortal = (() => {
   // TODO: the real Mada support number.
   const SUPPORT = "920000000";
   const L = {
-    en: { home: "Home", visits: "My Visits", schedule: "My Schedule", patients: "Patients", orders: "Orders", consults: "Consultations", reports: "Reports", soon: "Soon", account: "Profile", logout: "Log out", accountT: "Account", support: "Support",
-      nT: "Notifications", nNone: "No new notifications.", nBook: "New booking", nRes_lab: "Lab results ready", nRes_radiology: "Radiology results ready", today: "Today", tomorrow: "Tomorrow" },
-    ar: { home: "الرئيسية", visits: "زياراتي", schedule: "جدولي", patients: "المرضى", orders: "الأوردرات", consults: "الاستشارات", reports: "التقارير", soon: "قريباً", account: "الملف الشخصي", logout: "تسجيل الخروج", accountT: "الحساب", support: "الدعم",
-      nT: "الإشعارات", nNone: "ما فيه إشعارات جديدة.", nBook: "حجز جديد", nRes_lab: "نتائج التحاليل جاهزة", nRes_radiology: "نتيجة الأشعة جاهزة", today: "اليوم", tomorrow: "بكرة" }
+    en: { home: "Home", visits: "My Visits", schedule: "My Schedule", patients: "Patients", orders: "Orders", alerts: "Critical Results", consults: "Consultations", reports: "Reports", soon: "Soon", account: "Profile", logout: "Log out", accountT: "Account", support: "Support",
+      nT: "Notifications", nNone: "No new notifications.", nBook: "New booking", nRes_lab: "Lab results ready", nRes_radiology: "Radiology results ready", nCrit: "Critical result", nHigh: "High result", today: "Today", tomorrow: "Tomorrow" },
+    ar: { home: "الرئيسية", visits: "زياراتي", schedule: "جدولي", patients: "المرضى", orders: "الأوردرات", alerts: "النتائج الحرجة", consults: "الاستشارات", reports: "التقارير", soon: "قريباً", account: "الملف الشخصي", logout: "تسجيل الخروج", accountT: "الحساب", support: "الدعم",
+      nT: "الإشعارات", nNone: "ما فيه إشعارات جديدة.", nBook: "حجز جديد", nRes_lab: "نتائج التحاليل جاهزة", nRes_radiology: "نتيجة الأشعة جاهزة", nCrit: "نتيجة حرجة", nHigh: "نتيجة مرتفعة", today: "اليوم", tomorrow: "بكرة" }
   };
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const svg = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">${p}</svg>`;
@@ -30,8 +31,10 @@ const DrPortal = (() => {
   function render(me, lang, active) {
     const t = L[lang];
     menuCss();
+    // Critical Results shows how many alerts are still open (alerts.js).
+    const openN = m => m.k === "alerts" && me && typeof MadaAlerts !== "undefined" ? MadaAlerts.open(me.doctorId || me.staffId).length : 0;
     const link = m => m.href
-      ? `<a href="${m.href}" ${m.k === active ? 'aria-current="page"' : ""}${m.out ? ' class="dp-out" data-dp-logout' : ""}>${svg(m.icon)}${t[m.k]}</a>`
+      ? `<a href="${m.href}" ${m.k === active ? 'aria-current="page"' : ""}${m.out ? ' class="dp-out" data-dp-logout' : ""}>${svg(m.icon)}${t[m.k]}${openN(m) ? `<span class="dp-cnt">${openN(m)}</span>` : ""}</a>`
       : `<a href="#" class="soon" aria-disabled="true" data-soon>${svg(m.icon)}${t[m.k]}<span class="soon-tag">${t.soon}</span></a>`;
     document.getElementById("menu").innerHTML = MENU.filter(m => m.href).map(link).join("")
       + `<span class="dp-sep" aria-hidden="true"></span>` + MENU.filter(m => !m.href).map(link).join("")
@@ -50,6 +53,7 @@ const DrPortal = (() => {
   //  - New booking: a visit booked with this doctor that the doctor has not seen yet (opening the bell marks them seen).
   //  - Results ready: lab or radiology results entered for this doctor's orders, waiting for approval
   //    (medical.js, reviewed on doctor-orders-list.html). They stay until the doctor approves them.
+  //  - Critical / high result: a lab result with a high or critical value (alerts.js) the doctor has not opened yet.
   // Read straight from storage so every portal page can show it.
   // TODO: replace with push notifications from the bookings and orders APIs.
   const RES_STEP = { lab: 3, radiology: 2 };
@@ -67,11 +71,13 @@ const DrPortal = (() => {
       seen = bk.slice(2).map(o => o.id);
       if (bk.length) try { MadaStore.setJSON(seenKey(id), seen); } catch (e) {}
     }
+    if (typeof MadaAlerts !== "undefined") MadaAlerts.open(id).forEach(a => out.push({ kind: "crit", a, at: a.at, unread: !a.rec.seenAt }));
     bookings(id).forEach(o => out.push({ kind: "book", o, at: o.booking.at || o.bookedAt || o.createdAt, unread: !seen.includes(o.id) }));
     read("mada-medical", []).filter(r => r.doctorId === id && r.status === "open").forEach(r => r.items.forEach(it => {
       if (RES_STEP[it.type] === it.step && (it.type !== "lab" || it.v2)) out.push({ kind: "res", r, it, at: (it.log[it.log.length - 1] || {}).at || r.createdAt, unread: true });
     }));
-    return out.sort((a, b) => String(b.at).localeCompare(String(a.at)));
+    // Unopened critical and high results first, then the rest by time.
+    return out.sort((a, b) => (b.kind === "crit") - (a.kind === "crit") || String(b.at).localeCompare(String(a.at)));
   }
   function markSeen(me) {
     const id = me.doctorId || me.staffId;
@@ -104,7 +110,7 @@ const DrPortal = (() => {
           markSeen(bellMe); bell(bellMe, bellLang);
         } else if (pn && !e.target.closest("#dp-pn")) pn.remove();
       }, true);
-      window.addEventListener("storage", e => { if (!e.key || e.key === "mada-medical" || e.key === "mada-orders") bell(bellMe, bellLang); });
+      window.addEventListener("storage", e => { if (!e.key || ["mada-medical", "mada-orders", "mada-critical-alerts"].includes(e.key)) bell(bellMe, bellLang); });
     }
     const n = notes(me).filter(x => x.unread).length;
     let bd = b.querySelector(".dp-bd");
@@ -124,7 +130,9 @@ const DrPortal = (() => {
   function openPanel(b, items) {
     const t = L[bellLang], nm = v => v && typeof v === "object" ? v[bellLang] || v.en : v || "";
     const pn = document.createElement("div"); pn.id = "dp-pn"; pn.className = "dp-pn"; pn.setAttribute("role", "dialog"); pn.setAttribute("aria-label", t.nT);
-    const row = x => x.kind === "book"
+    const row = x => x.kind === "crit"
+      ? `<a href="doctor-alerts.html?id=${encodeURIComponent(x.a.key)}" class="un"><span class="ic res">${svg('<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/>')}</span><span><b>${x.a.critical ? t.nCrit : t.nHigh}</b>${esc(nm(x.a.r.patient))} · <span dir="ltr">${esc(x.a.r.mrn || "")}</span><small>${esc(x.a.rows.map(y => y.a.code + " " + y.v).join(" · "))}</small></span><i class="dot"></i></a>`
+      : x.kind === "book"
       ? `<a href="doctor-visits.html" class="${x.unread ? "un" : ""}"><span class="ic book">${svg(IC_BOOK)}</span><span><b>${t.nBook}</b>${esc(nm(x.o.patient))}<small>${esc(when(x.o))}</small></span>${x.unread ? '<i class="dot"></i>' : ""}</a>`
       : `<a href="doctor-orders-list.html?id=${encodeURIComponent(x.r.id)}" class="un"><span class="ic res">${svg(IC_RES)}</span><span><b>${t["nRes_" + x.it.type]}</b>${esc(nm(x.r.patient))}<small>${esc(nm(x.it.title))}</small></span><i class="dot"></i></a>`;
     const shown = items.filter(x => x.unread).slice(0, 8);
@@ -140,6 +148,7 @@ const DrPortal = (() => {
     const st = document.createElement("style"); st.id = "dp-menu-css";
     st.textContent = `.menu .dp-sep{display:block;height:1px;background:#e9eef0;margin:8px 14px}
 .menu .dp-lbl{display:block;margin:14px 14px 4px;padding-top:14px;border-top:1px solid #e9eef0;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#8a979c}
+.menu .dp-cnt{margin-inline-start:auto;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:#dc2626;color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;line-height:1}
 .menu a.dp-out{color:#b42318}[dir="rtl"] .menu a.dp-out svg{transform:scaleX(-1)}.menu a.dp-out:hover{background:#fdf1f0}
 @media (max-width:900px){.menu .dp-sep,.menu .dp-lbl{flex:none;width:1px;height:24px;margin:7px 4px;padding:0;border:0;background:#e3e8ea;font-size:0;align-self:center}}`;
     document.head.appendChild(st);

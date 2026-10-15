@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="doctor-nurse.css">
 <link rel="stylesheet" href="doctor-edu.css">
 <link rel="stylesheet" href="doctor-consent.css">
+<link rel="stylesheet" href="doctor-idform.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -517,6 +518,7 @@
 <script src="orders.js"></script>
 <script src="medical.js"></script>
 <script src="patients.js"></script>
+<script src="alerts.js"></script>
 <script src="doctor-portal.js"></script>
 <script src="doctor-history.js"></script>
 <script src="doctor-exam.js"></script>
@@ -526,6 +528,7 @@
 <script src="doctor-orders.js"></script>
 <script src="doctor-nurse.js"></script>
 <script src="doctor-edu.js"></script>
+<script src="doctor-idform.js"></script>
 <script src="doctor-consent.js"></script>
 <script>
   const me = MadaAuth.requireAuth("doctor");
@@ -534,7 +537,7 @@
   // The doctor's visit workspace (doctor-visit.html?id=ORD-...). Seven steps; each one is saved in order.doctorVisit.steps.
   // Step 1 (arrival) checks the patient's identity; what it confirms is also saved to the patient file when the file has no value yet.
   // Step 2 (case history) lives in doctor-history.js. Step 3 (vitals) saves doctorVisit.steps.vitals = { temp, bp, hr, sugar, spo2, rr, at, by };
-  // "Save as Draft" keeps the entries in doctorVisit.vitalsDraft. Step 4 (examination) lives in doctor-exam.js, step 5 (allergies) in doctor-allergy.js, step 6 (diagnosis) in doctor-diagnosis.js, step 7 (treatment plan) in doctor-plan.js, step 8 (orders & services) in doctor-orders.js, step 9 (nurse note) in doctor-nurse.js, step 10 (family education) in doctor-edu.js, step 11 (patient consent, completes the visit) in doctor-consent.js.
+  // "Save as Draft" keeps the entries in doctorVisit.vitalsDraft. Step 4 (examination) lives in doctor-exam.js, step 5 (allergies) in doctor-allergy.js, step 6 (diagnosis) in doctor-diagnosis.js, step 7 (treatment plan) in doctor-plan.js, step 8 (orders & services) in doctor-orders.js, step 9 (nurse note) in doctor-nurse.js, step 10 (family education) in doctor-edu.js, step 11 (patient identity confirmation) in doctor-idform.js, step 12 (patient consent, completes the visit) in doctor-consent.js.
   const id = new URLSearchParams(location.search).get("id");
   const STEPS = [
     { k: "arrival", icon: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>' },
@@ -547,6 +550,7 @@
     { k: "orders", icon: '<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 3.5h3l2.4 11.2a1.5 1.5 0 0 0 1.5 1.2h8.5a1.5 1.5 0 0 0 1.5-1.1L21 7.5H6.4"/>' },
     { k: "nurse", icon: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M9 12h6M9 16h4"/>' },
     { k: "edu", icon: '<path d="M3 8.5 12 4l9 4.5-9 4.5z"/><path d="M7 10.5V15c0 1.5 2.2 3 5 3s5-1.5 5-3v-4.5"/><path d="M21 8.5V14"/>' },
+    { k: "idform", icon: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.6-1.5 1.7-2.2 3-2.2s2.4.7 3 2.2M14 10h4M14 13h3"/>' },
     { k: "consent", icon: '<path d="M4 20h16"/><path d="M5 16c3-6 5-9 6.5-9S12 12 9 16s4-5 6-5 0 5 2 5 2-2 3-3"/>' }
   ];
   const IC = {
@@ -601,7 +605,7 @@
       pfNid: "ID / Iqama No.", pfNat: "Nationality", pfCity: "City", pfAl: "Allergies", pfNoAl: "No known allergies", pfAlNr: "Not recorded yet in this visit",
       pfNow: "This Visit", pfDx: "Diagnosis", pfStepsN: "Steps done", pfVit: "Vitals", pfPrev: "Previous Visits", pfNoPrev: "No previous visits on this file",
       sv_doctor: "Doctor Visit", sv_nursing: "Nursing", sv_blood: "Lab Tests", sv_iv: "IV Therapy", st_completed: "Completed", st_cancelled: "Cancelled", st_other: "Open",
-      s_arrival: "Arrival Confirmation", s_history: "Case History", s_vitals: "Vital Signs", s_exam: "Clinical Examination", s_allergy: "Allergy History", s_assess: "Diagnosis", s_plan: "Treatment Plan", s_orders: "Orders & Services", s_nurse: "Nurse Note", s_edu: "Family Education", s_consent: "Patient Consent", allergyT: "Allergy:", draftB: "Draft", missT: "Finish these steps before completing the visit:",
+      s_arrival: "Arrival Confirmation", s_history: "Case History", s_vitals: "Vital Signs", s_exam: "Clinical Examination", s_allergy: "Allergy History", s_assess: "Diagnosis", s_plan: "Treatment Plan", s_orders: "Orders & Services", s_nurse: "Nurse Note", s_edu: "Family Education", s_idform: "Identity Confirmation", s_consent: "Patient Consent", allergyT: "Allergy:", draftB: "Draft", missT: "Finish these steps before completing the visit:",
       payBar: "Payment open: {n} still to collect. You can carry on with the visit.", payBarRef: "Refund due: {n} to return to the patient.", payGo: "Collect payment", payView: "Review payment",
       lockedMsg: "Finish the steps before this one first.",
       arrSub: "Verify patient identity and confirm arrival at the correct location.",
@@ -631,7 +635,7 @@
       pfNid: "رقم الهوية / الإقامة", pfNat: "الجنسية", pfCity: "المدينة", pfAl: "الحساسية", pfNoAl: "لا توجد حساسية معروفة", pfAlNr: "ما انسجلت في هذه الزيارة للحين",
       pfNow: "هذه الزيارة", pfDx: "التشخيص", pfStepsN: "الخطوات المكتملة", pfVit: "العلامات الحيوية", pfPrev: "الزيارات السابقة", pfNoPrev: "ما فيه زيارات سابقة على هذا الملف",
       sv_doctor: "زيارة طبيب", sv_nursing: "تمريض", sv_blood: "تحاليل", sv_iv: "علاج وريدي", st_completed: "مكتملة", st_cancelled: "ملغاة", st_other: "مفتوحة",
-      s_arrival: "تأكيد الوصول", s_history: "التاريخ المرضي", s_vitals: "العلامات الحيوية", s_exam: "الفحص السريري", s_allergy: "تاريخ الحساسية", s_assess: "التشخيص", s_plan: "الخطة العلاجية", s_orders: "الطلبات والخدمات", s_nurse: "ملاحظة الممرضة", s_edu: "تثقيف الأسرة", s_consent: "موافقة المريض", allergyT: "حساسية:", draftB: "مسودة", missT: "كمّل هذه الخطوات قبل إنهاء الزيارة:",
+      s_arrival: "تأكيد الوصول", s_history: "التاريخ المرضي", s_vitals: "العلامات الحيوية", s_exam: "الفحص السريري", s_allergy: "تاريخ الحساسية", s_assess: "التشخيص", s_plan: "الخطة العلاجية", s_orders: "الطلبات والخدمات", s_nurse: "ملاحظة الممرضة", s_edu: "تثقيف الأسرة", s_idform: "تأكيد هوية المريض", s_consent: "موافقة المريض", allergyT: "حساسية:", draftB: "مسودة", missT: "كمّل هذه الخطوات قبل إنهاء الزيارة:",
       payBar: "الدفع مفتوح: باقي {n} للتحصيل. تقدر تكمل الزيارة عادي.", payBarRef: "استرجاع مستحق: {n} يرجع للمريض.", payGo: "تحصيل الدفع", payView: "مراجعة الدفع",
       lockedMsg: "خلّص الخطوات اللي قبلها أول.",
       arrSub: "تحقق من هوية المريض وأكد الوصول للموقع الصحيح.",
@@ -666,7 +670,7 @@
   }
   // Buttons that only move around (open a section, a catalogue tab, a cart, close a popup) still work in view only.
   const RO_OK = "[data-sub],[data-go],[data-cat],[data-rcat],[data-lcat],[data-ltab],[data-tab],[data-pview],[data-gostep],[data-step],[data-view]";
-  const RO_IDS = /^(hxBack|orBack2?|orCart|orDrX|orDrHub|prevToggle|advToggle|plDetails|plNext|plPrev|nuFull|nuFX|orMdX|orRdX|orPkX|orPkClose|orPyX|orQClr|pfOpen|pfX)$/;
+  const RO_IDS = /^(hxBack|orBack2?|orCart|orDrX|orDrHub|prevToggle|advToggle|plDetails|plNext|plPrev|nuFull|nuFX|orMdX|orRdX|orPkX|orPkClose|orPyX|orQClr|pfOpen|pfX|idDl)$/;
   function applyRo() {
     $("stepCard").querySelectorAll("input, textarea, select").forEach(el => { if (el.type === "search") return; if (/^(text|tel|number|date|email)$/.test(el.type) || el.tagName === "TEXTAREA") el.readOnly = true; else el.disabled = true; });
   }
@@ -852,7 +856,7 @@
     if (!$("doneOv").hidden) openDone();
     if (!o) { $("vw").innerHTML = `<div class="card missing"><h1 style="font-size:22px;color:#15304a">${t().missingT}</h1><p style="margin:8px 0 18px;color:var(--muted)">${t().missingS}</p><a class="back" href="doctor-visits.html">${svg(IC.back, 2)}${t().back}</a></div>`; return; }
     if (!active) active = STEPS[Math.min(doneCount(o), STEPS.length - 1)].k;
-    const hx = active === "history", body = active === "arrival" ? arrivalCard(o) : hx ? DrHistory.view(o, hxCtx) : active === "vitals" ? vitalsCard(o) : active === "exam" ? DrExam.view(o, exCtx) : active === "allergy" ? DrAllergy.view(o, alCtx) : active === "assess" ? DrDiagnosis.view(o, dxCtx) : active === "plan" ? DrPlan.view(o, planCtx) : active === "orders" ? DrOrders.view(o, orCtx) : active === "nurse" ? DrNurse.view(o, nuCtx) : active === "edu" ? DrEdu.view(o, edCtx) : active === "consent" ? DrConsent.view(o, csCtx) : soonCard(active);
+    const hx = active === "history", body = active === "arrival" ? arrivalCard(o) : hx ? DrHistory.view(o, hxCtx) : active === "vitals" ? vitalsCard(o) : active === "exam" ? DrExam.view(o, exCtx) : active === "allergy" ? DrAllergy.view(o, alCtx) : active === "assess" ? DrDiagnosis.view(o, dxCtx) : active === "plan" ? DrPlan.view(o, planCtx) : active === "orders" ? DrOrders.view(o, orCtx) : active === "nurse" ? DrNurse.view(o, nuCtx) : active === "edu" ? DrEdu.view(o, edCtx) : active === "idform" ? DrIdForm.view(o, idCtx) : active === "consent" ? DrConsent.view(o, csCtx) : soonCard(active);
     const backA = VIEW && o.mrn ? `<a class="back" href="doctor-patient.html?mrn=${encodeURIComponent(o.mrn)}">${svg(IC.back, 2)}${t().backFile}</a>` : `<a class="back" href="doctor-visits.html">${svg(IC.back, 2)}${t().back}</a>`;
     $("vw").innerHTML = `${backA}${VIEW ? `<div class="ro-bar">${svg(IC.info, 2)}<span><b>${t().roT}</b> ${t().roS}</span></div>` : ""}${strip(o)}${VIEW ? "" : payBar(o)}
       <div class="vw-body">${stepList(o)}<section class="card ${hx && DrHistory.isOpen() ? "hx-card" : ""}" id="stepCard">${body}</section></div>`;
@@ -865,6 +869,7 @@
     if (active === "orders") DrOrders.bind($("stepCard"), o, orCtx);
     if (active === "nurse") DrNurse.bind($("stepCard"), o, nuCtx);
     if (active === "edu") DrEdu.bind($("stepCard"), o, edCtx);
+    if (active === "idform") DrIdForm.bind($("stepCard"), o, idCtx);
     if (active === "consent") DrConsent.bind($("stepCard"), o, csCtx);
     if (VIEW) applyRo();
   }
@@ -873,7 +878,7 @@
     const i = STEPS.findIndex(x => x.k === k), pad = n => String(n).padStart(2, "0");
     return { get stepOf() { return { n: pad(i + 1), m: pad(STEPS.length) }; }, prevKey: STEPS[Math.max(i - 1, 0)].k, nextKey: STEPS[Math.min(i + 1, STEPS.length - 1)].k };
   };
-  function goStep(k) { active = k; DrHistory.reset(); DrExam.reset(); DrAllergy.reset(); DrDiagnosis.reset(); DrPlan.reset(); DrOrders.reset(); DrNurse.reset(); DrEdu.reset(); DrConsent.reset(); editing = false; tried = false; render(); window.scrollTo(0, 0); }
+  function goStep(k) { active = k; DrHistory.reset(); DrExam.reset(); DrAllergy.reset(); DrDiagnosis.reset(); DrPlan.reset(); DrOrders.reset(); DrNurse.reset(); DrEdu.reset(); DrIdForm.reset(); DrConsent.reset(); editing = false; tried = false; render(); window.scrollTo(0, 0); }
   // What the examination module needs from this page. Saving throws when browser storage is full (photos).
   function putVisit(patch) {
     const o = MadaOrders.get(id), dv = { ...o.doctorVisit, ...patch };
@@ -985,6 +990,29 @@
     MadaMedical.add({ orderId: o.id, bookingId: o.bookingId || null, mrn: o.mrn, patient: o.patient, mobile: o.mobile, service: o.service,
       doctorId: o.booking && o.booking.doctorId, source: "doctor", byDoctor: me.name, items });
   }
+  // Patient identity confirmation: starts from what was confirmed at arrival and the patient file; the signed form fills empty file fields.
+  const idCtx = {
+    ...stepNav("idform"),
+    get prevName() { return t()["s_" + this.prevKey]; },
+    get lang() { return current; }, svg, esc, loc, toast: m => toast(m), rerender() { render(); },
+    prefill(o) {
+      const file = (o.mrn && MadaPatients.get(o.mrn)) || {}, arr = stepsOf(o).arrival || {};
+      return { name: arr.name || T(file.name) || T(o.patient), nationality: file.nationality || "", idType: file.idType || "", idNumber: arr.idNumber || file.idNumber || "",
+        dob: arr.dob || file.dateOfBirth || "", idExpiry: file.idExpiry || "", birthPlace: file.birthPlace || "", employer: file.employer || "",
+        marital: file.maritalStatus || "", mobile: o.mobile || file.mobile || "" };
+    },
+    save(d) {
+      const o = MadaOrders.get(id), dv = o.doctorVisit || { status: "ongoing", startedAt: new Date().toISOString() };
+      putVisit({ ...dv, steps: { ...(dv.steps || {}), idform: { ...d, at: new Date().toISOString(), by: me.name } } });
+      if (o.mrn) {
+        const file = MadaPatients.get(o.mrn) || {}, keep = (k, v) => file[k] ? undefined : v;
+        MadaPatients.upsert({ fileNo: o.mrn, nationality: keep("nationality", d.nationality), idType: keep("idType", d.idType), idNumber: keep("idNumber", d.idNumber),
+          dateOfBirth: keep("dateOfBirth", d.dob), idExpiry: keep("idExpiry", d.idExpiry), birthPlace: keep("birthPlace", d.birthPlace),
+          employer: keep("employer", d.employer), maritalStatus: keep("maritalStatus", d.marital) });
+      }
+    },
+    go: goStep
+  };
   const csCtx = {
     ...stepNav("consent"),
     get prevName() { return t()["s_" + this.prevKey]; },

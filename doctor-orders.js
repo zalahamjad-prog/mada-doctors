@@ -834,5 +834,7 @@ const DrOrders = (() => {
     if (o.svc === "ref") { const sp = SPECS.find(x => x[0] === o.spec); return { en: `Referral to ${sp ? sp[1] : o.spec}`, ar: `تحويل إلى ${sp ? sp[2] : o.spec}` }; }
     const r = item(o.code); return r ? { en: r.en, ar: r.ar } : { en: o.code, ar: o.code };
   }
-  return { view, bind, reset, L, SVC, payState, openPay, item, labs, labTests, titleOf };
+  // How many services each Doctor Portal catalogue holds (dashboard Services page).
+  const counts = () => ({ lab: LAB.length, labPkg: PKG.length, rad: RAD.length, iv: IVS.length, ivPkg: IVPKG.length, nurse: SVC.nurse.items.length });
+  return { view, bind, reset, L, SVC, payState, openPay, item, labs, labTests, titleOf, counts };
 })();
