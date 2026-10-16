@@ -14,7 +14,8 @@ const MadaMedical = (() => {
   const TYPES = ["referral", "lab", "doctor", "radiology", "leave", "physio", "nursing"];
   // Steps of each item type; the last step means the item is done.
   const STEPS = {
-    referral: ["requested", "referred", "attended"],
+    // Referral: the doctor's request, the patient's consent, the staff's procedures (logged as often as needed), service delivered.
+    referral: ["requested", "consent", "procedures", "attended"],
     doctor: ["requested", "booked", "done"],
     nursing: ["requested", "booked", "done"],
     physio: ["requested", "booked", "done"],
@@ -74,10 +75,17 @@ const MadaMedical = (() => {
   }
   const openEsc = it => (it.escalations || []).filter(e => !e.resolved);
 
-  // Lab items saved before the "sample at the lab" step was added move one step on.
+  // Lab items saved before the "sample at the lab" step was added move one step on;
+  // referrals saved before the "patient consent" step was added move one step on too.
   function migrate(list) {
     let dirty = false;
     list.forEach(r => r.items.forEach(it => {
+      if (it.type === "referral" && !it.v3) {
+        it.v3 = true; dirty = true;
+        if (it.step >= 1) it.step += 1;
+        it.log.forEach(l => { if (l.step >= 1) l.step += 1; });
+        return;
+      }
       if (it.type !== "lab" || it.v2) return;
       it.v2 = true; dirty = true;
       if (it.step >= 2) it.step += 1;
@@ -96,7 +104,7 @@ const MadaMedical = (() => {
     const list = all();
     const n = list.reduce((m, r) => Math.max(m, parseInt(r.id.split("-")[1], 10) || 0), 7000) + 1;
     const item = { status: "open", contacts: [], ...req, id: "MR-" + n, createdAt: new Date().toISOString() };
-    item.items = item.items.map((it, i) => ({ step: 0, log: [{ step: 0, at: item.createdAt, by: req.byDoctor || null }], ...it, id: it.id || "IT-" + (i + 1) }));
+    item.items = item.items.map((it, i) => ({ step: 0, log: [{ step: 0, at: item.createdAt, by: req.byDoctor || null }], ...(it.type === "referral" ? { v3: true } : {}), ...it, id: it.id || "IT-" + (i + 1) }));
     list.push(item); save(list);
     return item;
   }
@@ -121,7 +129,7 @@ const MadaMedical = (() => {
     const r = get(id); if (!r) return null;
     const n = r.items.reduce((m, x) => Math.max(m, parseInt(String(x.id).split("-")[1], 10) || 0), 0) + 1;
     const at = new Date().toISOString();
-    return update(id, { items: [...r.items, { step: 0, log: [{ step: 0, at, by: by || null }], ...it, id: "IT-" + n, addedBy: by || null }] });
+    return update(id, { items: [...r.items, { step: 0, log: [{ step: 0, at, by: by || null }], ...(it.type === "referral" ? { v3: true } : {}), ...it, id: "IT-" + n, addedBy: by || null }] });
   }
   // Change fields on one item (lab results, notes, escalations).
   function patchItem(id, itemId, patch) {
@@ -139,6 +147,11 @@ const MadaMedical = (() => {
       return { ...it, step, ...(rejected ? { rejected: true } : {}), log: [...it.log, { step: it.step + 1, by, at: new Date().toISOString(), data: data || null }] };
     });
     return update(id, { items });
+  }
+  // Log one more entry on the item's current step without moving it (referral procedures, logged as often as needed).
+  function logStep(id, itemId, by, data) {
+    const at = new Date().toISOString();
+    return patchItem(id, itemId, it => ({ log: [...it.log, { step: it.step, by, at, data: data || null }] }));
   }
   // Waiting on the team for more than a day (or a result the doctor has not reviewed yet).
   function needsFollowUp(r) {
@@ -163,5 +176,5 @@ const MadaMedical = (() => {
   };
   const sampleItem = type => ({ type, title: SAMPLE[type][0], details: SAMPLE[type][1], ...(type === "lab" ? { tests: ["CBC", "HBA1C", "FBS"], v2: true } : {}) });
 
-  return { CATALOG, all, get, byOrder, add, addItem, linkBookings, update, patchItem, advance, ANALYTES, analytesOf, labStatus, labLate, openEsc, LAB_LATE_HOURS, isDone, progress, needsFollowUp, sampleItem, TYPES, STEPS, CHECKS };
+  return { CATALOG, all, get, byOrder, add, addItem, linkBookings, update, patchItem, advance, logStep, ANALYTES, analytesOf, labStatus, labLate, openEsc, LAB_LATE_HOURS, isDone, progress, needsFollowUp, sampleItem, TYPES, STEPS, CHECKS };
 })();

@@ -836,5 +836,11 @@ const DrOrders = (() => {
   }
   // How many services each Doctor Portal catalogue holds (dashboard Services page).
   const counts = () => ({ lab: LAB.length, labPkg: PKG.length, rad: RAD.length, iv: IVS.length, ivPkg: IVPKG.length, nurse: SVC.nurse.items.length });
-  return { view, bind, reset, L, SVC, payState, openPay, item, labs, labTests, titleOf, counts };
+  // A referral's specialty and provider names in both languages (Medical Requests page and the referral form).
+  function refInfo(o) {
+    const sp = SPECS.find(x => x[0] === o.spec), pv = PROVIDERS.find(x => x[0] === o.provider);
+    return { spec: sp ? { en: sp[1], ar: sp[2] } : { en: o.spec || "", ar: o.spec || "" },
+      provider: o.dest === "ext" ? { en: o.provider || "", ar: o.provider || "" } : pv ? { en: pv[1], ar: pv[2] } : null };
+  }
+  return { view, bind, reset, L, SVC, payState, openPay, item, labs, labTests, titleOf, refInfo, counts };
 })();
