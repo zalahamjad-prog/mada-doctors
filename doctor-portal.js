@@ -69,7 +69,7 @@ const DrPortal = (() => {
     if (!seen) {
       // SAMPLE DATA ONLY: on the first visit the two latest demo bookings show as new.
       const bk = bookings(id).sort((a, b) => String(b.booking.at || b.bookedAt).localeCompare(String(a.booking.at || a.bookedAt)));
-      seen = bk.slice(2).map(o => o.id);
+      seen = MadaStore.SAMPLES ? bk.slice(2).map(o => o.id) : [];
       if (bk.length) try { MadaStore.setJSON(seenKey(id), seen); } catch (e) {}
     }
     if (typeof MadaAlerts !== "undefined") MadaAlerts.open(id).forEach(a => out.push({ kind: "crit", a, at: a.at, unread: !a.rec.seenAt }));

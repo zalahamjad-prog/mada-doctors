@@ -78,13 +78,13 @@ const MadaOrders = (() => {
     other: { en: "Other", ar: "أخرى" }
   };
   // SAMPLE DATA ONLY: doctors who can be assigned to a visit. Replace with the real staff list.
-  const DOCTORS = [
+  const DOCTORS = !MadaStore.SAMPLES ? [] : [
     { id: "D01", name: { en: "Dr. Khalid Al-Mutairi", ar: "د. خالد المطيري" }, spec: { en: "Family Medicine", ar: "طب الأسرة" } },
     { id: "D02", name: { en: "Dr. Nada Al-Harbi", ar: "د. ندى الحربي" }, spec: { en: "Internal Medicine", ar: "الباطنة" } },
     { id: "D03", name: { en: "Dr. Faisal Al-Qahtani", ar: "د. فيصل القحطاني" }, spec: { en: "Geriatrics", ar: "طب كبار السن" } }
   ];
   // SAMPLE DATA ONLY: drivers who take the team to the visit. Replace with the real fleet list.
-  const DRIVERS = [
+  const DRIVERS = !MadaStore.SAMPLES ? [] : [
     { id: "DR01", name: { en: "Ahmed Al-Zahrani", ar: "أحمد الزهراني" }, car: { en: "Toyota Hiace · ABJ 4821", ar: "تويوتا هايس · أ ب ج 4821" }, mobile: "0551234870" },
     { id: "DR02", name: { en: "Majed Al-Harthi", ar: "ماجد الحارثي" }, car: { en: "Hyundai H1 · RSD 7314", ar: "هيونداي H1 · ر س د 7314" }, mobile: "0569981245" },
     { id: "DR03", name: { en: "Sultan Al-Jahdali", ar: "سلطان الجحدلي" }, car: { en: "Toyota Innova · KHM 2290", ar: "تويوتا إنوفا · ك ح م 2290" }, mobile: "0543307761" }
@@ -92,6 +92,9 @@ const MadaOrders = (() => {
   // Doctors added on the Staff page can also be assigned (their id is the employee ID).
   MadaStore.getJSON("mada-staff", []).filter(s => s.role === "doctor").forEach(s => DOCTORS.push({
     id: s.id, staff: true, active: s.status === "active", name: s.name, spec: { en: s.specialty || "", ar: s.specialty || "" } }));
+  // Drivers added on the Staff page (role driver). The car is not on the staff form yet (TODO with the fleet list).
+  MadaStore.getJSON("mada-staff", []).filter(s => s.role === "driver" && s.status === "active").forEach(s => DRIVERS.push({
+    id: s.id, staff: true, name: s.name, car: { en: "", ar: "" }, mobile: s.mobile || "" }));
   // Service area. Only Jeddah is covered for now; add a city here to open it.
   // Polygon points are [lat, lng] (rough city outline, demo only; the backend must hold the real zones).
   const COVERAGE = [
@@ -165,6 +168,8 @@ const MadaOrders = (() => {
   }
   function all() {
     let list = MadaStore.getJSON(KEY, null), dirty = false;
+    // Real data: no sample requests or sample updates.
+    if (!MadaStore.SAMPLES) return list || [];
     if (!list) { list = samples(); dirty = true; }
     if (!MadaStore.get("mada-orders-held-v1")) { heldSamples(list); MadaStore.set("mada-orders-held-v1", "1"); dirty = true; }
     // Sample payment links (one still running, one expired) for orders saved before this feature.
@@ -409,7 +414,7 @@ const MadaOrders = (() => {
       sample: true, drDemo: true, status: "open", contacts: [], createdAt: o.doctorVisit.completedAt, items };
   }
   function seedDoctorDemo(doctorId) {
-    if (!doctorId) return;
+    if (!doctorId || !MadaStore.SAMPLES) return;
     const doc = DOCTORS.find(d => d.id === doctorId), by = doc ? doc.name : { en: "Doctor", ar: "الطبيب" };
     if (MadaStore.get(DEMO_V + "-" + doctorId)) return;
     // Clear the older demo: every visit booked with this doctor, their medical requests, the demo files and notification state.

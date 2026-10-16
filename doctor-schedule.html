@@ -242,7 +242,7 @@
   const SHIFTS = { morning: ["08:00", "16:00"], evening: ["16:00", "24:00"], night: ["00:00", "08:00"] };
   // SAMPLE DATA ONLY: the demo doctor's weekly pattern, used when no schedule has been published for a day.
   // Sunday to Thursday morning, Saturday evening, Friday off.
-  const SAMPLE = { D01: ["morning", "morning", "morning", "morning", "morning", "off", "evening"] };
+  const SAMPLE = !MadaStore.SAMPLES ? {} : { D01: ["morning", "morning", "morning", "morning", "morning", "off", "evening"] };
   const docId = me && (me.doctorId || me.staffId);
   function shiftOn(ymd) {
     let pub = null; try { pub = ((MadaStore.getJSON("mada-dr-schedule") || {})[docId] || {})[ymd] || null; } catch (e) {}

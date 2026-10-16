@@ -8,7 +8,7 @@
 // Replace with calls to the real patients API.
 const MadaPatients = (() => {
   const KEY = "mada-patients";
-  const FILES = [
+  const FILES = !MadaStore.SAMPLES ? [] : [
     { fileNo: "MC-2025-147", mobile: "0551234567", name: { en: "Mohammed Saad Al-Qahtani", ar: "محمد سعد القحطاني" }, gender: "m", age: 64, lastVisit: "2026-09-28" },
     { fileNo: "MC-2025-148", mobile: "0551234567", name: { en: "Noura Fahad Al-Qahtani", ar: "نورة فهد القحطاني" }, gender: "f", age: 59, lastVisit: "2026-08-14" },
     { fileNo: "MC-2026-004", mobile: "0509876543", name: { en: "Abdullah Nasser Al-Harbi", ar: "عبدالله ناصر الحربي" }, gender: "m", age: 71, lastVisit: "2026-10-02" },
