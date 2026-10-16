@@ -309,7 +309,9 @@ const MadaOrders = (() => {
   // The first two have lab results approved by the doctor; the third has critical lab results waiting for the doctor,
   // an imaging order booked and a lab order not collected yet (for the Critical Results page). Remove with the real visits API.
   // The first run of this version clears the older doctor demo data (visits, orders, files, notifications).
-  const DEMO_V = "mada-dr-demo-v3";
+  const DEMO_V = "mada-dr-demo-v4";
+  // SAMPLE payments collected at the demo visits (amounts match the sample prices of the ordered services), so the Invoices page has data.
+  const DEMO_PAY = [[{ amount: 340, method: "card", ref: "TRM-48213" }], [{ amount: 360, method: "cash", received: 400 }], [{ amount: 200, method: "cash", received: 200 }, { amount: 420, method: "card", ref: "TRM-51907" }]];
   const DEMO_PATIENTS = [
     { name: { en: "Salem Mohammed", ar: "سالم محمد" }, mobile: "0501234567", mrn: "MC-001245", gender: "m", dob: "1962-04-15", idNumber: "1012345678", today: 600, pastDays: 12 },
     { name: { en: "Aisha Abdullah", ar: "عائشة عبدالله" }, mobile: "0559876543", mrn: "MC-001246", gender: "f", dob: "1990-07-22", idNumber: "1098765432", today: 690, pastDays: 30 },
@@ -436,6 +438,7 @@ const MadaOrders = (() => {
       const past = { ...base, id: "ORD-" + (20250901 + i), bookingId: "BK-" + (20250901 + i), status: "completed", createdAt: made, bookedAt: made, completedAt: at,
         appointment: { date: day, minute, nurse: null }, booking: { nurseId: null, doctorId, by: staff, at: made } };
       past.doctorVisit = demoVisit(i, at, by);
+      past.doctorVisit.payment = { entries: DEMO_PAY[i].map((e, k) => ({ id: "p" + i + k, received: e.amount, ref: "", ...e, at: new Date(new Date(at).getTime() + (40 + k * 5) * 60000).toISOString(), by })) };
       list.push(past);
       meds.push(demoRequest(i, past, ++mr, doctorId, by));
       const booked = new Date(Date.now() - (20 - i * 4) * 3600000).toISOString();
