@@ -365,7 +365,7 @@
       ck_onTime: "Orders done on time", ck_informed: "Patient informed", ck_reviewed: "Doctor reviewed results", ck_documented: "Everything documented",
       teamT: "Request Notes", teamS: "Your notes and the follow-up team's notes. You can add notes until the request is closed.", noTeam: "No notes yet.",
       dnT: "Add your note", dnSave: "Add note", dnPh: "Example: please book the referral this week, the patient needs an echo soon.", dnClosed: "This request is closed, so no more notes can be added.",
-      d_decision: "Patient consent", dc_approved: "Patient agrees", dc_rejected: "Patient declined", s_consent: "Patient consent", s_procedures: "Referral procedures", viewFile: "View file", nt_doctor: "Doctor's Note",
+      d_decision: "Patient consent", dc_approved: "Patient agrees", dc_rejected: "Patient declined", s_consent: "Patient consent", s_procedures: "Referral procedures", d_appt: "Appointment", d_provider: "Responsible", d_cost: "Cost", sar: "SAR", d_payWhen: "Payment", pw_before: "Paid before the service", pw_after: "Paid after the service", viewFile: "View file", nt_doctor: "Doctor's Note",
       nt_general: "General Note", nt_alert: "Important Alert", nt_followup: "Follow-up Required", fuOpen: "Follow-up open", fuDone: "Done by {n} · {t}",
       escT: "Escalations", escOpen: "Open", escRes: "Resolved by {n} · {t}", late: "Late at the lab", stepLog: "Step details",
       d_center: "Center", d_specialty: "Specialty", d_facility: "At", d_date: "Date", d_note: "Note", d_pharmacy: "Pharmacy", d_leaveNo: "Leave No.", d_period: "Period", d_range: "{a} to {b}", d_channel: "Sent by", d_file: "File",
@@ -401,7 +401,7 @@
       ck_onTime: "الطلبات خلصت في وقتها", ck_informed: "المريض تم إبلاغه", ck_reviewed: "الطبيب راجع النتائج", ck_documented: "كل شي موثق",
       teamT: "ملاحظات الطلب", teamS: "ملاحظاتك وملاحظات فريق المتابعة. تقدر تضيف ملاحظات لين ينقفل الطلب.", noTeam: "ما فيه ملاحظات للحين.",
       dnT: "أضف ملاحظتك", dnSave: "إضافة الملاحظة", dnPh: "مثال: احجزوا التحويل هذا الأسبوع، المريض يحتاج إيكو قريب.", dnClosed: "الطلب مقفل، ما يمديك تضيف ملاحظات.",
-      d_decision: "موافقة المريض", dc_approved: "المريض موافق", dc_rejected: "المريض رافض", s_consent: "موافقة المريض", s_procedures: "إجراءات التحويل", viewFile: "عرض الملف", nt_doctor: "ملاحظة الطبيب",
+      d_decision: "موافقة المريض", dc_approved: "المريض موافق", dc_rejected: "المريض رافض", s_consent: "موافقة المريض", s_procedures: "إجراءات التحويل", d_appt: "الموعد", d_provider: "المسؤول", d_cost: "التكلفة", sar: "ريال", d_payWhen: "الدفع", pw_before: "مدفوعة قبل الخدمة", pw_after: "تُدفع بعد الخدمة", viewFile: "عرض الملف", nt_doctor: "ملاحظة الطبيب",
       nt_general: "ملاحظة عامة", nt_alert: "تنبيه مهم", nt_followup: "متابعة مطلوبة", fuOpen: "المتابعة مفتوحة", fuDone: "خلّصها {n} · {t}",
       escT: "التصعيد", escOpen: "مفتوح", escRes: "انحل بواسطة {n} · {t}", late: "متأخر في المختبر", stepLog: "تفاصيل الخطوات",
       d_center: "المركز", d_specialty: "التخصص", d_facility: "الجهة", d_date: "التاريخ", d_note: "ملاحظة", d_pharmacy: "الصيدلية", d_leaveNo: "رقم الإجازة", d_period: "المدة", d_range: "من {a} إلى {b}", d_channel: "انرسلت عبر", d_file: "الملف",
@@ -471,7 +471,7 @@
   // ---------- one order ----------
   function tracker(it) {
     const sp = it.rejected ? it.log[it.log.length - 1].step : it.step;
-    return `<ol class="trk">${STEPS[it.type].map((s, i) => { const l = logAt(it, s), now = needs(it) && i === it.step;
+    return `<ol class="trk">${STEPS[it.type].slice(0, it.rejected ? sp + 1 : 99).map((s, i) => { const l = logAt(it, s), now = needs(it) && i === it.step;
       return `<li class="${now ? "now" : i <= sp ? "ok" : ""}">${t()["s_" + s] || s}${i <= sp && l ? `<small class="num">${esc(fmtT(l.at))}</small>` : ""}</li>`; }).join("")}</ol>`;
   }
   function flag(f) { return f ? `<span class="tg ${f === "critical" ? "cr" : f === "high" ? "hi" : f === "low" ? "lo" : "nm"}">${t()["fl_" + f]}</span>` : ""; }
@@ -508,11 +508,15 @@
     const dd = v => /^\d{4}-\d{2}-\d{2}$/.test(v) ? fmtD(v + "T00:00") : v;
     const kv = (d, li) => { const out = [];
       if (d.decision) out.push(`<span>${t().d_decision}: <span class="tg-t ${d.decision === "rejected" ? "red" : "grn"}">${t()["dc_" + d.decision]}</span></span>`);
-      ["center", "specialty", "facility", "date", "pharmacy", "leaveNo", "channel", "note"].forEach(k => { if (d[k]) out.push(`<span>${t()["d_" + k]}: <b dir="auto">${esc(k === "channel" ? t()["ch_" + d[k]] || d[k] : dd(d[k]))}</b></span>`); });
+      if (d.time && !d.date) out.push(`<span>${t().d_appt}: <b class="num" dir="ltr">${esc(d.time)}</b></span>`);
+      if (d.provider) out.push(`<span>${t().d_provider}: <b dir="auto">${esc(d.provider)}</b></span>`);
+      if (d.cost) out.push(`<span>${t().d_cost}: <b class="num">${esc(d.cost)}</b> ${t().sar}</span>`);
+      if (d.payWhen) out.push(`<span>${t().d_payWhen}: <b>${t()["pw_" + d.payWhen] || ""}</b></span>`);
+      ["center", "specialty", "facility", "date", "pharmacy", "leaveNo", "channel", "note"].forEach(k => { if (d[k]) out.push(`<span>${t()["d_" + k]}: <b dir="auto">${esc(k === "channel" ? t()["ch_" + d[k]] || d[k] : dd(d[k]) + (k === "date" && d.time ? " · " + d.time : ""))}</b></span>`); });
       if (d.from || d.to) out.push(`<span>${t().d_period}: <b>${esc(tx("d_range", { a: d.from ? dd(d.from) : "—", b: d.to ? dd(d.to) : "—" }))}</b></span>`);
       if (all && d.file) out.push(`<span>${t().d_file}: <button type="button" class="btn btn-out btn-xs" data-lf="${esc(it.id)}" data-li="${li}">${svg(IC.eye)}${esc(d.file.name || t().viewFile)}</button></span>`);
       return out.join(""); };
-    return `<div class="lg"><small>${t().stepLog}</small>${rows.map(l => { const k = kv(l.data, l.i); return k ? `<div class="lg-r"><b>${l.data.decision === "rejected" ? t().dc_rejected : t()["s_" + (STEPS[it.type] || [])[l.step]] || ""}</b> <span class="by">· ${esc(who(l.by))} · ${esc(fmtT(l.at))}</span><div class="kv">${k}</div></div>` : ""; }).join("")}</div>`;
+    return `<div class="lg"><small>${t().stepLog}</small>${rows.map(l => { const k = kv(l.data, l.i); return k ? `<div class="lg-r"><b>${t()["s_" + (STEPS[it.type] || [])[l.step]] || ""}</b> <span class="by">· ${esc(who(l.by))} · ${esc(fmtT(l.at))}</span><div class="kv">${k}</div></div>` : ""; }).join("")}</div>`;
   }
   // Escalations raised by the team (lab-test.html), open and resolved.
   function escBox(it) {
