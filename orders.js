@@ -238,7 +238,7 @@ const MadaOrders = (() => {
         });
       MadaStore.set("mada-orders-done-v1", "1"); dirty = true;
     }
-    // SAMPLE DATA ONLY: upcoming paid doctor visits for the other doctors (the demo doctor D01 has its own two patients, see seedDoctorDemo).
+    // SAMPLE DATA ONLY: upcoming paid doctor visits for the other doctors (the demo doctor D01 has its own three patients, see seedDoctorDemo).
     if (!MadaStore.get("mada-orders-docvisits-v1")) {
       let n = list.reduce((m, o) => o.drDemo ? m : Math.max(m, parseInt(o.id.split("-")[1], 10) || 0), 1000);
       let bk = list.reduce((m, o) => o.drDemo ? m : Math.max(m, o.bookingId ? parseInt(o.bookingId.split("-")[1], 10) : 0), 5000);
@@ -305,13 +305,15 @@ const MadaOrders = (() => {
   }
   const text = (v, lang) => v && typeof v === "object" ? (v[lang] || v.en) : (v || "");
 
-  // SAMPLE DATA ONLY: the Doctor Portal demo has two patients. Each has a completed visit with lab results
-  // (approved by the doctor) and a new visit booked for today. Remove with the real visits API.
+  // SAMPLE DATA ONLY: the Doctor Portal demo has three patients. Each has a completed visit and a new visit booked for today.
+  // The first two have lab results approved by the doctor; the third has critical lab results waiting for the doctor,
+  // an imaging order booked and a lab order not collected yet (for the Critical Results page). Remove with the real visits API.
   // The first run of this version clears the older doctor demo data (visits, orders, files, notifications).
-  const DEMO_V = "mada-dr-demo-v2";
+  const DEMO_V = "mada-dr-demo-v3";
   const DEMO_PATIENTS = [
     { name: { en: "Salem Mohammed", ar: "سالم محمد" }, mobile: "0501234567", mrn: "MC-001245", gender: "m", dob: "1962-04-15", idNumber: "1012345678", today: 600, pastDays: 12 },
-    { name: { en: "Aisha Abdullah", ar: "عائشة عبدالله" }, mobile: "0559876543", mrn: "MC-001246", gender: "f", dob: "1990-07-22", idNumber: "1098765432", today: 690, pastDays: 30 }
+    { name: { en: "Aisha Abdullah", ar: "عائشة عبدالله" }, mobile: "0559876543", mrn: "MC-001246", gender: "f", dob: "1990-07-22", idNumber: "1098765432", today: 690, pastDays: 30 },
+    { name: { en: "Fahad Al-Harbi", ar: "فهد الحربي" }, mobile: "0543217890", mrn: "MC-001247", gender: "m", dob: "1958-11-03", idNumber: "1023456789", today: 780, pastDays: 2 }
   ];
   const ymdOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   const ADDR0 = { city: "jeddah", district: "Al Rawdah", street: "", building: "", postalCode: "", floor: "", mapLink: "", landmark: "" };
@@ -342,6 +344,24 @@ const MadaOrders = (() => {
             { id: "m2", drugId: "azithromycin", name: "Azithromycin", generic: { en: "Azithromycin", ar: "أزيثرومايسين" }, form: "tablet", strength: "500 mg", route: "oral", doseN: "1", doseU: "tab", freq: "od", durN: "3", durU: "days", instr: "", timing: [], prn: false, prnFor: "" }], none: false }),
         orders: s({ items: [{ uid: "a", svc: "lab", code: "LAB-001", note: "" }, { uid: "b", svc: "lab", code: "LAB-102", note: "" }, { uid: "c", svc: "lab", code: "LAB-101", note: "" }, { uid: "d", svc: "rad", code: "RAD-001", note: "" }] })
       } };
+    if (i === 2) return { status: "done", completedAt: at,
+      history: {
+        complaint: hs({ items: [{ type: "more", text: "Thirst, passing urine often and tiredness", durMode: "set", durN: "1", durU: "weeks", severity: "moderate", pain: "", details: "Very thirsty, up at night to pass urine, feels weak and dizzy." }] }),
+        hpi: hs({ onsetN: "1", onsetU: "weeks", course: ["gradual", "worsening"], character: "Thirst and passing urine often, with tiredness and dizziness on standing. Missed his diabetes tablets for two weeks.", locNA: true, body: [], aggr: "Standing up", relief: "Rest", assoc: ["fatigue"], notes: "" }),
+        meds: hs({ status: "current", current: [{ name: "Metformin", dose: "1000 mg", freq: "Twice daily" }, { name: "Gliclazide", dose: "60 mg", freq: "Once daily" }], previous: [], nkda: true, allergies: [] }),
+        pmh: hs({ chronic: ["diabetes", "htn"], surgeries: "" }),
+        ros: hs({ sys: { const: { v: "pos", note: "Tiredness and dizziness" }, gu: { v: "pos", note: "Passing urine often" }, cv: { v: "neg" }, resp: { v: "neg" }, gi: { v: "neg" }, neuro: { v: "neg" } } }),
+        social: hs({ occupation: "Retired", marital: "married", smoking: "ex", notes: "" }),
+        family: hs({ status: "present", conditions: ["diabetes"], notes: "" })
+      },
+      steps: { ...common,
+        vitals: s({ temp: "37.0", bp: "106/68", hr: "102", sugar: "410", spo2: "97", rr: "18" }),
+        exam: s({ general: { appear: { status: "ill", findings: ["alert"], notes: "Looks tired, dry mouth" }, cv: { status: "normal", findings: [], notes: "" }, resp: { status: "normal", findings: [], notes: "" },
+          abd: { status: "normal", findings: ["soft"], notes: "" }, neuro: { status: "normal", findings: ["alertN"], notes: "" }, skin: { status: "abn", findings: ["other"], notes: "Dry skin" } }, regions: [] }),
+        assess: s({ primary: { code: "E11.65", en: "Type 2 diabetes mellitus with hyperglycaemia", ar: "داء السكري من النوع الثاني مع ارتفاع السكر" }, additional: [], notes: "" }),
+        plan: s({ goals: [{ id: "cause" }, { id: "prevent" }], details: "<p>Restart the diabetes tablets today and drink plenty of water.</p><ul><li>Check blood sugar four times a day</li><li>Go to the emergency department if vomiting or confused</li></ul>", followUp: "Doctor call after the lab results", meds: [], none: true }),
+        orders: s({ items: [{ uid: "a", svc: "lab", code: "LAB-001", note: "" }, { uid: "b", svc: "lab", code: "LAB-101", note: "" }, { uid: "c", svc: "lab", code: "LAB-105", note: "" }, { uid: "d", svc: "rad", code: "RAD-004", note: "" }, { uid: "e", svc: "lab", code: "LAB-104", note: "" }] })
+      } };
     return { status: "done", completedAt: at,
       history: {
         complaint: hs({ items: [{ type: "more", text: "Tiredness and body aches", durMode: "set", durN: "2", durU: "months", severity: "mild", pain: "", details: "Feels tired most days, aches in the legs and back." }] }),
@@ -367,7 +387,13 @@ const MadaOrders = (() => {
     const lab = { en: "Nurse Hanan Al-Otaibi", ar: "الممرضة حنان العتيبي" }, t0 = new Date(o.doctorVisit.completedAt).getTime();
     const at = h => new Date(t0 + h * 3600000).toISOString();
     const log = (hours, data, notes) => hours.map((h, s) => ({ step: s, at: at(h), by: s === 0 || s === hours.length - 1 && notes ? by : lab, data: s === hours.length - 1 && notes ? { docNote: notes } : (data || {})[s] || null }));
-    const items = i === 0 ? [
+    const items = i === 2 ? [
+      // Results entered by the lab, not approved yet: the critical values raise an alert on the Critical Results page.
+      { type: "lab", v2: true, step: 3, orderCodes: ["LAB-001", "LAB-101", "LAB-105"], tests: ["CBC", "FBS", "KFT"], title: { en: "Complete Blood Count (CBC), Glucose (Fasting), Kidney Function Test", ar: "صورة دم كاملة، سكر صائم، وظائف الكلى" },
+        details: { en: "", ar: "" }, results: { HGB: 6.8, WBC: 9.1, PLT: 240, LYM: 26, GLU: 465, CREA: 2.1, UREA: 68 }, log: log([0, 2, 4, 20]) },
+      { type: "radiology", step: 1, orderCodes: ["RAD-004"], title: { en: "Ultrasound Abdomen", ar: "أشعة صوتية للبطن" }, details: { en: "", ar: "" }, log: log([0, 3]) },
+      { type: "lab", v2: true, step: 0, orderCodes: ["LAB-104"], tests: ["LFT"], title: { en: "Liver Function Test", ar: "وظائف الكبد" }, details: { en: "", ar: "" }, log: log([0]) }
+    ] : i === 0 ? [
       { type: "lab", v2: true, step: 4, orderCodes: ["LAB-001", "LAB-102", "LAB-101"], tests: ["CBC", "HBA1C", "FBS"], title: { en: "Complete Blood Count (CBC), HbA1c, Glucose (Fasting)", ar: "صورة دم كاملة، السكر التراكمي، سكر صائم" },
         details: { en: "", ar: "" }, results: { HGB: 13.6, WBC: 12.4, PLT: 280, LYM: 18, A1C: 7.4, GLU: 142 }, log: log([0, 2, 4, 22, 26], null, "WBC high, fits the chest infection. HbA1c above target: keep Metformin and recheck in 3 months.") },
       { type: "radiology", step: 3, orderCodes: ["RAD-001"], title: { en: "Chest X-Ray", ar: "أشعة الصدر" }, details: { en: "", ar: "" },
