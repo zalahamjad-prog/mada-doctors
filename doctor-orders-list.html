@@ -204,6 +204,18 @@
   .apv span { color: #2c3d43; }
   .nts { padding: 10px 16px; border-top: 1px solid #eef2f3; font-size: 13.5px; color: #44545a; display: grid; gap: 4px; }
   .nts small { color: var(--muted); }
+  .tg-t { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 11px; font-size: 11.5px; font-weight: 600; background: #eef2f3; color: #44545a; }
+  .tg-t.red { background: #fdecec; color: #b42318; } .tg-t.grn { background: #e3f4ee; color: #0f6b52; } .tg-t.org { background: var(--orange-soft); color: #a35a00; }
+  .rq { display: grid; gap: 8px; padding: 14px 24px 18px; border-top: 1px solid #eef2f3; font-size: 13.5px; color: #2c3d43; }
+  .rq b { color: #15304a; } .rq .ck { display: flex; flex-wrap: wrap; gap: 6px; }
+  .lg { padding: 10px 16px; border-top: 1px solid #eef2f3; display: grid; gap: 8px; font-size: 13px; color: #44545a; }
+  .lg > small { color: var(--muted); }
+  .lg-r b { color: #15304a; font-weight: 600; } .lg-r .by { color: var(--muted); font-size: 12px; } .lg-r .kv { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 2px; }
+  .esc { padding: 10px 16px; border-top: 1px solid #f6d9a8; background: #fffaf2; display: grid; gap: 6px; font-size: 13px; }
+  .tn { display: grid; gap: 10px; }
+  .tn li { list-style: none; padding: 10px 12px; border: 1px solid #e7ecee; border-radius: 10px; font-size: 13.5px; display: grid; gap: 4px; }
+  .tn li.alert { border-color: #f3c5c5; background: #fffafa; } .tn .h { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 12px; color: var(--muted); }
+  .sec .sub { font-size: 13px; color: var(--muted); margin: -6px 0 12px; }
   .wait-box { display: flex; align-items: center; gap: 10px; margin: 12px 16px 14px; padding: 12px 14px; border-radius: 10px; background: var(--orange-soft); color: #8a4b0f; font-size: 13.5px; }
   .wait-box svg { width: 18px; height: 18px; flex: none; }
   .ov { position: fixed; inset: 0; z-index: 70; background: rgba(16,35,43,.6); display: grid; place-items: center; padding: 16px; }
@@ -313,11 +325,12 @@
   const needs = it => it.type === "lab" && stepOf(it) === "resulted";
   const radReady = it => it.type === "radiology" && !!logAt(it, "resulted");
   const itDone = it => radReady(it) || M.isDone(it);
-  // This page shows lab and radiology orders only; nursing, IV, referral and sick leave items are left out.
-  const isLR = it => it.type === "lab" || it.type === "radiology";
-  const only = r => r ? { ...r, items: r.items.filter(isLR) } : null;
-  const mine = () => M.all().filter(r => r.doctorId === docId && r.source === "doctor").map(only).filter(r => r.items.length);
-  const stateOf = r => r.items.some(needs) ? "need" : r.items.every(itDone) ? "done" : "wait";
+  // Everything on the staff Medical Requests page shows here for the doctor, view only: every item type with its steps and
+  // what staff entered at each step, the team's notes, escalations, the late-lab flag, closing and quality review.
+  // Requests the team opened for this doctor (source "staff") show too, marked "Added by the team".
+  const only = r => r || null;
+  const mine = () => M.all().filter(r => r.doctorId === docId && r.items && r.items.length);
+  const stateOf = r => r.items.some(needs) ? "need" : r.status !== "open" || r.items.every(itDone) ? "done" : "wait";
 
 
   const I18N = {
@@ -327,7 +340,7 @@
       title: "Orders", sub: "Labs, radiology and every service you ordered, with their results.", needN: "{n} to review",
       searchPh: "Search by patient, file number, order number or test", search: "Search",
       f_need: "Needs Review", f_wait: "In Progress", f_done: "Completed", f_all: "All Orders",
-      st_need: "Results to review", st_wait: "Pending results", st_done: "Completed",
+      st_need: "Results to review", st_wait: "In progress", st_done: "Completed",
       ordered: "Ordered {d}", fileNo: "File {n}", tests1: "1 test", testsN: "{n} tests",
       ty_lab: "Laboratory", ty_radiology: "Radiology", ty_nursing: "Nursing", ty_iv: "IV Therapy", ty_referral: "Referral", ty_leave: "Sick Leave", ty_doctor: "Doctor Visit", ty_physio: "Physiotherapy",
       noneT: "No orders yet", noneS: "Orders appear here after you sign a visit with lab tests or radiology.", noMatchT: "No matching orders", noMatchS: "Try another name, file number or test.",
@@ -343,6 +356,16 @@
       approve: "Approve Results", saveNote: "Save Note Only", needNote: "Write the note first.",
       approvedBy: "Approved by {n} · {t}", notesT: "Your notes", approvedToast: "Results approved. Customer service can now share them with the patient.", noteToast: "Note saved.",
       notFound: "This order was not found, or it belongs to another doctor.", close: "Close", fileGone: "The file is not available on this device.",
+      ty_medication: "Medication", ty_plan: "Treatment Plan", ty_followup: "Follow-up Visit",
+      s_prescribed: "Prescribed", s_dispensed: "Dispensed", s_delivered: "Delivered", s_written: "Written", s_explained: "Explained to patient",
+      byTeam: "Added by the team", rq_open: "Open: the follow-up team is working on it.", rq_quality: "Closed by {n} · {t}. Waiting for the quality review.", rq_done: "Closed by {n} · {t}. Quality reviewed.",
+      rq_note: "Closing note", rq_q: "Quality review", rq_score: "{n} of 5", rq_qBy: "Reviewed by {n} · {t}",
+      ck_onTime: "Orders done on time", ck_informed: "Patient informed", ck_reviewed: "Doctor reviewed results", ck_documented: "Everything documented",
+      teamT: "Follow-up Team Notes", teamS: "Written by the follow-up team on the Medical Requests page. View only.", noTeam: "No notes from the team yet.",
+      nt_general: "General Note", nt_alert: "Important Alert", nt_followup: "Follow-up Required", fuOpen: "Follow-up open", fuDone: "Done by {n} · {t}",
+      escT: "Escalations", escOpen: "Open", escRes: "Resolved by {n} · {t}", late: "Late at the lab", stepLog: "Step details",
+      d_center: "Center", d_specialty: "Specialty", d_facility: "At", d_date: "Date", d_note: "Note", d_pharmacy: "Pharmacy", d_leaveNo: "Leave No.", d_period: "Period", d_range: "{a} to {b}", d_channel: "Sent by", d_file: "File",
+      ch_sms: "SMS", ch_whatsapp: "WhatsApp", ch_email: "Email", svcWait: "The follow-up team is arranging this.",
       demo: "Demo: results are entered from the staff lab page until the nurse app is ready."
     },
     ar: {
@@ -351,7 +374,7 @@
       title: "الأوردرات", sub: "التحاليل والأشعة وكل الخدمات اللي طلبتها، مع نتائجها.", needN: "{n} بانتظار مراجعتك",
       searchPh: "ابحث باسم المريض أو رقم الملف أو رقم الطلب أو التحليل", search: "بحث",
       f_need: "بانتظار المراجعة", f_wait: "قيد التنفيذ", f_done: "مكتملة", f_all: "كل الأوردرات",
-      st_need: "نتائج تحتاج مراجعة", st_wait: "بانتظار النتائج", st_done: "مكتمل",
+      st_need: "نتائج تحتاج مراجعة", st_wait: "قيد التنفيذ", st_done: "مكتمل",
       ordered: "طُلب {d}", fileNo: "ملف {n}", tests1: "تحليل واحد", testsN: "{n} تحاليل",
       ty_lab: "مختبر", ty_radiology: "أشعة", ty_nursing: "تمريض", ty_iv: "محاليل وريدية", ty_referral: "تحويل", ty_leave: "إجازة مرضية", ty_doctor: "زيارة طبيب", ty_physio: "علاج طبيعي",
       noneT: "ما فيه أوردرات للحين", noneS: "تظهر الأوردرات هنا بعد ما توقّع زيارة فيها تحاليل أو أشعة.", noMatchT: "ما فيه أوردر مطابق", noMatchS: "جرب اسم أو رقم ملف أو تحليل ثاني.",
@@ -367,6 +390,16 @@
       approve: "اعتماد النتائج", saveNote: "حفظ الملاحظة فقط", needNote: "اكتب الملاحظة أول.",
       approvedBy: "اعتمدها {n} · {t}", notesT: "ملاحظاتك", approvedToast: "تم اعتماد النتائج. خدمة العملاء تقدر تشاركها مع المريض الحين.", noteToast: "تم حفظ الملاحظة.",
       notFound: "ما لقينا هذا الأوردر، أو أنه لطبيب ثاني.", close: "إغلاق", fileGone: "الملف مو متوفر على هذا الجهاز.",
+      ty_medication: "أدوية", ty_plan: "الخطة العلاجية", ty_followup: "زيارة متابعة",
+      s_prescribed: "انوصف", s_dispensed: "انصرف", s_delivered: "توصّل", s_written: "انكتبت", s_explained: "انشرحت للمريض",
+      byTeam: "أضافه الفريق", rq_open: "مفتوح: فريق المتابعة شغال عليه.", rq_quality: "قفله {n} · {t}. بانتظار مراجعة الجودة.", rq_done: "قفله {n} · {t}. تمت مراجعة الجودة.",
+      rq_note: "ملاحظة القفل", rq_q: "مراجعة الجودة", rq_score: "{n} من 5", rq_qBy: "راجعه {n} · {t}",
+      ck_onTime: "الطلبات خلصت في وقتها", ck_informed: "المريض تم إبلاغه", ck_reviewed: "الطبيب راجع النتائج", ck_documented: "كل شي موثق",
+      teamT: "ملاحظات فريق المتابعة", teamS: "يكتبها فريق المتابعة في صفحة الطلبات الطبية. للعرض فقط.", noTeam: "ما فيه ملاحظات من الفريق للحين.",
+      nt_general: "ملاحظة عامة", nt_alert: "تنبيه مهم", nt_followup: "متابعة مطلوبة", fuOpen: "المتابعة مفتوحة", fuDone: "خلّصها {n} · {t}",
+      escT: "التصعيد", escOpen: "مفتوح", escRes: "انحل بواسطة {n} · {t}", late: "متأخر في المختبر", stepLog: "تفاصيل الخطوات",
+      d_center: "المركز", d_specialty: "التخصص", d_facility: "الجهة", d_date: "التاريخ", d_note: "ملاحظة", d_pharmacy: "الصيدلية", d_leaveNo: "رقم الإجازة", d_period: "المدة", d_range: "من {a} إلى {b}", d_channel: "انرسلت عبر", d_file: "الملف",
+      ch_sms: "رسالة SMS", ch_whatsapp: "واتساب", ch_email: "إيميل", svcWait: "فريق المتابعة يرتّب هذا الطلب.",
       demo: "تجربة: النتائج تندخل من صفحة المختبر للموظفين لين يجهز تطبيق التمريض."
     }
   };
@@ -455,22 +488,54 @@
     let h = `<div class="it" id="it-${esc(it.id)}"><div class="it-h">${codes}<b>${esc(who(it.title))}</b>
       <span class="st st-${rl ? "done" : "wait"}">${rl ? t().radReady : t().radWait}</span></div>
       <div class="rad-ref">${ref(t().orderNo, r.id)}${ref(t().bookingNo, r.bookingId)}${ref(t().visitNo, r.orderId)}${rl ? ref(t().repDate, fmtT(rl.at), 1) : ""}</div>`;
+    h += logBox(it) + escBox(it);
     if (!rl) return h + `<div class="wait-box">${svg(IC.clock, 2)}${t().waitRad}</div></div>`;
     h += `<div class="rad-rep"><small>${t().radRep}</small>${rd.result ? `<p dir="auto">${esc(rd.result)}</p>` : ""}${file ? `<button type="button" class="btn btn-out" data-file="${esc(it.id)}">${svg(IC.eye)}${t().viewReport}</button>` : ""}</div>`;
     return h + `</div>`;
   }
+  // What staff entered at each step (Medical Requests page), e.g. referral facility, booked date, leave number, pharmacy.
+  const LOG_SKIP = ["result", "file", "docNote"];
+  function logBox(it, all) {
+    const rows = (it.log || []).filter(l => l.data && Object.keys(l.data).some(k => all || !LOG_SKIP.includes(k)));
+    if (!rows.length) return "";
+    const dd = v => /^\d{4}-\d{2}-\d{2}$/.test(v) ? fmtD(v + "T00:00") : v;
+    const kv = d => { const out = [];
+      ["center", "specialty", "facility", "date", "pharmacy", "leaveNo", "channel", "note"].forEach(k => { if (d[k]) out.push(`<span>${t()["d_" + k]}: <b dir="auto">${esc(k === "channel" ? t()["ch_" + d[k]] || d[k] : dd(d[k]))}</b></span>`); });
+      if (d.from || d.to) out.push(`<span>${t().d_period}: <b>${esc(tx("d_range", { a: d.from ? dd(d.from) : "—", b: d.to ? dd(d.to) : "—" }))}</b></span>`);
+      if (all && d.file) out.push(`<span>${t().d_file}: <b dir="auto">${esc(d.file.name || "")}</b></span>`);
+      return out.join(""); };
+    return `<div class="lg"><small>${t().stepLog}</small>${rows.map(l => { const k = kv(l.data); return k ? `<div class="lg-r"><b>${t()["s_" + (STEPS[it.type] || [])[l.step]] || ""}</b> <span class="by">· ${esc(who(l.by))} · ${esc(fmtT(l.at))}</span><div class="kv">${k}</div></div>` : ""; }).join("")}</div>`;
+  }
+  // Escalations raised by the team (lab-test.html), open and resolved.
+  function escBox(it) {
+    const list = it.escalations || []; if (!list.length) return "";
+    return `<div class="esc"><b>${svg(IC.alert, 2)} ${t().escT}</b>${list.map(e => `<div><span class="tg-t ${e.resolved ? "grn" : "red"}">${e.resolved ? esc(tx("escRes", { n: who(e.resolved.by), t: fmtT(e.resolved.at) })) : t().escOpen}</span>
+      <span dir="auto"> ${esc(e.note || "")}</span> <small class="num">· ${esc(who(e.by))} · ${esc(fmtT(e.at))}</small>${e.resolved && e.resolved.note ? `<div dir="auto"><small>${esc(e.resolved.note)}</small></div>` : ""}</div>`).join("")}</div>`;
+  }
+  // Nursing, IV, referral, doctor visit, physiotherapy, sick leave, medication, plan: steps and what staff entered, view only.
+  function svcItem(r, it) {
+    const s = stepOf(it), codes = (it.orderCodes || []).map(c => `<span class="code">${esc(c)}</span>`).join(" "), det = it.details && (it.details[current] || it.details.en);
+    let h = `<div class="it" id="it-${esc(it.id)}"><div class="it-h">${codes}<b>${esc(who(it.title))}<small>${t()["ty_" + it.type] || it.type}</small></b>
+      <span class="st st-${M.isDone(it) ? "done" : "wait"}">${t()["s_" + s] || s}</span></div>${tracker(it)}`;
+    if (det) h += `<div class="nts"><small>${t().details}</small><span dir="auto">${esc(det)}</span></div>`;
+    h += logBox(it, true) + escBox(it);
+    if (!M.isDone(it) && it.step === 0) h += `<div class="wait-box">${svg(IC.clock, 2)}${t().svcWait}</div>`;
+    return h + `</div>`;
+  }
   function item(r, it) {
     if (it.type === "radiology") return radItem(r, it);
+    if (it.type !== "lab") return svcItem(r, it);
     const s = stepOf(it), isRes = it.type === "lab" || it.type === "radiology", rl = logAt(it, "resulted"), rd = (rl && rl.data) || {}, ap = logAt(it, "reviewed");
     const file = it.report || rd.file || null, codes = (it.orderCodes || []).map(c => `<span class="code">${esc(c)}</span>`).join(" ");
     const det = it.details && (it.details[current] || it.details.en);
     let h = `<div class="it${needs(it) ? " need" : ""}" id="it-${esc(it.id)}"><div class="it-h">${it.type !== "lab" ? codes : ""}<b>${esc(it.type === "lab" ? t().reqTests : who(it.title))}${it.type !== "lab" && t()["ty_" + it.type] && it.type !== "radiology" ? `<small>${t()["ty_" + it.type]}</small>` : ""}</b>
-      <span class="st st-${needs(it) ? "need" : M.isDone(it) ? "done" : "wait"}">${t()["s_" + s] || s}</span></div>${tracker(it)}`;
+      ${M.labLate(it) ? `<span class="tg-t red">${t().late}</span>` : ""}<span class="st st-${needs(it) ? "need" : M.isDone(it) ? "done" : "wait"}">${t()["s_" + s] || s}</span></div>${tracker(it)}`;
     if (it.type === "lab") h += labTable(it);
     if (isRes && !rl) h += `<div class="wait-box">${svg(IC.clock, 2)}${it.type === "lab" ? t().waitLab : t().waitRad}</div>`;
     if (rd.result) h += `<div class="txt-res" dir="auto">${esc(rd.result)}</div>`;
     if (det) h += `<div class="nts"><small>${t().details}</small><span dir="auto">${esc(det)}</span></div>`;
     if (isRes && rl) h += `<div class="it-f"><span>${esc(tx("enteredBy", { n: who(it.enteredBy || rl.by) || "—", t: fmtT(it.enteredAt || rl.at) }))}</span>${file ? `<button type="button" class="btn btn-out" data-file="${esc(it.id)}">${svg(IC.eye)}${t().viewReport}</button>` : ""}</div>`;
+    h += logBox(it) + escBox(it);
     const notes = it.docNotes || [];
     if (ap) h += `<div class="apv"><b>${svg(IC.check, 2.2)}${esc(tx("approvedBy", { n: who(ap.by), t: fmtT(ap.at) }))}</b>${ap.data && ap.data.docNote ? `<span dir="auto">${esc(ap.data.docNote)}</span>` : ""}</div>`;
     if (notes.length) h += `<div class="nts"><small>${t().notesT}</small>${notes.map(n => `<span dir="auto">${esc(n.text)} <small class="num">· ${esc(fmtT(n.at))}</small></span>`).join("")}</div>`;
@@ -479,18 +544,37 @@
       <div class="rv-a"><button type="button" class="btn btn-out" data-note="${esc(it.id)}">${t().saveNote}</button><button type="button" class="btn btn-green" data-approve="${esc(it.id)}">${svg(IC.check, 2.2)}${t().approve}</button></div></div>`;
     return h + `</div>`;
   }
+  // Request status from the Medical Requests page: open, closed (waiting quality review) or quality reviewed.
+  function rqBox(r) {
+    const c = r.closed, q = r.quality;
+    let h = `<section class="card"><div class="rq">${r.source === "staff" ? `<span><span class="tg-t org">${t().byTeam}</span></span>` : ""}`;
+    if (r.status === "open" || !c) h += `<span>${t().rq_open}</span>`;
+    else h += `<span><b>${esc(tx(r.status === "done" ? "rq_done" : "rq_quality", { n: who(c.by), t: fmtT(c.at) }))}</b></span>${c.note ? `<span><small>${t().rq_note}:</small> <span dir="auto">${esc(c.note)}</span></span>` : ""}`;
+    if (q) h += `<span><b>${t().rq_q}:</b> ${"★".repeat(q.score || 0)}${"☆".repeat(5 - (q.score || 0))} ${esc(tx("rq_score", { n: q.score || 0 }))} · <small>${esc(tx("rq_qBy", { n: who(q.by), t: fmtT(q.at) }))}</small></span>
+      ${(q.checks || []).length ? `<span class="ck">${q.checks.map(k => `<span class="tg-t grn">${t()["ck_" + k] || k}</span>`).join("")}</span>` : ""}${q.note ? `<span dir="auto">${esc(q.note)}</span>` : ""}`;
+    return h + `</div></section>`;
+  }
+  // The follow-up team's notes on this request (general, important alert, follow-up required), view only.
+  function teamBox(r) {
+    const list = (r.notes || []).slice().reverse();
+    return `<section class="card sec"><h2 class="sec-t"><span class="ic">${svg(IC.list)}</span>${t().teamT}</h2><p class="sub">${t().teamS}</p>
+      ${list.length ? `<ul class="tn">${list.map(n => { const ty = n.type || "general";
+        return `<li class="${ty}"><span class="h"><span class="tg-t ${ty === "alert" ? "red" : ty === "followup" ? "org" : ""}">${t()["nt_" + ty]}</span><b>${esc(who(n.by))}</b><span class="num">${esc(fmtT(n.at))}</span>
+          ${ty === "followup" ? `<span class="tg-t ${n.done ? "grn" : "org"}">${n.done ? esc(tx("fuDone", { n: who(n.done.by), t: fmtT(n.done.at) })) : t().fuOpen}</span>` : ""}</span><span dir="auto">${esc(n.text)}</span></li>`; }).join("")}</ul>`
+        : `<div class="none-box" style="margin:0">${t().noTeam}</div>`}</section>`;
+  }
   function detail(id) {
     const r = only(M.get(id));
     if (!r || r.doctorId !== docId || !r.items.length) { $("vw").innerHTML = `<a class="back" href="doctor-orders-list.html">${svg(IC.l, 2)}${t().back}</a><section class="card"><div class="none-box"><b>${t().notFound}</b></div></section>`; return; }
     const o = MadaOrders.get(r.orderId), done = o && o.doctorVisit && o.doctorVisit.status === "done";
-    const grp = { lab: r.items.filter(i => i.type === "lab"), radiology: r.items.filter(i => i.type === "radiology") };
+    const grp = { lab: r.items.filter(i => i.type === "lab"), radiology: r.items.filter(i => i.type === "radiology"), other: r.items.filter(i => i.type !== "lab" && i.type !== "radiology") };
     const sec = k => grp[k].length ? `<section class="card sec"><h2 class="sec-t"><span class="ic">${svg(icOf(k))}</span>${t()["sec_" + k]}</h2>${grp[k].map(it => item(r, it)).join("")}</section>` : "";
     const s = stateOf(r);
     $("vw").innerHTML = `<a class="back" href="doctor-orders-list.html">${svg(IC.l, 2)}${t().back}</a>
       <section class="card"><div class="od-h"><span class="pa">${esc(initials(nm(r.patient).en))}</span><div><h1>${esc(pName(r))}</h1>
         <div class="meta"><span>${t().orderNo}: <b class="num">${esc(r.id)}</b></span><span>${esc(tx("fileNo", { n: "" }).trim())}: <b class="num">${esc(r.mrn || "—")}</b></span>${r.orderId ? `<span>${t().visitNo}: <b class="num">${esc(r.orderId)}</b></span>` : ""}<span>${t().date}: <b>${esc(fmtT(r.createdAt))}</b></span><span class="st st-${s}">${t()["st_" + s]}</span></div></div>
         <div class="od-acts">${r.mrn ? `<a class="btn btn-out" href="doctor-patient.html?mrn=${encodeURIComponent(r.mrn)}">${svg(IC.folder)}${t().openFile}</a>` : ""}${done ? `<a class="btn btn-dark" href="doctor-visit.html?id=${encodeURIComponent(r.orderId)}&view=1">${svg(IC.eye)}${t().openVisit}</a>` : ""}</div></div></section>
-      ${sec("lab")}${sec("radiology")}
+      ${rqBox(r)}${sec("lab")}${sec("radiology")}${sec("other")}${teamBox(r)}
       <p class="ol-note">${svg(IC.info, 2)}${t().demo}</p>`;
   }
   const qid = () => new URLSearchParams(location.search).get("id");
