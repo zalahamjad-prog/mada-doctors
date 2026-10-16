@@ -34,7 +34,10 @@ const MadaReport = (() => {
       sAl: "Allergies", sSvc: "Services Ordered", sNurse: "Nurse Note", sEdu: "Family Education", sIdf: "Identity Confirmation", insurance: "Insurance Company",
       nurseBy: "Written by {n}", idfBy: "Confirmed and signed by {n} on {d}", draftTag: "Draft · not approved yet", apprBy: "Approved by {n} on {d}", stampT: "Doctor's stamp",
       none: "Not recorded", sign: "Doctor's name", signNote: "Generated from the Mada Care medical record on {d}.", page: "Mada Care · Home healthcare",
-      making: "Preparing the PDF…", done: "{f} downloaded.", fail: "Could not create the file here. Use Save as PDF in the print window."
+      making: "Preparing the PDF…", done: "{f} downloaded.", fail: "Could not create the file here. Use Save as PDF in the print window.",
+      refTitle: "Medical Referral", refNo: "Referral No.", refDate: "Referral Date", clinT: "Clinical Summary", measured: "Measured on {d}", vitNone: "Vital signs not recorded.", ccNone: "Not recorded",
+      workDx: "Working diagnosis", refT: "Referral Details", rf_spec: "Specialty", rf_pri: "Priority", rf_routine: "Routine", rf_urgent: "Urgent", rf_dest: "Referred to", rf_mada: "Mada Care service", rf_ext: "External healthcare provider",
+      rf_prov: "Preferred provider", rf_reason: "Reason for referral", rf_rec: "Clinical recommendation", rf_notes: "Additional notes", rf_by: "Referring doctor", refSign: "Signature", refNote: "Issued from the Mada Care medical record on {d}. Please present this form at the receiving facility."
     },
     ar: {
       title: "التقرير الطبي", reportNo: "رقم التقرير", issued: "تاريخ الإصدار", patientT: "بيانات المريض", name: "اسم المريض", fileNo: "رقم الملف الطبي", idNo: "رقم الهوية",
@@ -56,7 +59,10 @@ const MadaReport = (() => {
       sAl: "الحساسية", sSvc: "الخدمات المطلوبة", sNurse: "ملاحظة الممرضة", sEdu: "تثقيف الأسرة", sIdf: "تأكيد الهوية", insurance: "شركة التأمين",
       nurseBy: "كتبتها {n}", idfBy: "أكّدها ووقّع عليها {n} بتاريخ {d}", draftTag: "مسودة · لم يُعتمد بعد", apprBy: "اعتمده {n} بتاريخ {d}", stampT: "ختم الطبيب",
       none: "غير مسجل", sign: "اسم الطبيب", signNote: "صدر من السجل الطبي لمدى كير بتاريخ {d}.", page: "مدى كير · رعاية صحية منزلية",
-      making: "جاري تجهيز الملف…", done: "تم تحميل {f}.", fail: "تعذر إنشاء الملف هنا. استخدم حفظ كـ PDF من نافذة الطباعة."
+      making: "جاري تجهيز الملف…", done: "تم تحميل {f}.", fail: "تعذر إنشاء الملف هنا. استخدم حفظ كـ PDF من نافذة الطباعة.",
+      refTitle: "نموذج تحويل طبي", refNo: "رقم التحويل", refDate: "تاريخ التحويل", clinT: "الملخص السريري", measured: "وقت القياس: {d}", vitNone: "لم تُسجل العلامات الحيوية.", ccNone: "غير مسجلة",
+      workDx: "التشخيص المبدئي", refT: "تفاصيل التحويل", rf_spec: "التخصص", rf_pri: "الأولوية", rf_routine: "عادي", rf_urgent: "عاجل", rf_dest: "جهة التحويل", rf_mada: "خدمة من مدى كير", rf_ext: "جهة صحية خارجية",
+      rf_prov: "مقدم الخدمة المفضل", rf_reason: "سبب التحويل", rf_rec: "التوصية السريرية", rf_notes: "ملاحظات إضافية", rf_by: "الطبيب المحوّل", refSign: "التوقيع", refNote: "صادر من السجل الطبي لمدى كير بتاريخ {d}. يُرجى تقديم هذا النموذج لدى الجهة المحوَّل إليها."
     }
   };
   // Same ranges as the Vital Signs step (doctor-visit.html).
@@ -301,16 +307,17 @@ const MadaReport = (() => {
   const withTimeout = (pr, ms) => Promise.race([pr, new Promise((_, bad) => setTimeout(() => bad(new Error("timeout")), ms))]);
   // The PDF renderer draws each line left to right, which drops the spaces between Arabic words and moves punctuation:
   // every word gets its own box so the browser's layout is kept (same as the lab results PDF).
-  function fixArabic(wrap) {
+  // An English page (onlyAr) only splits text that has Arabic in it, such as a doctor's note, and keeps its brackets.
+  function fixArabic(wrap, onlyAr) {
     const walk = document.createTreeWalker(wrap, NodeFilter.SHOW_TEXT), nodes = [];
-    while (walk.nextNode()) if (walk.currentNode.nodeValue.trim()) nodes.push(walk.currentNode);
+    while (walk.nextNode()) if (walk.currentNode.nodeValue.trim() && (!onlyAr || /[\u0600-\u06ff]/.test(walk.currentNode.nodeValue))) nodes.push(walk.currentNode);
     nodes.forEach(nd => {
       const frag = document.createDocumentFragment();
       nd.nodeValue.split(/(\s+|[()،,.:·\-–]+)/).forEach(part => {
         if (!part) return;
         if (/^\s+$/.test(part)) frag.appendChild(document.createTextNode(part));
         else {
-          const ltrBox = nd.parentElement && nd.parentElement.closest('[dir="ltr"]');
+          const db = nd.parentElement && nd.parentElement.closest("[dir]"), ltrBox = onlyAr || (db && db.getAttribute("dir") === "ltr");
           const sp = document.createElement("span");
           sp.textContent = ltrBox ? part : part.replace(/[()]/g, c => c === "(" ? ")" : "(");
           frag.appendChild(sp);
@@ -320,13 +327,14 @@ const MadaReport = (() => {
     });
   }
   const fileName = o => `Mada-Care-Medical-Report-${o.id}.pdf`;
-  async function download(o, lang, toast) {
-    const t = R[lang], file = fileName(o), wrap = document.createElement("div");
+  const download = (o, lang, toast) => save(html(o, lang), fileName(o), lang, toast);
+  async function save(page, file, lang, toast) {
+    const t = R[lang], wrap = document.createElement("div");
     wrap.style.cssText = "position:fixed;left:-10000px;top:0;z-index:-1;width:794px";
-    wrap.innerHTML = html(o, lang);
+    wrap.innerHTML = page;
     document.body.appendChild(wrap);
     if (toast) toast(t.making);
-    if (lang === "ar") fixArabic(wrap);
+    fixArabic(wrap, lang !== "ar");
     // The page is drawn from the top: when the page is scrolled down the PDF comes out blank.
     const sy = window.scrollY; window.scrollTo(0, 0);
     try {
@@ -342,9 +350,84 @@ const MadaReport = (() => {
       return false;
     } finally { wrap.remove(); window.scrollTo(0, sy); }
   }
+  // ---------- Referral form ----------
+  // One page per referral item (medical.js type "referral"): the patient file, the visit's chief complaint and vital signs,
+  // and the referral the doctor wrote (it.order from doctor-orders.js). o is the visit order; a referral without one shows what the request holds.
+  function referral(o, r, it, lang) {
+    o = o || { id: r.orderId || "", mrn: r.mrn, patient: r.patient, mobile: r.mobile, booking: { doctorId: r.doctorId } };
+    const d = data(o), t = R[lang], rtl = lang === "ar", al = rtl ? "right" : "left", ar2 = rtl ? "left" : "right", ro = it.order || {};
+    const H = typeof DrHistory !== "undefined" ? DrHistory.L[lang] : {}, lb = (dict, k, fb) => dict[k] || fb || k;
+    const loc = rtl ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB";
+    const fmtD = s => { if (!s) return ""; const dt = /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(s + "T00:00") : new Date(s); return isNaN(dt) ? "" : dt.toLocaleDateString(loc, { day: "numeric", month: "long", year: "numeric" }); };
+    // Clock time as digits in a left-to-right box, with the Arabic AM/PM word outside it.
+    const fmtT = s => { const dt = new Date(s); if (isNaN(dt)) return ""; const h = dt.getHours(), hm = `${h % 12 || 12}:${String(dt.getMinutes()).padStart(2, "0")}`;
+      return rtl ? `${ltr(hm)} ${h < 12 ? "ص" : "م"}` : ltr(`${hm} ${h < 12 ? "AM" : "PM"}`); };
+    // Numbers and codes in their own left-to-right box (no direction marks): Safari otherwise draws them over each other in the PDF.
+    const ltr = v => `<span dir="ltr" style="display:inline-block">${esc(String(v).replace(/[⁦-⁩‎‏]/g, "")).replace(/ /g, "&nbsp;")}</span>`;
+    const txt = v => `<span dir="auto" style="unicode-bidi:plaintext">${esc(v)}</span>`;
+    const when = s => s ? `${esc(fmtD(s))} · ${fmtT(s)}` : "";
+    const dash = `<span style="color:${MU};font-weight:400">—</span>`;
+    const kv = (k, v, w) => `<div style="flex:0 0 ${w || "33.33%"};box-sizing:border-box;padding:5px 0;padding-${ar2}:12px"><div style="color:${MU};font-size:10.5px">${k}</div><div style="font-weight:600;color:${INK};font-size:12.5px;margin-top:2px;white-space:pre-line">${v || dash}</div></div>`;
+    const ic = p => `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+    const card = (n, icon, title, body) => `<div class="pdf-avoid" style="border:1px solid ${LINE};border-radius:14px;margin-top:10px;background:#fff;overflow:hidden;break-inside:avoid;page-break-inside:avoid">
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 16px;background:${SOFT};border-bottom:1px solid ${LINE}"><span style="width:28px;height:28px;border-radius:8px;background:${G};display:inline-flex;align-items:center;justify-content:center">${ic(icon)}</span>
+        <span style="font-size:14.5px;font-weight:700;color:${GD}">${ltr(n)}&nbsp; ${title}</span></div><div style="padding:6px 16px 10px">${body}</div></div>`;
+    const flag = s => s ? `<span style="display:inline-block;padding:1px 8px;border-radius:8px;font-size:10px;font-weight:700;${s === "ok" ? "background:#e7f6ec;color:#15803d" : "background:#fef3e2;color:#b45309"}">${s === "ok" ? t.ok : s === "low" ? t.low : t.high}</span>` : "";
+    const vState = (v, val) => { if (!has(val)) return ""; if (v.k === "bp") { const m = String(val).match(/^(\d+)\/(\d+)$/); if (!m) return ""; return +m[1] >= 140 || +m[2] >= 90 ? "high" : +m[1] < 90 || +m[2] < 60 ? "low" : "ok"; } return +val < v.lo ? "low" : +val > v.hi ? "high" : "ok"; };
+
+    // 1. Patient information, from the patient file.
+    const pt = d.p, visitNo = o.id || r.orderId || r.bookingId || "";
+    const ptBody = `<div style="display:flex;flex-wrap:wrap">${kv(t.name, txt(pt.name[lang] || pt.name.en || ""))}${kv(t.fileNo, pt.fileNo && ltr(pt.fileNo))}${kv(t.idNo, pt.idNumber && ltr(pt.idNumber))}
+      ${kv(t.dob, pt.dob && esc(fmtD(pt.dob)) + (has(pt.age) ? ` <span style="color:${MU};font-weight:400">· ${esc(tx(t.years, { n: pt.age }))}</span>` : ""))}${kv(t.gender, pt.gender ? t["g_" + pt.gender] : "")}${kv(t.mobile, pt.mobile && ltr(pt.mobile))}${kv(t.visitNo, visitNo && ltr(visitNo))}</div>`;
+
+    // 2. Clinical summary: the chief complaint as the doctor wrote it, the vital signs with the time they were measured.
+    const cc = ((d.hist.complaint && !d.hist.complaint.draft && d.hist.complaint.items) || []).filter(c => has(c.text));
+    const ccBody = cc.length ? cc.map(c => `<div style="font-size:12.5px;line-height:1.75;color:${INK}">${cc.length > 1 ? "• " : ""}${c.type ? `<b>${esc(lb(H, "t_" + c.type, c.type))}:</b> ` : ""}${txt(c.text)}${
+      [c.durMode === "set" && c.durN ? `${t.duration}: ${ltr(c.durN)} ${esc(lb(H, "u_" + c.durU, c.durU))}` : "", c.severity ? `${t.severity}: ${esc(lb(H, "sv_" + c.severity, c.severity))}` : "", has(c.pain) ? `${t.pain}: ${ltr(c.pain + "/10")}` : ""].filter(Boolean).map(x => ` <span style="color:${MU};font-size:11.5px">· ${x}</span>`).join("")}</div>`).join("") : `<div style="font-size:12px;color:${MU}">${t.ccNone}</div>`;
+    const vs = d.st.vitals || {}, vl = VITALS.filter(v => has(vs[v.k]));
+    const vBody = vl.length ? `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">${vl.map(v => `<div style="flex:0 0 calc((100% - 16px) / 3);box-sizing:border-box;border:1px solid ${LINE};border-radius:10px;padding:6px 12px;background:#fbfdfc">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:6px"><span style="color:${MU};font-size:10.5px">${esc(v[lang].replace(/[()]/g, ""))}</span>${flag(vState(v, vs[v.k]))}</div>
+        <div style="margin-top:3px;color:${INK}"><b style="font-size:16px">${ltr(vs[v.k])}</b> <span style="color:${MU};font-size:11px">${ltr(v.unit)}</span></div></div>`).join("")}</div>
+      ${vs.at ? `<div style="font-size:11px;color:${MU};margin-top:6px">${t.measured.replace("{d}", when(vs.at))}${vs.by ? ` · ${txt(nm(vs.by)[lang] || nm(vs.by).en)}` : ""}</div>` : ""}` : `<div style="font-size:12px;color:${MU}">${t.vitNone}</div>`;
+    const dx = (d.st.assess || {}).primary;
+    const sub = (k, v) => `<div style="margin-top:6px"><div style="font-size:11.5px;font-weight:700;color:${G};margin-bottom:3px">${k}</div>${v}</div>`;
+    const clinBody = sub(t.cc, ccBody) + sub(t.s2, vBody) + (dx ? sub(t.workDx, `<div style="font-size:12.5px;color:${INK}">${dx.code ? `${ltr(dx.code)} · ` : ""}${txt(dx[lang] || dx.en || dx.ar)}</div>`) : "");
+
+    // 3. Referral details, short.
+    const ri = typeof DrOrders !== "undefined" && DrOrders.refInfo ? DrOrders.refInfo(ro) : { spec: null, provider: null }, urgent = ro.priority === "urgent";
+    const pill = urgent ? `<span style="display:inline-block;padding:1px 10px;border-radius:10px;background:#fdecec;color:#dc2626;font-size:11px;font-weight:700">${t.rf_urgent}</span>` : `<span style="display:inline-block;padding:1px 10px;border-radius:10px;background:#e6f3ef;color:${G};font-size:11px;font-weight:700">${t.rf_routine}</span>`;
+    const refBody = `<div style="display:flex;flex-wrap:wrap">${kv(t.rf_spec, ri.spec ? esc(nm(ri.spec)[lang]) : "")}${kv(t.rf_pri, pill)}${kv(t.rf_dest, esc(t[ro.dest === "ext" ? "rf_ext" : "rf_mada"]))}
+      ${ri.provider ? kv(t.rf_prov, esc(nm(ri.provider)[lang])) : ""}${kv(t.rf_reason, ro.reason && txt(ro.reason), "100%")}${ro.rec ? kv(t.rf_rec, txt(ro.rec), "100%") : ""}${ro.notes ? kv(t.rf_notes, txt(ro.notes), "100%") : ""}</div>`;
+
+    const doc = d.doc || (MadaOrders.DOCTORS || []).find(x => x.id === r.doctorId) || null, stamp = doc && typeof MadaStamps !== "undefined" ? MadaStamps.get(doc.id) : null;
+    const docName = doc ? doc.name[lang] : nm(r.byDoctor)[lang] || nm(r.byDoctor).en || "", now = new Date().toISOString(), no = `${r.id}-${it.id}`;
+    const P = { pt: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>', cl: '<path d="M3 12h4l2-5 4 10 2-5h6"/>', rf: '<path d="M4 12h13M13 7l5 5-5 5"/><path d="M20 4v16"/>' };
+    // Outer box left to right with the language direction inside: the PDF renderer cuts off the edge of a right-to-left page.
+    // 748px is the A4 width inside the 6 mm margins, so nothing is scaled or cut.
+    return `<div dir="ltr" style="width:748px;margin:0 auto;background:#fff"><div dir="${rtl ? "rtl" : "ltr"}" lang="${lang}" style="width:748px;background:#fff;color:${INK};font-family:${rtl ? "Tajawal, Inter" : "Inter, Tajawal"}, Arial, sans-serif;text-align:${al};box-sizing:border-box;position:relative">
+      <div style="background:linear-gradient(120deg, ${GD}, ${G});color:#fff;padding:16px 26px;display:flex;align-items:center;gap:16px;border-radius:0 0 22px 22px">
+        <span style="width:62px;height:62px;border-radius:50%;background:#fff;display:inline-flex;align-items:center;justify-content:center;flex:none;box-shadow:0 0 0 3px rgba(200,164,90,.6)"><img src="${LOGO}" style="height:42px;width:auto" alt=""></span>
+        <div style="flex:1"><div style="font-size:21px;font-weight:700">Mada Care <span style="font-weight:500">| مدى كير</span></div><div style="font-size:11.5px;opacity:.85">${rtl ? "رعاية كالعائلة" : "Caring Like Family"}</div></div>
+        <div style="text-align:${ar2}"><div style="font-size:20px;font-weight:700">${t.refTitle}</div><div style="font-size:11px;opacity:.9;margin-top:3px">${t.refNo}: ${ltr(no)}</div><div style="font-size:11px;opacity:.9">${t.refDate}: ${esc(fmtD(r.createdAt || now))}</div></div>
+      </div>
+      <div style="height:3px;background:${GOLD};margin:0 44px;border-radius:2px"></div>
+      <div style="padding:2px 22px 8px">
+        ${card("1", P.pt, t.patientT, ptBody)}
+        ${card("2", P.cl, t.clinT, clinBody)}
+        ${card("3", P.rf, t.refT, refBody)}
+        <div class="pdf-avoid" style="break-inside:avoid;page-break-inside:avoid;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-top:16px">
+          <div style="flex:1"><div style="color:${MU};font-size:10.5px">${t.rf_by}</div><div style="font-weight:700;font-size:14px;margin-top:2px">${esc(docName) || dash}</div>${doc ? `<div style="color:${MU};font-size:11px">${esc(doc.spec[lang])}</div>` : ""}
+            <div style="margin-top:24px;width:220px;border-top:1px solid #9aa7ab;padding-top:5px;color:${MU};font-size:10.5px">${t.refSign}</div></div>
+          <div style="width:170px;height:92px;border:1px dashed ${LINE};border-radius:12px;display:flex;align-items:center;justify-content:center">${stamp ? `<img src="${esc(stamp.data)}" alt="${t.stampT}" style="max-height:92px;max-width:170px;object-fit:contain">` : `<span style="color:#b9c3c6;font-size:11px">${t.stampT}</span>`}</div>
+        </div>
+        <div style="margin-top:16px;padding-top:8px;border-top:1px solid ${LINE};display:flex;justify-content:space-between;gap:16px;color:${MU};font-size:10.5px"><span>${esc(t.refNote.replace("{d}", fmtD(now)))}</span><span style="white-space:nowrap">${t.page}</span></div>
+      </div></div></div>`;
+  }
+  const referralFile = (r, it) => `Mada-Care-Referral-${r.id}-${it.id}.pdf`;
+  const downloadReferral = (o, r, it, lang, toast) => save(referral(o, r, it, lang), referralFile(r, it), lang, toast);
   // A visit has a report once it is completed.
   const ready = o => !!(o && o.doctorVisit && o.doctorVisit.status === "done");
   // A finished visit's report is shown and downloaded once the doctor approved it.
   const approved = o => ready(o) && ((o.doctorVisit.report || {}).status === "approved");
-  return { html, download, ready, approved, fileName, clean, stepHas, STEP_KEYS, STEP_SECS, L: R };
+  return { html, download, referral, downloadReferral, referralFile, ready, approved, fileName, clean, stepHas, STEP_KEYS, STEP_SECS, L: R };
 })();
