@@ -51,6 +51,7 @@ const DrPortal = (() => {
 
   // Bell: two kinds of notifications, newest first.
   //  - New booking: a visit booked with this doctor that the doctor has not seen yet (opening the bell marks them seen).
+  //    It only counts once the customer has paid (the order has a booking number), dated from the later of payment and assignment.
   //  - Results ready: lab or radiology results entered for this doctor's orders, waiting for approval
   //    (medical.js, reviewed on doctor-orders-list.html). They stay until the doctor approves them.
   //  - Critical / high result: a lab result with a high or critical value (alerts.js) the doctor has not opened yet.
@@ -60,7 +61,7 @@ const DrPortal = (() => {
   const read = (k, d) => { try { return MadaStore.getJSON(k, d) || d; } catch (e) { return d; } };
   const seenKey = id => "mada-dr-seen-" + id;
   function bookings(id) {
-    return read("mada-orders", []).filter(o => o.booking && o.booking.doctorId === id && o.appointment && o.status !== "cancelled" && !(o.doctorVisit && o.doctorVisit.status === "done"));
+    return read("mada-orders", []).filter(o => o.bookingId && o.booking && o.booking.doctorId === id && o.appointment && o.status !== "cancelled" && !(o.doctorVisit && o.doctorVisit.status === "done"));
   }
   function notes(me) {
     const id = me.doctorId || me.staffId, out = [];
@@ -72,7 +73,7 @@ const DrPortal = (() => {
       if (bk.length) try { MadaStore.setJSON(seenKey(id), seen); } catch (e) {}
     }
     if (typeof MadaAlerts !== "undefined") MadaAlerts.open(id).forEach(a => out.push({ kind: "crit", a, at: a.at, unread: !a.rec.seenAt }));
-    bookings(id).forEach(o => out.push({ kind: "book", o, at: o.booking.at || o.bookedAt || o.createdAt, unread: !seen.includes(o.id) }));
+    bookings(id).forEach(o => out.push({ kind: "book", o, at: [o.booking.at, o.bookedAt, o.createdAt].filter(Boolean).sort().pop(), unread: !seen.includes(o.id) }));
     read("mada-medical", []).filter(r => r.doctorId === id && r.status === "open").forEach(r => r.items.forEach(it => {
       if (RES_STEP[it.type] === it.step && (it.type !== "lab" || it.v2)) out.push({ kind: "res", r, it, at: (it.log[it.log.length - 1] || {}).at || r.createdAt, unread: true });
     }));

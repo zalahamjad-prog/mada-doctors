@@ -253,7 +253,7 @@
   const hasSchedule = () => { if (SAMPLE[docId]) return true; try { return !!Object.keys((MadaStore.getJSON("mada-dr-schedule") || {})[docId] || {}).length; } catch (e) { return false; } };
   const hours = s => { if (!s || !s.from || !s.to) return 0; const m = x => +x.slice(0, 2) * 60 + +x.slice(3); let d = m(s.to) - m(s.from); if (d <= 0) d += 1440; return d / 60; };
   // This doctor's booked visits on a day (not cancelled).
-  const visitsOn = ymd => MadaOrders.all().filter(o => o.booking && o.booking.doctorId === docId && o.appointment && o.appointment.date === ymd && o.status !== "cancelled").length;
+  const visitsOn = ymd => MadaOrders.all().filter(o => o.bookingId && o.booking && o.booking.doctorId === docId && o.appointment && o.appointment.date === ymd && o.status !== "cancelled").length;
 
   const I18N = {
     en: {
