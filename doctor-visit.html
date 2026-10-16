@@ -856,6 +856,7 @@
     if (!$("doneOv").hidden) openDone();
     if (!o) { $("vw").innerHTML = `<div class="card missing"><h1 style="font-size:22px;color:#15304a">${t().missingT}</h1><p style="margin:8px 0 18px;color:var(--muted)">${t().missingS}</p><a class="back" href="doctor-visits.html">${svg(IC.back, 2)}${t().back}</a></div>`; return; }
     if (!active) active = STEPS[Math.min(doneCount(o), STEPS.length - 1)].k;
+    if (!VIEW) markOpen(o, active);
     const hx = active === "history", body = active === "arrival" ? arrivalCard(o) : hx ? DrHistory.view(o, hxCtx) : active === "vitals" ? vitalsCard(o) : active === "exam" ? DrExam.view(o, exCtx) : active === "allergy" ? DrAllergy.view(o, alCtx) : active === "assess" ? DrDiagnosis.view(o, dxCtx) : active === "plan" ? DrPlan.view(o, planCtx) : active === "orders" ? DrOrders.view(o, orCtx) : active === "nurse" ? DrNurse.view(o, nuCtx) : active === "edu" ? DrEdu.view(o, edCtx) : active === "idform" ? DrIdForm.view(o, idCtx) : active === "consent" ? DrConsent.view(o, csCtx) : soonCard(active);
     const backA = VIEW && o.mrn ? `<a class="back" href="doctor-patient.html?mrn=${encodeURIComponent(o.mrn)}">${svg(IC.back, 2)}${t().backFile}</a>` : `<a class="back" href="doctor-visits.html">${svg(IC.back, 2)}${t().back}</a>`;
     $("vw").innerHTML = `${backA}${VIEW ? `<div class="ro-bar">${svg(IC.info, 2)}<span><b>${t().roT}</b> ${t().roS}</span></div>` : ""}${strip(o)}${VIEW ? "" : payBar(o)}
@@ -872,6 +873,14 @@
     if (active === "idform") DrIdForm.bind($("stepCard"), o, idCtx);
     if (active === "consent") DrConsent.bind($("stepCard"), o, csCtx);
     if (VIEW) applyRo();
+  }
+  // The first time the doctor opens each step of a started visit is kept in doctorVisit.stepLog[k].openedAt; the step's own
+  // saved time (steps[k].at) is when it was closed. The dashboard shows both, and the time between them (request-details.html).
+  function markOpen(o, k) {
+    const dv = o.doctorVisit; if (!dv || !dv.startedAt || dv.status === "done") return;
+    const log = dv.stepLog || {}; if (log[k] && log[k].openedAt) return;
+    const next = { ...dv, stepLog: { ...log, [k]: { openedAt: new Date().toISOString() } } };
+    try { MadaOrders.update(id, { doctorVisit: next }); o.doctorVisit = next; } catch (e) {}
   }
   // Shared by the step modules: position in the step list, and moving between steps.
   const stepNav = k => {
