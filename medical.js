@@ -129,12 +129,14 @@ const MadaMedical = (() => {
     return update(id, { items: r.items.map(it => it.id === itemId ? { ...it, ...(typeof patch === "function" ? patch(it) : patch) } : it) });
   }
   // Move one item to its next step, keeping who did it and what they entered.
+  // A referral we decide not to approve ends there: it moves to its last step, marked rejected.
   function advance(id, itemId, by, data) {
     const r = get(id); if (!r) return null;
     const items = r.items.map(it => {
       if (it.id !== itemId || isDone(it)) return it;
-      const step = it.step + 1;
-      return { ...it, step, log: [...it.log, { step, by, at: new Date().toISOString(), data: data || null }] };
+      const rejected = !!(data && data.decision === "rejected");
+      const step = rejected ? STEPS[it.type].length - 1 : it.step + 1;
+      return { ...it, step, ...(rejected ? { rejected: true } : {}), log: [...it.log, { step: it.step + 1, by, at: new Date().toISOString(), data: data || null }] };
     });
     return update(id, { items });
   }
