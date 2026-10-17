@@ -454,5 +454,13 @@ const MadaOrders = (() => {
     MadaStore.set(DEMO_V + "-" + doctorId, "1");
   }
 
-  return { all, get, byReq, add, update, text, needsAction, sweepHolds, seedDoctorDemo, STAFF, PAY_MINUTES, CHECKS, OUTCOMES, CANCEL_OUTCOMES, CANCEL_REASONS, DOCTORS, DRIVERS, COVERAGE, coverageAt };
+  // VAT: listed prices are before VAT. A Saudi national ID holder (patient file idType "national", or Saudi nationality with no ID type)
+  // pays no VAT; everyone else pays 15% on top. A booking with no patient file pays VAT.
+  const VAT = 0.15;
+  function vatExempt(o) {
+    const f = (typeof MadaPatients !== "undefined" && o && o.mrn && MadaPatients.get(o.mrn)) || {};
+    return f.idType === "national" || (!f.idType && f.nationality === "SA");
+  }
+  const vatRate = o => vatExempt(o) ? 0 : VAT;
+  return { VAT, vatExempt, vatRate, all, get, byReq, add, update, text, needsAction, sweepHolds, seedDoctorDemo, STAFF, PAY_MINUTES, CHECKS, OUTCOMES, CANCEL_OUTCOMES, CANCEL_REASONS, DOCTORS, DRIVERS, COVERAGE, coverageAt };
 })();
