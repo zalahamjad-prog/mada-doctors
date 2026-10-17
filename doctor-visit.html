@@ -964,6 +964,9 @@
       const dv = MadaOrders.get(id).doctorVisit;
       putVisit({ nurseDraft: undefined, steps: { ...(dv.steps || {}), nurse: { ...d, at: new Date().toISOString(), by: me.name } } });
     },
+    // Sample collection confirmed by the nurse (doctorVisit.sample).
+    saveSample(d) { putVisit({ sample: d }); },
+    get doctor() { return me.name; },
     go: goStep
   };
   const edCtx = {
@@ -991,8 +994,12 @@
       const codes = [...new Set(labs.flatMap(x => DrOrders.labTests(x.code)))];
       const names = l => codes.map(c => (DrOrders.item(c) || {})[l] || c).join(l === "ar" ? "، " : ", ");
       const note = labs.map(x => x.note).filter(Boolean).join(" · ");
-      items.push({ type: "lab", v2: true, title: { en: names("en"), ar: names("ar") }, details: { en: note, ar: note }, orderCodes: codes,
-        tests: [...new Set(codes.map(c => MadaMedical.CATALOG[c]).filter(Boolean))] });
+      // The nurse's sample confirmation (Nurse Note step): a collected sample starts the follow-up at "Sample collected"; one not collected is noted on the item.
+      const sm = o.doctorVisit.sample, got = sm && sm.status === "collected", miss = sm && sm.status === "not";
+      const det = l => [note, miss ? (l === "ar" ? "لم تُسحب العينة: " : "Sample not collected: ") + sm.reason : ""].filter(Boolean).join(" · ");
+      items.push({ type: "lab", v2: true, title: { en: names("en"), ar: names("ar") }, details: { en: det("en"), ar: det("ar") }, orderCodes: codes,
+        tests: [...new Set(codes.map(c => MadaMedical.CATALOG[c]).filter(Boolean))],
+        ...(got ? { step: 1, log: [{ step: 0, at: (o.doctorVisit.steps.orders || {}).at || new Date().toISOString(), by: me.name }, { step: 1, at: sm.at, by: sm.by, data: sm.note ? { note: sm.note } : null }] } : {}) });
     }
     all.filter(x => SEND_TYPE[x.svc]).forEach(x => {
       const det = x.svc === "ref" ? [x.reason, x.notes].filter(Boolean).join(" · ") : x.svc === "leave" ? [x.start, x.reason].filter(Boolean).join(" · ") : (x.note || "");

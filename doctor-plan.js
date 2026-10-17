@@ -1,7 +1,7 @@
 // Treatment Plan (doctor visit step after Diagnosis), two pages: "Goals & Plan" then "Medications". Saved in order.doctorVisit.steps.plan:
 //   { goals: [{ id, text }], details (limited HTML from the editor), followUp, meds: [{ id, name, generic: { en, ar }, cls: { en, ar }, atc, form, strength, route, doseN, doseU, freq, durN, durU, instr,
 //              qty, timing: [], prn, prnFor, allergy }], none, at, by }
-// "Save as Draft" keeps the same shape in doctorVisit.planDraft. To continue: at least one goal, and at least one medicine or "No medications".
+// "Save as Draft" keeps the same shape in doctorVisit.planDraft. To continue: the plan details, at least one goal, and at least one medicine or "No medications".
 // A medicine that matches a recorded allergy (Allergy History or Medication History) shows a warning; it does not block.
 const DrPlan = (() => {
   // SAMPLE formulary. TODO: replace with the SFDA drug list / formulary search; check strengths and ATC codes before go-live.
@@ -72,7 +72,7 @@ const DrPlan = (() => {
       g2: "Treatment Plan Details", g2s: "Provide an overall treatment plan and key instructions. You can include general management, patient advice, and next steps.", optTag: "Optional",
       detailsPh: "Write the treatment plan here...", bold: "Bold", italic: "Italic", bullets: "Bulleted list", numbers: "Numbered list", linkB: "Link", linkAsk: "Link address (https://...)", linkBad: "Enter a link that starts with https://", maxChars: "Maximum {n} characters.",
       g3: "Follow-up Plan", g3s: "Add follow-up instructions (e.g., review results, assess response).", fuPh: "Write follow-up instructions here...",
-      nextMeds: "Next: Medications", needGoal: "Add at least one treatment goal.", stepOf: "Step {n} of {m}",
+      nextMeds: "Next: Medications", needGoal: "Add at least one treatment goal.", needDetails: "Write the treatment plan details.", stepOf: "Step {n} of {m}",
       s1: "Search Medication", s1s: "Search by brand name, generic name or classification.", searchPh: "Search medication (e.g. Paracetamol, Amoxicillin, Augmentin...)", quick: "Quick Suggestions",
       noMatch: "No match in the list.", otherGoal: "Other", otherGoalPh: "Write another treatment goal ...", addOther: "Add goal", otherGoalReq: "Write the goal first.", otherMed: "Other (write the name)", cancel: "Cancel", freeText: "Add \"{q}\" manually", clear: "Clear search",
       s2: "Medication Details", s2s: "Review and adjust the details.", pickFirst: "Search or pick a quick suggestion to start.",
@@ -102,7 +102,7 @@ const DrPlan = (() => {
       g2: "تفاصيل الخطة العلاجية", g2s: "اكتب الخطة العلاجية العامة والتعليمات المهمة، مثل التدبير العام ونصائح المريض والخطوات الجاية.", optTag: "اختياري",
       detailsPh: "اكتب الخطة العلاجية هنا...", bold: "عريض", italic: "مائل", bullets: "قائمة نقطية", numbers: "قائمة مرقمة", linkB: "رابط", linkAsk: "عنوان الرابط (https://...)", linkBad: "اكتب رابط يبدأ بـ https://", maxChars: "الحد الأقصى {n} حرف.",
       g3: "خطة المتابعة", g3s: "أضف تعليمات المتابعة (مثل مراجعة النتائج، تقييم الاستجابة).", fuPh: "اكتب تعليمات المتابعة هنا...",
-      nextMeds: "التالي: الأدوية", needGoal: "أضف هدف علاجي واحد على الأقل.", stepOf: "الخطوة {n} من {m}",
+      nextMeds: "التالي: الأدوية", needGoal: "أضف هدف علاجي واحد على الأقل.", needDetails: "اكتب تفاصيل الخطة العلاجية.", stepOf: "الخطوة {n} من {m}",
       s1: "البحث عن دواء", s1s: "ابحث بالاسم التجاري أو العلمي أو التصنيف.", searchPh: "ابحث عن دواء (مثال: باراسيتامول، أموكسيسيلين، أوجمنتين...)", quick: "اقتراحات سريعة",
       noMatch: "ما فيه دواء مطابق في القائمة.", otherGoal: "أخرى", otherGoalPh: "اكتب هدف علاجي آخر ...", addOther: "إضافة الهدف", otherGoalReq: "اكتب الهدف أول.", otherMed: "أخرى (اكتب اسم الدواء)", cancel: "إلغاء", freeText: "إضافة \"{q}\" يدوياً", clear: "مسح البحث",
       s2: "تفاصيل الدواء", s2s: "راجع التفاصيل وعدّلها.", pickFirst: "ابحث أو اختر من الاقتراحات عشان تبدأ.",
@@ -127,11 +127,11 @@ const DrPlan = (() => {
     }
   };
 
-  let draft = null, forId = null, lang = "en", ctx = null, q = "", page = "goals", gq = "", gOpen = false, gOther = false, gOt = "", cur = null, editIx = -1, adv = false, tried = false, allergies = [];
+  let draft = null, forId = null, lang = "en", ctx = null, q = "", page = "goals", gq = "", gOpen = false, gOther = false, gOt = "", cur = null, editIx = -1, adv = false, tried = false, dTried = false, allergies = [];
   const t = () => L[lang];
   const tx = (k, v) => t()[k].replace(/\{(\w+)\}/g, (_, n) => v[n]);
   const S = (p, w) => ctx.svg(p, w), E = s => ctx.esc(s);
-  const reset = () => { draft = null; forId = null; q = ""; page = "goals"; gq = ""; gOpen = false; gOther = false; gOt = ""; cur = null; editIx = -1; adv = false; tried = false; };
+  const reset = () => { draft = null; forId = null; q = ""; page = "goals"; gq = ""; gOpen = false; gOther = false; gOt = ""; cur = null; editIx = -1; adv = false; tried = false; dTried = false; };
   const drug = id => DRUGS.find(d => d.id === id);
   const lbl = (pre, v) => v ? t()[pre + v] || v : "";
 
@@ -251,18 +251,20 @@ const DrPlan = (() => {
     const sec = (n, title, sub, body, opt) => `<section class="pl-sec"><span class="pl-n">${n}</span><div class="pl-sb"><div class="pl-sh"><div><h2>${title}${opt ? ` <span class="pl-tag">${t().optTag}</span>` : ""}</h2><p>${sub}</p></div></div>${body}</div></section>`;
     const n = draft.goals.length, dl = textOf(draft.details).length;
     const tb = (cmd, icon, label) => `<button type="button" class="pl-tb" data-cmd="${cmd}" aria-label="${label}" title="${label}">${icon}</button>`;
+    // Treatment Plan Details comes first and is required; the goals follow.
+    const DETAILS = `<div class="pl-ed ${dTried && !dl ? "bad" : ""}"><div class="pl-tbar">${tb("bold", "<b>B</b>", t().bold)}${tb("italic", "<i>I</i>", t().italic)}<span class="pl-tsep"></span>${tb("insertUnorderedList", S(I.ul), t().bullets)}${tb("insertOrderedList", S(I.ol), t().numbers)}<span class="pl-tsep"></span>${tb("createLink", S(I.link), t().linkB)}</div>
+          <div class="pl-rt" id="plDetails" contenteditable="true" dir="auto" role="textbox" aria-multiline="true" aria-label="${E(t().g2)}" data-ph="${E(t().detailsPh)}">${draft.details}</div>
+          <div class="hx-count pl-edc"><span id="detN">${dl}</span>/${MAXD}</div></div>`;
     return `<div class="pl">
       ${head(c, "goals", t().subGoals)}
-      ${sec(1, t().g1, t().g1s, `<div class="dx-sb pl-gsb ${gOpen ? "open" : ""}">${S(I.search)}<input id="goalQ" type="search" value="${E(gq)}" placeholder="${E(t().goalPh)}" autocomplete="off" maxlength="200" aria-expanded="${gOpen}">
+      ${sec(1, t().g2, t().g2s, DETAILS)}
+      ${sec(2, t().g1, t().g1s, `<div class="dx-sb pl-gsb ${gOpen ? "open" : ""}">${S(I.search)}<input id="goalQ" type="search" value="${E(gq)}" placeholder="${E(t().goalPh)}" autocomplete="off" maxlength="200" aria-expanded="${gOpen}">
           <button type="button" class="dx-clr" id="goalTog" aria-label="${E(t().goalPh)}">${S(I.down, 2.2)}</button>${gOpen ? goalDrop() : ""}</div>
         <div class="pl-qg">${QGOALS.map(id => { const on = hasGoal({ id }); return `<button type="button" class="pl-qgb ${on ? "on" : ""}" data-qgoal="${id}" ${on ? "disabled" : ""}>${S(on ? I.check : I.plus, 2)}<span>${QSHORT[id][lang === "ar" ? 1 : 0]}</span></button>`; }).join("")}<button type="button" class="pl-qgb other ${gOther ? "on" : ""}" id="goalOtherB" aria-expanded="${gOther}">${S(I.pen || I.plus, 2)}<span>${t().otherGoal}</span></button></div>
         ${gOther ? `<div class="pl-gother"><input class="hx-in" id="goalOther" value="${E(gOt)}" placeholder="${E(t().otherGoalPh)}" maxlength="200" dir="auto"><button type="button" class="hx-btn out sm" id="goalOtherX">${t().cancel}</button><button type="button" class="pl-addbtn" id="goalOtherAdd">${S(I.plus, 2.2)}${t().addOther}</button></div>` : ""}
         <div class="pl-gh"><b>${t().selGoals}</b><span>${n ? tx("nAdded", { n }) : ""}</span></div>
         ${n ? `<ol class="pl-goals">${draft.goals.map((g, i) => `<li class="pl-goal" draggable="true" data-gi="${i}"><button type="button" class="pl-grip" data-grip="${i}" aria-label="${t().dragGoal}" title="${t().dragGoal}">${S(I.grip, 2.4)}</button>
           <span dir="auto">${E(goalText(g))}</span><button type="button" class="pl-ib del" data-gdel="${i}" aria-label="${t().removeGoal}">${S(I.trash)}</button></li>`).join("")}</ol>` : `<p class="hx-empty pl-pick">${t().noGoals}</p>`}`)}
-      ${sec(2, t().g2, t().g2s, `<div class="pl-ed"><div class="pl-tbar">${tb("bold", "<b>B</b>", t().bold)}${tb("italic", "<i>I</i>", t().italic)}<span class="pl-tsep"></span>${tb("insertUnorderedList", S(I.ul), t().bullets)}${tb("insertOrderedList", S(I.ol), t().numbers)}<span class="pl-tsep"></span>${tb("createLink", S(I.link), t().linkB)}</div>
-          <div class="pl-rt" id="plDetails" contenteditable="true" dir="auto" role="textbox" aria-multiline="true" aria-label="${E(t().g2)}" data-ph="${E(t().detailsPh)}">${draft.details}</div>
-          <div class="hx-count pl-edc"><span id="detN">${dl}</span>/${MAXD}</div></div>`, true)}
       ${sec(3, t().g3, t().g3s, `<div class="pl-fu">${S(I.doc)}<input class="hx-in" id="plFu" dir="auto" value="${E(draft.followUp)}" placeholder="${E(t().fuPh)}" maxlength="500"></div>`, true)}
       <div class="ex-foot"><button type="button" class="hx-btn out pl-prevb" id="plPrev"><span class="flip">${S(I.back)}</span><span><b>${t().prev}</b><small>${E(c.prevName || "")}</small></span></button><span class="hx-sp"></span>
         <button type="button" class="hx-btn soft" id="plDraft">${S(I.doc)}${t().draft}</button>
@@ -316,7 +318,7 @@ const DrPlan = (() => {
       if (to === -9) return; e.preventDefault(); move(i, to); const nb = root.querySelector(`[data-grip="${Math.max(0, Math.min(to, draft.goals.length - 1))}"]`); if (nb) nb.focus();
     }));
     // Plan editor
-    const ed = $("#plDetails"), cnt = () => { const n = ed.textContent.length; $("#detN").textContent = n; ed.classList.toggle("empty", !n && !ed.querySelector("li")); };
+    const ed = $("#plDetails"), cnt = () => { const n = ed.textContent.length; $("#detN").textContent = n; ed.classList.toggle("empty", !n && !ed.querySelector("li")); if (n) ed.closest(".pl-ed").classList.remove("bad"); };
     cnt();
     const sync = () => { draft.details = sanitize(ed.innerHTML); cnt(); };
     ed.addEventListener("beforeinput", e => {
@@ -350,10 +352,16 @@ const DrPlan = (() => {
     $("#plDraft").addEventListener("click", () => { ctx.saveDraft(clean()); ctx.toast(t().draftSaved); });
     $("#plNext").addEventListener("click", () => goPage("meds"));
   }
-  // Moving to Medications needs a goal; the goals page is kept as a draft so a reload does not lose it.
+  // The goals page needs the plan details and at least one goal: shows what is missing (and marks the editor) when it is not done.
+  function needs() {
+    if (!textOf(draft.details).trim()) { dTried = true; ctx.rerender(); window.scrollTo(0, 0); return ctx.toast(t().needDetails) || true; }
+    if (!draft.goals.length) { ctx.rerender(); return ctx.toast(t().needGoal) || true; }
+    return false;
+  }
+  // Moving to Medications needs the plan details and a goal; the goals page is kept as a draft so a reload does not lose it.
   function goPage(k) {
     if (k === page) return;
-    if (k === "meds") { if (!draft.goals.length) return ctx.toast(t().needGoal); ctx.saveDraft(clean()); }
+    if (k === "meds") { const e = needs(); if (e) return e; ctx.saveDraft(clean()); }
     page = k; gOpen = false; ctx.rerender(); window.scrollTo(0, 0);
   }
 
@@ -438,7 +446,7 @@ const DrPlan = (() => {
     $("#plDraft").addEventListener("click", () => { ctx.saveDraft(clean()); ctx.toast(t().draftSaved); });
     $("#plSave").addEventListener("click", () => {
       if (cur) return ctx.toast(t().pendingMed);
-      if (!draft.goals.length) { page = "goals"; ctx.rerender(); window.scrollTo(0, 0); return ctx.toast(t().needGoal); }
+      if (!textOf(draft.details).trim() || !draft.goals.length) { page = "goals"; needs(); return; }
       if (!draft.meds.length && !draft.none) return ctx.toast(t().needMed);
       ctx.save(clean()); reset(); ctx.toast(t().saved); ctx.go(ctx.nextKey);
     });

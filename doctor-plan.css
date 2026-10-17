@@ -178,3 +178,4 @@
 .pl-gother .hx-in { flex: 1 1 260px; min-width: 0; height: 48px; }
 .pl-qs.other { display: inline-flex; align-items: center; gap: 6px; border-style: dashed; color: #2f6fd6; }
 .pl-qs.other svg { width: 15px; height: 15px; }
+.pl-ed.bad { border-color: #e5484d; box-shadow: 0 0 0 3px rgba(229,72,77,.12); }

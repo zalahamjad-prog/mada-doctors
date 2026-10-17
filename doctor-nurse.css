@@ -48,3 +48,16 @@
   .nu-fm { inset: 0; border-radius: 0; }
   .nu-ff .hx-btn { width: 100%; justify-content: center; }
 }
+/* Sample collection (when the doctor ordered lab tests) */
+.nu-sm { margin-bottom: 16px; }
+.nu-sm.open { border-color: #bfe3d3; }
+.nu-sm.bad { border-color: #e5484d; box-shadow: 0 0 0 3px rgba(229,72,77,.1); }
+.nu-n0.sm { background: #e6f3ef; color: #0b6b5c; }
+.nu-n0.sm.done { background: var(--teal, #12a37f); color: #fff; }
+.nu-sm.no .nu-n0.sm.done { background: #d97706; }
+.nu-smt { margin: 0 0 12px; font-size: 14px; color: #15304a; line-height: 1.6; }
+.nu-smt span { color: #6b7a80; }
+.nu-sm .or-pills { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+.nu-sm .or-pill svg { width: 18px; height: 18px; }
+.nu-sm .or-pill.no.on { border-color: #f3c58b; background: #fff6ea; color: #a35a00; }
+.nu-sm .or-pill.no.on .or-rd { background: #d97706; border-color: #d97706; }

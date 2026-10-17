@@ -1,6 +1,8 @@
 // Nurse Note (doctor visit step after Orders & Services). The nurse on the visit writes her notes and observations.
 // Saved in order.doctorVisit.steps.nurse: { note, nurse, none, at, by }. While typing, the text is kept in doctorVisit.nurseDraft.
 // To continue: a saved note, or "No nurse note for this visit".
+// When the doctor ordered lab tests (or Home Sample Collection), the nurse also confirms the sample: doctorVisit.sample =
+//   { status: "collected" | "not", at, note, reason, by }. On completing the visit the lab follow-up item starts at "Sample collected" (doctor-visit.html sendOrders).
 const DrNurse = (() => {
   const MAX = 1000;
   const I = {
@@ -9,7 +11,7 @@ const DrNurse = (() => {
     full: '<path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/>', shrink: '<path d="M4 14h6v6M20 10h-6V4M14 10l7-7M10 14l-7 7"/>',
     x: '<path d="M6 6l12 12M18 6 6 18"/>', save: '<path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7V3M8 21v-6h8v6"/>',
     check: '<path d="m5 12 5 5 9-10"/>', pen: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>', back: '<path d="M19 12H5M11 6l-6 6 6 6"/>',
-    arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>', doc: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/>'
+    arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>', tube: '<path d="M9 3h6M10 3v13a2 2 0 0 0 4 0V3"/><path d="M10 10h4"/>', doc: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/>'
   };
   const L = {
     en: {
@@ -18,7 +20,11 @@ const DrNurse = (() => {
       by: "Written by", byPh: "Nurse name", cancel: "Cancel", save: "Save Note", saved: "Nurse note saved.", savedAt: "Saved {t} · {n}", edit: "Edit Note",
       reverted: "Changes discarded.", empty: "Write the note first.", needBy: "Write the nurse's name.", none: "No nurse note for this visit",
       prev: "Previous", draft: "Save as Draft", draftSaved: "Draft saved.", cont: "Save & Continue", needNote: "Save a nurse note, or tick \"No nurse note for this visit\".",
-      unsaved: "You have unsaved changes in the note.", storeErr: "Couldn't save. Try again."
+      unsaved: "You have unsaved changes in the note.", storeErr: "Couldn't save. Try again.",
+      smT: "Sample Collection", opt: "(Optional)", smS: "The doctor ordered tests that need a sample. Confirm it was collected.", smTests: "Ordered", smYes: "Sample collected", smNo: "Not collected",
+      smNote: "Sample note", smNotePh: "e.g. 2 tubes, collected from the left arm", smReason: "Why was it not collected?", smReasonPh: "e.g. Patient refused, difficult vein", smOk: "Confirm",
+      smDone: "Sample collected · {t} · {n}", smNot: "Not collected · {t} · {n}", smEdit: "Change", smSaved: "Sample confirmation saved.", needSm: "Confirm the sample collection first.",
+      needSmPick: "Choose whether the sample was collected.", needReason: "Write why the sample was not collected."
     },
     ar: {
       title: "ملاحظة الممرضة", sub: "أضف ملاحظات التمريض والمشاهدات.", stepOf: "الخطوة {n} من {m}", label: "ملاحظة الممرضة", ph: "اكتب ملاحظة الممرضة هنا ...",
@@ -26,14 +32,18 @@ const DrNurse = (() => {
       by: "كتبتها", byPh: "اسم الممرضة", cancel: "إلغاء", save: "حفظ الملاحظة", saved: "انحفظت ملاحظة الممرضة.", savedAt: "انحفظت {t} · {n}", edit: "تعديل الملاحظة",
       reverted: "تم التراجع عن التعديلات.", empty: "اكتب الملاحظة أول.", needBy: "اكتب اسم الممرضة.", none: "ما فيه ملاحظة تمريض لهذه الزيارة",
       prev: "السابق", draft: "حفظ كمسودة", draftSaved: "انحفظت المسودة.", cont: "حفظ ومتابعة", needNote: "احفظ ملاحظة الممرضة، أو اختر \"ما فيه ملاحظة تمريض لهذه الزيارة\".",
-      unsaved: "عندك تعديلات ما انحفظت في الملاحظة.", storeErr: "ما قدرنا نحفظ. حاول مرة ثانية."
+      unsaved: "عندك تعديلات ما انحفظت في الملاحظة.", storeErr: "ما قدرنا نحفظ. حاول مرة ثانية.",
+      smT: "سحب العينة", opt: "(اختياري)", smS: "الطبيب طلب فحوصات تحتاج عينة. أكّدي إنه تم سحبها.", smTests: "المطلوب", smYes: "تم سحب العينة", smNo: "ما تم السحب",
+      smNote: "ملاحظة على العينة", smNotePh: "مثال: أنبوبين، من الذراع اليسار", smReason: "ليش ما تم السحب؟", smReasonPh: "مثال: المريض رفض، صعوبة في الوريد", smOk: "تأكيد",
+      smDone: "تم سحب العينة · {t} · {n}", smNot: "ما تم السحب · {t} · {n}", smEdit: "تغيير", smSaved: "انحفظ تأكيد سحب العينة.", needSm: "أكّدي سحب العينة أول.",
+      needSmPick: "اختاري هل تم سحب العينة أو لا.", needReason: "اكتبي ليش ما تم سحب العينة."
     }
   };
-  let ctx = null, lang = "en", st = null, forId = null, full = false, editing = false, tried = false, timer = null;
+  let ctx = null, lang = "en", st = null, forId = null, full = false, editing = false, tried = false, timer = null, sm = null;
   const t = () => L[lang];
   const tx = (k, v) => t()[k].replace(/\{(\w+)\}/g, (_, n) => v[n]);
   const S = (p, w) => ctx.svg(p, w), E = s => ctx.esc(s);
-  const reset = () => { st = null; forId = null; full = false; editing = false; tried = false; clearTimeout(timer); };
+  const reset = () => { sm = null; st = null; forId = null; full = false; editing = false; tried = false; clearTimeout(timer); };
   const savedOf = o => ((o.doctorVisit || {}).steps || {}).nurse;
   const nameOf = v => v && typeof v === "object" ? v[lang] || v.en : v || "";
   function load(o) {
@@ -41,6 +51,25 @@ const DrNurse = (() => {
     const dv = o.doctorVisit || {}, sv = savedOf(o), dr = dv.nurseDraft;
     st = { note: (dr || sv || {}).note || "", nurse: (dr || sv || {}).nurse || (o.appointment && o.appointment.nurse) || "", none: !!(sv && sv.none) };
     forId = o.id; editing = !!dr || !sv || !sv.note;
+  }
+  // Orders that need a sample: lab tests and packages, or the Home Sample Collection service.
+  const sampleOrders = o => { const dv = o.doctorVisit || {}, src = (dv.steps && dv.steps.orders) || dv.ordersDraft || {};
+    return (src.items || []).filter(x => x.svc === "lab" || x.code === "NS-051"); };
+  function sampleCard(o, c) {
+    const need = sampleOrders(o); if (!need.length) return "";
+    const sv = (o.doctorVisit || {}).sample, names = need.map(x => (DrOrders.titleOf(x) || {})[lang] || x.code).join(lang === "ar" ? "، " : ", ");
+    const when = d => new Date(d).toLocaleString(c.loc(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+    const head = (done) => `<div class="nu-ch"><span class="nu-n0 sm ${done ? "done" : ""}">${S(done ? I.check : I.tube, done ? 2.6 : 2)}</span><div><b>${t().smT}</b><small>${done ? E(tx(sv.status === "collected" ? "smDone" : "smNot", { t: when(sv.at), n: nameOf(sv.by) })) : t().smS}</small></div>
+      ${done ? `<button type="button" class="hx-btn out sm" id="smEdit">${S(I.pen)}${t().smEdit}</button>` : ""}</div>`;
+    const tests = `<p class="nu-smt"><span>${t().smTests}:</span> ${E(names)}</p>`;
+    if (sv && !sm) return `<section class="nu-card nu-sm ${sv.status === "not" ? "no" : "ok"}">${head(true)}<div class="nu-cb">${tests}${sv.note || sv.reason ? `<p class="nu-txt" dir="auto">${E(sv.note || sv.reason)}</p>` : ""}</div></section>`;
+    if (!sm) sm = { status: sv ? sv.status : "", note: sv ? sv.note || "" : "", reason: sv ? sv.reason || "" : "", tried: false };
+    const bad = cond => sm.tried && cond ? "bad" : "";
+    return `<section class="nu-card nu-sm open ${bad(!sm.status)}">${head(false)}<div class="nu-cb">${tests}
+      <div class="or-pills">${[["collected", "smYes", I.check], ["not", "smNo", I.x]].map(([k, l, ic]) => `<button type="button" class="or-pill ${sm.status === k ? "on" : ""} ${k === "not" ? "no" : ""}" data-sm="${k}" aria-pressed="${sm.status === k}"><span class="or-rd">${sm.status === k ? S(I.check, 3) : ""}</span>${S(ic, 2.2)}${t()[l]}</button>`).join("")}</div>
+      ${sm.status === "collected" ? `<div class="pl-f"><label for="smNote">${t().smNote} <span class="hx-opt">${t().opt}</span></label><input class="hx-in" id="smNote" value="${E(sm.note)}" placeholder="${E(t().smNotePh)}" maxlength="200" dir="auto"></div>` : ""}
+      ${sm.status === "not" ? `<div class="pl-f"><label for="smReason">${t().smReason} <span class="req">*</span></label><input class="hx-in ${bad(!sm.reason.trim())}" id="smReason" value="${E(sm.reason)}" placeholder="${E(t().smReasonPh)}" maxlength="200" dir="auto"></div>` : ""}
+      <div class="nu-acts">${sv ? `<button type="button" class="hx-btn out" id="smCancel">${S(I.x, 2.2)}${t().cancel}</button>` : ""}<button type="button" class="hx-btn nu-save" id="smOk">${S(I.check, 2.4)}${t().smOk}</button></div></div></section>`;
   }
   const dirty = o => { const sv = savedOf(o) || {}; return st.note.trim() !== (sv.note || "") || nameOf(st.nurse).trim() !== nameOf(sv.nurse || "").trim(); };
 
@@ -64,6 +93,7 @@ const DrNurse = (() => {
           <div class="nu-cb"><p class="nu-txt" dir="auto">${E(sv.note)}</p></div></section>`;
     return `<div class="nu">
       <div class="ex-top"><span class="ex-tic">${S(I.note)}</span><div><h1>${t().title}</h1><p>${t().sub}</p></div><span class="ex-stp">${tx("stepOf", c.stepOf)}</span></div>
+      ${sampleCard(o, c)}
       ${card}
       ${sv && sv.note && !editing ? "" : `<label class="hx-ck nu-none"><input type="checkbox" id="nuNone" ${st.none ? "checked" : ""}><span>${t().none}</span></label>`}
       <div class="ex-foot"><button type="button" class="hx-btn out pl-prevb" id="nuPrev"><span class="flip">${S(I.back)}</span><span><b>${t().prev}</b><small>${E(c.prevName || "")}</small></span></button><span class="hx-sp"></span>
@@ -78,7 +108,7 @@ const DrNurse = (() => {
 
   function bind(root, o, c) {
     ctx = c;
-    const $ = s => root.querySelector(s);
+    const $ = s => root.querySelector(s), all = (s, f) => root.querySelectorAll(s).forEach(f);
     const keepDraft = () => { clearTimeout(timer); timer = setTimeout(() => { try { ctx.saveDraft({ note: st.note, nurse: st.nurse }); } catch (e) { /* storage full: the text stays on screen */ } }, 600); };
     const onType = ta => ta.addEventListener("input", () => { st.note = ta.value; root.querySelectorAll(".nu-n").forEach(n => { n.textContent = ta.value.length; }); if (st.note.trim()) { st.none = false; ta.closest(".hx-area").classList.remove("bad"); } keepDraft(); });
     ["#nuNote", "#nuNoteF"].forEach(s => { if ($(s)) onType($(s)); });
@@ -103,10 +133,24 @@ const DrNurse = (() => {
       $("#nuFX").addEventListener("click", close); $("#nuFDone").addEventListener("click", close); $("#nuOv").addEventListener("click", close);
       $(".nu-fm").addEventListener("keydown", e => { if (e.key === "Escape") close(); });
     }
+    all("[data-sm]", b => b.addEventListener("click", () => { sm.status = b.dataset.sm; ctx.rerender(); }));
+    if ($("#smNote")) $("#smNote").addEventListener("input", e => { sm.note = e.target.value; });
+    if ($("#smReason")) $("#smReason").addEventListener("input", e => { sm.reason = e.target.value; if (e.target.value.trim()) e.target.classList.remove("bad"); });
+    if ($("#smEdit")) $("#smEdit").addEventListener("click", () => { sm = null; const sv = MadaOrders.get(o.id).doctorVisit.sample; sm = { status: sv.status, note: sv.note || "", reason: sv.reason || "", tried: false }; ctx.rerender(); });
+    if ($("#smCancel")) $("#smCancel").addEventListener("click", () => { sm = null; ctx.rerender(); });
+    if ($("#smOk")) $("#smOk").addEventListener("click", () => {
+      sm.tried = true;
+      if (!sm.status) { ctx.rerender(); return ctx.toast(t().needSmPick); }
+      if (sm.status === "not" && !sm.reason.trim()) { ctx.rerender(); return ctx.toast(t().needReason); }
+      const by = (o.appointment && o.appointment.nurse) || (nameOf(st.nurse).trim() ? st.nurse : "") || ctx.doctor;
+      try { ctx.saveSample({ status: sm.status, note: sm.status === "collected" ? sm.note.trim() : "", reason: sm.status === "not" ? sm.reason.trim() : "", at: new Date().toISOString(), by }); } catch (e) { return ctx.toast(e.message || t().storeErr); }
+      sm = null; ctx.toast(t().smSaved); ctx.rerender();
+    });
     $("#nuPrev").addEventListener("click", () => ctx.go(ctx.prevKey));
     $("#nuDraft").addEventListener("click", () => { try { ctx.saveDraft({ note: st.note, nurse: st.nurse }); ctx.toast(t().draftSaved); } catch (e) { ctx.toast(e.message || t().storeErr); } });
     $("#nuCont").addEventListener("click", () => {
       const cur = MadaOrders.get(o.id), sv = savedOf(cur);
+      if (sampleOrders(cur).length && (!cur.doctorVisit.sample || sm)) { if (sm) sm.tried = true; ctx.rerender(); const el = document.querySelector(".nu-sm"); if (el) el.scrollIntoView({ block: "center" }); return ctx.toast(t().needSm); }
       if (st.note.trim() && (dirty(cur) || !sv || !sv.note)) { if (!doSave()) return; }
       else if (!st.note.trim()) {
         if (!st.none) { tried = true; ctx.rerender(); return ctx.toast(t().needNote); }
