@@ -270,6 +270,8 @@ const MadaAuth = (() => {
     admin: { en: "Administrator", ar: "مدير النظام" }, supervisor: { en: "Supervisor", ar: "مشرف" }, agent: { en: "Call Center Agent", ar: "موظف كول سنتر" },
     doctor: { en: "Doctor", ar: "طبيب" }, nurse: { en: "Nurse", ar: "ممرضة" }, lab: { en: "Laboratory", ar: "مختبر" }, driver: { en: "Driver", ar: "سائق" }, quality: { en: "Quality", ar: "جودة" }
   };
+  // Roles with their own portal (login page and home); every other role uses the operating system (index.html).
+  const PORTAL = { doctor: { login: "doctor-login.html", home: "doctor-visits.html" }, nurse: { login: "nurse-login.html", home: "nurse-visits.html" } };
   function staffUsers() {
     return MadaStore.getJSON("mada-staff", []).filter(s => s.status === "active").map(s => {
       const first = n => String(n || "").trim().split(/\s+/).filter(w => !/^(dr|د)\.?$/i.test(w))[0] || "";
@@ -278,8 +280,8 @@ const MadaAuth = (() => {
         name: s.name, firstName: { en: first(s.name.en), ar: first(s.name.ar) },
         role: ROLE_LABEL[s.role] || { en: s.role, ar: s.role },
         initials: { en: s.name.en.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase(), ar: first(s.name.ar).charAt(0) },
-        kind: s.role === "doctor" ? "doctor" : "agent", supervisor: s.role === "supervisor", home: s.role === "doctor" ? "doctor-visits.html" : "dashboard.html",
-        specialty: s.specialty ? { en: s.specialty, ar: s.specialty } : null, doctorId: s.role === "doctor" ? s.id : null,
+        kind: PORTAL[s.role] ? s.role : "agent", supervisor: s.role === "supervisor", home: PORTAL[s.role] ? PORTAL[s.role].home : "dashboard.html",
+        specialty: s.specialty ? { en: s.specialty, ar: s.specialty } : null, doctorId: s.role === "doctor" ? s.id : null, nurseId: s.role === "nurse" ? s.id : null,
         profile: { name: s.name, mobile: s.mobile, email: s.email, idType: s.idType, idNumber: s.idNumber, gender: s.gender, license: s.license, empNo: s.id }
       };
     });
@@ -294,27 +296,30 @@ const MadaAuth = (() => {
     const v = String(id).trim(), m = v.match(/^emp-?(\d+)$/i);
     return m ? "EMP-" + m[1].padStart(3, "0") : v;
   }
-  // Two entry points: the operating system (index.html) and the Doctor Portal (doctor-login.html).
+  // Entry points: the operating system (index.html), the Doctor Portal (doctor-login.html) and the Nursing Portal (nurse-login.html).
   // Live, each gets its own address (e.g. doctor.madacare.sa). Returns true, false (wrong details) or "wrong-portal".
-  const loginPage = u => u && u.kind === "doctor" ? "doctor-login.html" : "index.html";
+  const loginPage = u => u && PORTAL[u.kind] ? PORTAL[u.kind].login : "index.html";
   function login(username, password, portal) {
     const name = normalize(username).toLowerCase();
     const u = users().find(x => x.username.toLowerCase() === name && x.password === password);
     if (!u) return false;
-    if ((portal === "doctor") !== (u.kind === "doctor")) return "wrong-portal";
+    if ((portal || "agent") !== u.kind) return "wrong-portal";
     save(u.username);
     return true;
   }
+
+  // The login page of the account with this ID (any password), so a login page can point to the right portal.
+  const portalOf = username => { const n = normalize(username).toLowerCase(), u = users().find(x => x.username.toLowerCase() === n); return u ? loginPage(u) : null; };
 
   function currentUser() {
     const name = read();
     return users().find(x => x.username === name) || null;
   }
 
-  // kind: "agent" or "doctor"; a user of the other kind is sent to their own home page.
+  // kind: "agent", "doctor" or "nurse"; a user of the other kind is sent to their own home page.
   function requireAuth(kind) {
     const u = currentUser();
-    if (!u) window.location.replace(kind === "doctor" ? "doctor-login.html" : "index.html");
+    if (!u) window.location.replace(PORTAL[kind] ? PORTAL[kind].login : "index.html");
     else if (u.mustChangePassword) window.location.replace(loginPage(u));
     else if (kind && u.kind !== kind) window.location.replace(u.home);
     return u;
@@ -355,5 +360,5 @@ const MadaAuth = (() => {
     window.location.replace(page);
   }
 
-  return { login, currentUser, requireAuth, changePassword, updatePassword, logout, home };
+  return { login, portalOf, currentUser, requireAuth, changePassword, updatePassword, logout, home };
 })();

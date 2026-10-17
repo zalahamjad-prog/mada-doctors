@@ -238,7 +238,7 @@
       f1: "Better Care", f1s: "Access the tools you need", f2: "Secure & Trusted", f2s: "Your data, always protected", f3: "Caring Like Family", f3s: "For a healthier community",
       portal: "Doctor Portal", portalSub: "Sign in with your employee credentials", empId: "Employee ID", empIdPh: "Enter your employee ID", empIdErr: "Please enter your employee ID",
       password: "Password", passwordPh: "Enter your password", passwordErr: "Please enter your password", forgot: "Forgot password?", signIn: "Sign In",
-      badCreds: "Incorrect employee ID or password", notDoctor: "This portal is for doctors. Staff sign in from the operating system.", opsLink: "Go to staff login",
+      badCreds: "Incorrect employee ID or password", notDoctor: "This portal is for doctors. Staff sign in from the operating system.", opsLink: "Go to staff login", nurseLink: "Go to Nursing Portal",
       script1: "Healthcare", script2: "for Brighter", script3: "Tomorrows", help: "Need help accessing your account?", support: "Contact IT Support.", toOps: "Staff login (operating system)",
       soonMsg: "Please contact the system administrator.", show: "Show password", hide: "Hide password",
       cpTitle: "Reset Your Password", cpHi: "Welcome {n}. For your security, you need to create a new password before continuing.",
@@ -255,7 +255,7 @@
       f1: "رعاية أفضل", f1s: "كل الأدوات اللي تحتاجها", f2: "آمن وموثوق", f2s: "بياناتك محمية دايماً", f3: "رعاية كالعائلة", f3s: "لمجتمع أصح",
       portal: "بوابة الطبيب", portalSub: "ادخل ببيانات حسابك الوظيفي", empId: "الرقم الوظيفي", empIdPh: "أدخل رقمك الوظيفي", empIdErr: "يرجى إدخال الرقم الوظيفي",
       password: "كلمة المرور", passwordPh: "أدخل كلمة المرور", passwordErr: "يرجى إدخال كلمة المرور", forgot: "نسيت كلمة المرور؟", signIn: "تسجيل الدخول",
-      badCreds: "الرقم الوظيفي أو كلمة المرور غير صحيحة", notDoctor: "هذي البوابة للأطباء. الموظفين يدخلون من نظام التشغيل.", opsLink: "الذهاب لدخول الموظفين",
+      badCreds: "الرقم الوظيفي أو كلمة المرور غير صحيحة", notDoctor: "هذي البوابة للأطباء. الموظفين يدخلون من نظام التشغيل.", opsLink: "الذهاب لدخول الموظفين", nurseLink: "الذهاب لبوابة التمريض",
       script1: "رعاية صحية", script2: "لغدٍ", script3: "أجمل", help: "تحتاج مساعدة في الدخول؟", support: "تواصل مع الدعم التقني.", toOps: "دخول الموظفين (نظام التشغيل)",
       soonMsg: "تواصل مع مدير النظام.", show: "إظهار كلمة المرور", hide: "إخفاء كلمة المرور",
       cpTitle: "غيّر كلمة المرور", cpHi: "أهلاً {n}. لحماية حسابك، لازم تنشئ كلمة مرور جديدة قبل ما تكمل.",
@@ -298,7 +298,8 @@
     if (!u.value.trim() || !pw.value) return;
     // TODO: replace with the real authentication call.
     const res = MadaAuth.login(u.value, pw.value, "doctor");
-    if (res === "wrong-portal") showError(i18n[current].notDoctor);
+    if (res === "wrong-portal") { const nurse = MadaAuth.portalOf(u.value) === "nurse-login.html";
+      showError(i18n[current].notDoctor); }
     else if (res) { if (MadaAuth.currentUser().mustChangePassword) openChange(); else window.location.href = MadaAuth.home(); }
     else { showError(i18n[current].badCreds); pw.value = ""; pw.focus(); }
   });
