@@ -206,7 +206,7 @@
     en: {
       tagline: "Caring Like Family", otherLang: "العربية", profile: "My Account", logout: "Log out", notifications: "Notifications", soonMsg: "This section is coming next.", noNotes: "No notifications yet.",
       backVisit: "Back to Visit", backVisits: "Back to My Visits", backPatients: "Back to Patients", fileTag: "Patient File", fileNo: "Medical File No.", mobile: "Mobile Number", g_m: "Male", g_f: "Female", years: "{n} Years",
-      alT: "Allergy", missN: "{n} missing details", missN1: "1 missing detail", editInfo: "Edit Personal Info", nf: "Patient file not found", nfS: "Check the file number and try again.",
+      alT: "Allergy", missN: "{n} missing details", missN1: "1 missing detail", editInfo: "Edit Personal Info", nf: "Patient file not found", nfSub: "Check the file number and try again.",
       famT: "Associated Family Members", famS: "People registered on the same mobile number.", openNew: "Open Patient File", cur: "Current file", holder: "Account holder", caller: "Mobile owner: {r}",
       famNone: "No other people are registered on this mobile number.", openFile: "Open file",
       medReport: "Medical Report", pvT: "Previous Visits", pvS: "Visit history for this patient.", bk: "Booking No.", ord: "Order No.", vdate: "Visit Date", status: "Status", viewVisit: "View Visit Details", curVisit: "This visit",
@@ -262,7 +262,7 @@
     ar: {
       tagline: "رعاية كالعائلة", otherLang: "English", profile: "حسابي", logout: "تسجيل الخروج", notifications: "الإشعارات", soonMsg: "هذا القسم هو الخطوة الجاية.", noNotes: "ما فيه إشعارات للحين.",
       backVisit: "رجوع للزيارة", backVisits: "رجوع لزياراتي", backPatients: "رجوع للمرضى", fileTag: "ملف المريض", fileNo: "رقم الملف الطبي", mobile: "رقم الجوال", g_m: "ذكر", g_f: "أنثى", years: "{n} سنة",
-      alT: "حساسية", missN: "{n} معلومات ناقصة", missN1: "معلومة وحدة ناقصة", editInfo: "تعديل البيانات الشخصية", nf: "ما لقينا ملف المريض", nfS: "تأكد من رقم الملف وحاول مرة ثانية.",
+      alT: "حساسية", missN: "{n} معلومات ناقصة", missN1: "معلومة وحدة ناقصة", editInfo: "تعديل البيانات الشخصية", nf: "ما لقينا ملف المريض", nfSub: "تأكد من رقم الملف وحاول مرة ثانية.",
       famT: "أفراد العائلة المرتبطين", famS: "الأشخاص المسجلين على نفس رقم الجوال.", openNew: "فتح ملف مريض", cur: "الملف الحالي", holder: "صاحب الرقم", caller: "صاحب الرقم: {r}",
       famNone: "ما فيه أشخاص ثانيين مسجلين على هذا الرقم.", openFile: "فتح الملف",
       medReport: "التقرير الطبي", pvT: "الزيارات السابقة", pvS: "سجل زيارات هذا المريض.", bk: "رقم الحجز", ord: "رقم الطلب", vdate: "تاريخ الزيارة", status: "الحالة", viewVisit: "عرض تفاصيل الزيارة", curVisit: "هذه الزيارة",
@@ -606,7 +606,7 @@
   function render() {
     const p = patient(), back = from ? `doctor-visit.html?id=${encodeURIComponent(from)}` : fromList ? "doctor-patients.html" : "doctor-visits.html";
     const backA = `<a class="pt-back" href="${back}">${svg(IC.back, 2)}${from ? t().backVisit : fromList ? t().backPatients : t().backVisits}</a>`;
-    if (!p) { $("vw").innerHTML = `${backA}<div class="pt-card ps-b">${empty(t().nf, t().nfS)}</div>`; return; }
+    if (!p) { $("vw").innerHTML = `${backA}<div class="pt-card ps-b">${empty(t().nf, t().nfSub)}</div>`; return; }
     const y = window.scrollY;
     $("vw").innerHTML = `<div class="pt-page">${backA}${header(p)}${family(p)}${visits()}${fileSections()}</div>`;
     window.scrollTo(0, y);
