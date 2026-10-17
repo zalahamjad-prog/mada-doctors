@@ -207,7 +207,8 @@ const DrOrders = (() => {
       copied: "Message copied. Paste it in the chat with the patient.", badPhone: "Enter a valid Saudi mobile number (05XXXXXXXX).", sentOk: "Sent. The payment updates here once the patient pays.",
       linkSent: "Link sent by {c} · {t}", linkOpened: "Opened by the patient · {t}", linkNotOpened: "Not opened yet", ch_wa: "WhatsApp", ch_sms: "SMS", ch_copy: "copied message", ch_share: "share",
       pm_link: "Payment link", via_apple: "Apple Pay", via_card: "mada / card", via_tamara: "Tamara", via_tabby: "Tabby",
-      m_hi: "Hello {n},", m_intro: "Here is a summary of the orders from your visit with {d} at Mada Care:", m_due: "Amount due: {n}", m_link: "See the details and pay here:", m_free: "no fee",
+      m_head: "💚 Mada Care | Payment request", m_hi: "Hello {n},", m_body: "Following the doctor's assessment, you can view your order details and complete the payment here:", m_thanks2: "Thank you for trusting Mada Care 💚", m_tag: "Caring Like Family",
+      m_intro: "Here is a summary of the orders from your visit with {d} at Mada Care:", m_due: "Amount due: {n}", m_link: "See the details and pay here:", m_free: "no fee",
       m_leave: "Sick leave · {n} days", m_leave1: "Sick leave · 1 day", m_ref: "Referral to {s}", m_thanks: "Wishing you good health.",
       receivedT: "Amount received", shortT: "The amount received is less than the amount due.", changeT: "Change {n}", refNo: "Approval no.", refPh: "From the terminal receipt",
       confirmCash: "The patient paid {n} in cash and I received it.", confirmCard: "The card payment of {n} was approved on the terminal.", confirmPay: "Confirm Payment",
@@ -260,7 +261,8 @@ const DrOrders = (() => {
       copied: "تم نسخ الرسالة. الصقها في المحادثة مع المريض.", badPhone: "اكتب رقم جوال سعودي صحيح (05XXXXXXXX).", sentOk: "تم الإرسال. الدفع يتحدث هنا أول ما يدفع المريض.",
       linkSent: "أُرسل الرابط عبر {c} · {t}", linkOpened: "فتحه المريض · {t}", linkNotOpened: "ما فتحه المريض للحين", ch_wa: "واتساب", ch_sms: "رسالة SMS", ch_copy: "نسخ الرسالة", ch_share: "المشاركة",
       pm_link: "رابط الدفع", via_apple: "Apple Pay", via_card: "مدى / بطاقة", via_tamara: "تمارا", via_tabby: "تابي",
-      m_hi: "مرحباً {n}،", m_intro: "هذا ملخص الطلبات من زيارتك مع {d} في مدى كير:", m_due: "المبلغ المطلوب: {n}", m_link: "التفاصيل والدفع من هنا:", m_free: "بدون رسوم",
+      m_head: "💚 مدى كير | طلب دفع", m_hi: "مرحبًا {n}،", m_body: "بناءً على تقييم الطبيب، يمكنك الاطلاع على تفاصيل الطلب وإتمام الدفع عبر الرابط التالي:", m_thanks2: "شكرًا لثقتك بمدى كير 💚", m_tag: "نرعاكم كأهلنا",
+      m_intro: "هذا ملخص الطلبات من زيارتك مع {d} في مدى كير:", m_due: "المبلغ المطلوب: {n}", m_link: "التفاصيل والدفع من هنا:", m_free: "بدون رسوم",
       m_leave: "إجازة مرضية · {n} أيام", m_leave1: "إجازة مرضية · يوم واحد", m_leave2: "إجازة مرضية · يومين", m_leaveN: "إجازة مرضية · {n} يوم", m_ref: "تحويل إلى {s}", m_thanks: "نتمنى لك الصحة والعافية.",
       receivedT: "المبلغ المستلم", shortT: "المبلغ المستلم أقل من المستحق.", changeT: "الباقي {n}", refNo: "رقم الموافقة", refPh: "من إيصال الجهاز",
       confirmCash: "المريض دفع {n} كاش واستلمته.", confirmCard: "تمت الموافقة على دفع {n} بالشبكة في الجهاز.", confirmPay: "تأكيد الدفع",
@@ -369,24 +371,18 @@ const DrOrders = (() => {
   // Sick leave in words, with the Arabic count forms (1, 2, 3-10, 11+).
   const leaveTxt = (M, n) => { n = Number(n); return n === 1 ? M.m_leave1 : n === 2 && M.m_leave2 ? M.m_leave2 : (n > 10 && M.m_leaveN ? M.m_leaveN : M.m_leave).replace("{n}", n); };
   const newToken = () => { const a = new Uint8Array(16); crypto.getRandomValues(a); return [...a].map(b => b.toString(16).padStart(2, "0")).join(""); };
-  const linkUrl = ml => new URL(`visit-pay.html?t=${payLink().token}&l=${ml}`, location.href).href;
+  // Short link for messages: v?TOKEN (Arabic) or v?TOKEN.en; v.html opens visit-pay.html. GitHub Pages serves v.html at /v.
+  const linkUrl = ml => new URL(`${/github\.io$/.test(location.hostname) ? "v" : "v.html"}?${payLink().token}${ml === "ar" ? "" : "." + ml}`, location.href).href;
   // Saudi mobile as 9665XXXXXXXX (for WhatsApp), or "" when it is not one.
   function waNum(v) {
     const d = String(v || "").replace(/[٠-٩]/g, c => "٠١٢٣٤٥٦٧٨٩".indexOf(c)).replace(/\D/g, "");
     const m = d.match(/^(?:00966|966|0)?(5\d{8})$/); return m ? "966" + m[1] : "";
   }
-  // The message: what was ordered, in plain words and grouped by service, the amount due and the link.
+  // The message: Amjad's short template; what was ordered and the amount are on the link page.
   function shareMsg(ml) {
-    const M = L[ml], nm = v => v && typeof v === "object" ? v[ml] || v.en || "" : v || "", items = draft.items, ps = payNow();
-    const mny = n => `${Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 2 })} ${ml === "ar" ? "ريال" : "SAR"}`, sep = ml === "ar" ? "، " : ", ";
+    const M = L[ml], nm = v => v && typeof v === "object" ? v[ml] || v.en || "" : v || "";
     const first = nm(curO.patient).trim().split(/\s+/)[0] || "";
-    const lines = ORDER.filter(svc => items.some(o => o.svc === svc)).map(svc => {
-      const its = items.filter(o => o.svc === svc);
-      if (svc === "ref") return its.map(o => { const sp = SPECS.find(x => x[0] === o.spec); return `• ${M.m_ref.replace("{s}", sp ? sp[ml === "ar" ? 2 : 1] : o.spec)} (${M.m_free})`; }).join("\n");
-      if (svc === "leave") return its.map(o => `• ${leaveTxt(M, o.days)} (${M.m_free})`).join("\n");
-      return `• ${M["s_" + svc]}: ${its.map(o => (item(o.code) || {})[ml] || o.code).join(sep)}`;
-    });
-    return [M.m_hi.replace("{n}", first), M.m_intro.replace("{d}", nm(ctx.doctor)), ...lines, "", M.m_due.replace("{n}", mny(ps.due)), M.m_link, linkUrl(ml), "", M.m_thanks].join("\n");
+    return [M.m_head, "", M.m_hi.replace(" {n}", first ? " " + first : ""), "", M.m_body, "", "🔗 " + linkUrl(ml), "", M.m_thanks2, M.m_tag].join("\n");
   }
   function shareModal() {
     const m = shM, ok = !!waNum(m.phone);
