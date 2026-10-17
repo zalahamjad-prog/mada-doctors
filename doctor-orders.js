@@ -29,6 +29,7 @@ const DrOrders = (() => {
     home: '<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/>', center: '<path d="M4 21V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16M15 9h4a1 1 0 0 1 1 1v11M3 21h18M8 8h3M8 12h3M8 16h3"/>',
     eye: '<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/>',
     send: '<path d="M21 3 10 14"/><path d="M21 3l-7 18-4-7-7-4z"/>', wa: '<path d="M4 20l1.3-4A8 8 0 1 1 8 18.7z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 .8a4 4 0 0 1-1.8-1.8l.8-1-1-2z"/>',
+    qr: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 17h4v4h-4"/>', dl: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
     sms: '<path d="M4 5h16v11H8l-4 4z"/><path d="M8 9h8M8 12h5"/>', copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',
     share: '<circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.4M8.2 13.2l7.6 4.4"/>',
     wallet: '<path d="M4 7a2 2 0 0 1 2-2h11v4"/><path d="M4 7v11a2 2 0 0 0 2 2h14V9H6a2 2 0 0 1-2-2z"/><circle cx="16.5" cy="14.5" r="1.2"/>',
@@ -203,7 +204,7 @@ const DrOrders = (() => {
       openNote: "You can carry on with the visit. The payment stays open until you collect it.", collect: "Collect {n}", refundNote: "The orders total went down after payment. Refund {n} to the patient.",
       collectT: "Collect Payment", collectS: "Take the payment from the patient, then confirm.", methodT: "Payment method", pm_cash: "Cash", pm_card: "Card (mada terminal)",
       sendPt: "Send to Patient", sendT: "Send the Orders to the Patient", sendS: "The patient gets a link with a clear summary of the orders and can pay from it.",
-      phoneT: "Patient mobile", msgT: "Message", msgLang: "Message language", viaWa: "WhatsApp", viaSms: "SMS", copyMsg: "Copy Message", shareT: "Share", preview: "Preview Patient Page",
+      phoneT: "Patient mobile", msgT: "Message", msgLang: "Message language", viaWa: "WhatsApp", viaSms: "SMS", viaQr: "QR Code", copyMsg: "Copy Message", qrT: "Let the patient scan this code", qrS: "They point the phone camera at the code and their payment page opens.", qrDue: "Amount due", qrBack: "Back to message", qrSave: "Save image", qrLoad: "Preparing the code…", qrErr: "Couldn't load the QR code. Check the internet and try again.", ch_qr: "QR code", shareT: "Share", preview: "Preview Patient Page",
       copied: "Message copied. Paste it in the chat with the patient.", badPhone: "Enter a valid Saudi mobile number (05XXXXXXXX).", sentOk: "Sent. The payment updates here once the patient pays.",
       linkSent: "Link sent by {c} · {t}", linkOpened: "Opened by the patient · {t}", linkNotOpened: "Not opened yet", ch_wa: "WhatsApp", ch_sms: "SMS", ch_copy: "copied message", ch_share: "share",
       pm_link: "Payment link", via_apple: "Apple Pay", via_card: "mada / card", via_tamara: "Tamara", via_tabby: "Tabby",
@@ -257,7 +258,7 @@ const DrOrders = (() => {
       openNote: "تقدر تكمل الزيارة عادي. الدفع يبقى مفتوح لين تحصّله.", collect: "تحصيل {n}", refundNote: "إجمالي الطلبات نقص بعد الدفع. رجّع {n} للمريض.",
       collectT: "تحصيل الدفع", collectS: "استلم المبلغ من المريض وبعدين أكّد.", methodT: "طريقة الدفع", pm_cash: "كاش", pm_card: "شبكة (جهاز مدى)",
       sendPt: "إرسال للمريض", sendT: "إرسال الطلبات للمريض", sendS: "يوصل المريض رابط فيه ملخص واضح للطلبات ويقدر يدفع منه.",
-      phoneT: "جوال المريض", msgT: "الرسالة", msgLang: "لغة الرسالة", viaWa: "واتساب", viaSms: "رسالة SMS", copyMsg: "نسخ الرسالة", shareT: "مشاركة", preview: "معاينة صفحة المريض",
+      phoneT: "جوال المريض", msgT: "الرسالة", msgLang: "لغة الرسالة", viaWa: "واتساب", viaSms: "رسالة SMS", viaQr: "كود QR", copyMsg: "نسخ الرسالة", qrT: "خلّ المريض يصوّر الكود", qrS: "يوجّه كاميرا الجوال على الكود، وتفتح له صفحة الدفع حقته مباشرة.", qrDue: "المبلغ المستحق", qrBack: "رجوع للرسالة", qrSave: "حفظ الصورة", qrLoad: "جاري تجهيز الكود…", qrErr: "ما قدرنا نجهّز الكود. تأكد من الإنترنت وحاول مرة ثانية.", ch_qr: "كود QR", shareT: "مشاركة", preview: "معاينة صفحة المريض",
       copied: "تم نسخ الرسالة. الصقها في المحادثة مع المريض.", badPhone: "اكتب رقم جوال سعودي صحيح (05XXXXXXXX).", sentOk: "تم الإرسال. الدفع يتحدث هنا أول ما يدفع المريض.",
       linkSent: "أُرسل الرابط عبر {c} · {t}", linkOpened: "فتحه المريض · {t}", linkNotOpened: "ما فتحه المريض للحين", ch_wa: "واتساب", ch_sms: "رسالة SMS", ch_copy: "نسخ الرسالة", ch_share: "المشاركة",
       pm_link: "رابط الدفع", via_apple: "Apple Pay", via_card: "مدى / بطاقة", via_tamara: "تمارا", via_tabby: "تابي",
@@ -384,8 +385,22 @@ const DrOrders = (() => {
     const first = nm(curO.patient).trim().split(/\s+/)[0] || "";
     return [M.m_head, "", M.m_hi.replace(" {n}", first ? " " + first : ""), "", M.m_body, "", "🔗 " + linkUrl(ml), "", M.m_thanks2, M.m_tag].join("\n");
   }
+  // QR view: the patient scans the code with the phone camera and the same payment link opens (language as chosen).
+  function qrBody() {
+    const m = shM, nm = v => v && typeof v === "object" ? v[m.ml] || v.en || "" : v || "", url = linkUrl(m.ml);
+    return `<div class="or-mb or-qr">
+        <div class="or-pills">${["ar", "en"].map(k => `<button type="button" class="or-pill ${m.ml === k ? "on" : ""}" data-ml="${k}" aria-pressed="${m.ml === k}"><span class="or-rd">${m.ml === k ? S(I.check, 3) : ""}</span>${k === "ar" ? "العربية" : "English"}</button>`).join("")}</div>
+        <div class="or-qrc"><div class="or-qrb" id="orQr">${window.MadaQR ? MadaQR.svg(url) : `<span class="or-qrw">${t().qrLoad}</span>`}</div>${window.MadaQR ? `<img class="or-qrl" src="assets/mada-logo.png" alt="">` : ""}</div>
+        <b class="or-qrt">${t().qrT}</b><small class="or-qrs">${t().qrS}</small>
+        <div class="or-qri"><span>${E(nm(curO.patient))}</span><span>${t().qrDue}: <b>${money(payNow().due)}</b></span></div>
+        <a class="or-prev" href="${E(url)}" target="_blank" rel="noopener">${S(I.eye)}${t().preview}</a>
+      </div>
+      <div class="or-mf or-shb"><button type="button" class="hx-btn out" id="orQrBack">${t().qrBack}</button><button type="button" class="hx-btn dark" id="orQrSave" ${window.MadaQR ? "" : "disabled"}>${S(I.dl)}${t().qrSave}</button></div>`;
+  }
   function shareModal() {
     const m = shM, ok = !!waNum(m.phone);
+    if (m.qr) return `<div class="or-ov" id="orShOv"></div><div class="or-md" role="dialog" aria-modal="true" aria-labelledby="orShT">
+      <div class="or-mh"><span class="or-sic pay">${S(I.qr)}</span><div class="or-mt"><b id="orShT">${t().viaQr}</b><small>${t().sendS}</small></div><button type="button" class="or-x" id="orShX" aria-label="${t().close}">${S(I.x, 2.2)}</button></div>${qrBody()}</div>`;
     return `<div class="or-ov" id="orShOv"></div><div class="or-md" role="dialog" aria-modal="true" aria-labelledby="orShT">
       <div class="or-mh"><span class="or-sic pay">${S(I.send)}</span><div class="or-mt"><b id="orShT">${t().sendT}</b><small>${t().sendS}</small></div><button type="button" class="or-x" id="orShX" aria-label="${t().close}">${S(I.x, 2.2)}</button></div>
       <div class="or-mb">
@@ -397,6 +412,7 @@ const DrOrders = (() => {
       <div class="or-mf or-shb">
         <a class="hx-btn or-wa" data-ch="wa" target="_blank" rel="noopener" href="#">${S(I.wa)}${t().viaWa}</a>
         <a class="hx-btn out" data-ch="sms" href="#">${S(I.sms)}${t().viaSms}</a>
+        <button type="button" class="hx-btn out" id="orQrOpen">${S(I.qr)}${t().viaQr}</button>
         <button type="button" class="hx-btn out" data-ch="copy">${S(I.copy)}${t().copyMsg}</button>
         ${navigator.share ? `<button type="button" class="hx-btn out" data-ch="share">${S(I.share)}${t().shareT}</button>` : ""}
       </div></div>`;
@@ -753,6 +769,27 @@ const DrOrders = (() => {
       const close = () => { shM = null; ctx.rerender(); };
       $("#orShX").addEventListener("click", close); $("#orShOv").addEventListener("click", close);
       document.querySelector(".or-md").addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+      if (shM.qr) {
+        all("[data-ml]", b => b.addEventListener("click", () => { shM.ml = b.dataset.ml; shM.msg = shareMsg(shM.ml); ctx.rerender(); }));
+        $("#orQrBack").addEventListener("click", () => { shM.qr = false; ctx.rerender(); });
+        $("#orQrSave").addEventListener("click", () => {
+          // PNG with the logo and a white border, ready to print or send.
+          const img = new Image(), c = document.createElement("canvas"), W = 1000; c.width = c.height = W;
+          img.onload = () => { const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, W, W); g.drawImage(img, 0, 0, W, W);
+            const lg = new Image(); lg.onload = () => { const r = W * .12, lw = r * 1.3, lh = lw * lg.height / lg.width; g.fillStyle = "#fff"; g.beginPath(); g.arc(W / 2, W / 2, r, 0, 7); g.fill(); g.drawImage(lg, (W - lw) / 2, (W - lh) / 2, lw, lh); done(); };
+            lg.onerror = done; lg.src = "assets/mada-logo.png"; };
+          const done = () => { const a = document.createElement("a"); a.href = c.toDataURL("image/png"); a.download = `mada-pay-${curO.id || "qr"}.png`; a.click(); };
+          img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(MadaQR.svg(linkUrl(shM.ml)));
+        });
+        return;
+      }
+      $("#orQrOpen").addEventListener("click", () => {
+        const show = () => { shM.qr = true; const pl = payLink() || {};
+          try { ctx.payLink({ sent: [...(pl.sent || []), { ch: "qr", at: new Date().toISOString(), by: ctx.doctor }] }); } catch (er) { /* the QR still shows */ }
+          ctx.rerender(); };
+        if (window.MadaQR) return show();
+        const sc = document.createElement("script"); sc.src = "doctor-qr.js"; sc.onload = show; sc.onerror = () => ctx.toast(t().qrErr); document.head.appendChild(sc);
+      });
       const hrefs = () => { const msg = encodeURIComponent(shM.msg), wa = waNum(shM.phone);
         document.querySelector('[data-ch="wa"]').href = `https://wa.me/${wa}?text=${msg}`;
         document.querySelector('[data-ch="sms"]').href = `sms:${wa ? "+" + wa : ""}?&body=${msg}`; };
