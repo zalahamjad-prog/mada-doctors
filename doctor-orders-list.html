@@ -583,6 +583,8 @@
     const r = only(M.get(id));
     if (!r || r.doctorId !== docId || !r.items.length) { $("vw").innerHTML = `<a class="back" href="doctor-orders-list.html">${svg(IC.l, 2)}${t().back}</a><section class="card"><div class="none-box"><b>${t().notFound}</b></div></section>`; return; }
     const o = MadaOrders.get(r.orderId), done = o && o.doctorVisit && o.doctorVisit.status === "done";
+    // Opening the order marks entered lab results as seen by the doctor (shown on the dashboard's Lab Results page).
+    r.items.filter(i => i.type === "lab" && i.results && !i.docSeen).forEach(i => M.patchItem(r.id, i.id, { docSeen: { at: new Date().toISOString(), by: me.name } }));
     const grp = { lab: r.items.filter(i => i.type === "lab"), radiology: r.items.filter(i => i.type === "radiology"), other: r.items.filter(i => i.type !== "lab" && i.type !== "radiology") };
     const sec = k => grp[k].length ? `<section class="card sec"><h2 class="sec-t"><span class="ic">${svg(icOf(k))}</span>${t()["sec_" + k]}</h2>${grp[k].map(it => item(r, it)).join("")}</section>` : "";
     const s = stateOf(r);
