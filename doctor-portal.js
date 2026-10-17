@@ -22,7 +22,7 @@ const DrPortal = (() => {
     { k: "visits", href: "nurse-visits.html", icon: MENU[0].icon },
     { k: "schedule", icon: MENU[1].icon },
     { k: "patients", icon: MENU[2].icon },
-    { k: "samples", icon: '<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/>' },
+    { k: "samples", href: "nurse-samples.html", icon: '<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/>' },
   ];
   const NURSE_ACCOUNT = [{ k: "account", icon: ACCOUNT[0].icon }, { ...ACCOUNT[1], href: "nurse-login.html" }];
   const isNurse = me => !!me && me.kind === "nurse";
@@ -30,9 +30,9 @@ const DrPortal = (() => {
   const SUPPORT = "920000000";
   const L = {
     en: { home: "Home", visits: "My Visits", schedule: "My Schedule", patients: "Patients", orders: "Orders", alerts: "Critical Results", consults: "Consultations", reports: "Reports", samples: "Samples", soon: "Soon", account: "Profile", logout: "Log out", accountT: "Account", support: "Support",
-      nT: "Notifications", nNone: "No new notifications.", nBook: "New booking", nRes_lab: "Lab results ready", nRes_radiology: "Radiology results ready", nCrit: "Critical result", nHigh: "High result", today: "Today", tomorrow: "Tomorrow" },
+      nT: "Notifications", nNone: "No new notifications.", nBook: "New booking", nRes_lab: "Lab results ready", nRes_radiology: "Radiology results ready", nDue: "Lab result due: enter it", nReady: "Results entered, not sent yet", nCrit: "Critical result", nHigh: "High result", today: "Today", tomorrow: "Tomorrow" },
     ar: { home: "الرئيسية", visits: "زياراتي", schedule: "جدولي", patients: "المرضى", orders: "الأوردرات", alerts: "النتائج الحرجة", consults: "الاستشارات", reports: "التقارير", samples: "العينات", soon: "قريباً", account: "الملف الشخصي", logout: "تسجيل الخروج", accountT: "الحساب", support: "الدعم",
-      nT: "الإشعارات", nNone: "ما فيه إشعارات جديدة.", nBook: "حجز جديد", nRes_lab: "نتائج التحاليل جاهزة", nRes_radiology: "نتيجة الأشعة جاهزة", nCrit: "نتيجة حرجة", nHigh: "نتيجة مرتفعة", today: "اليوم", tomorrow: "بكرة" }
+      nT: "الإشعارات", nNone: "ما فيه إشعارات جديدة.", nBook: "حجز جديد", nRes_lab: "نتائج التحاليل جاهزة", nRes_radiology: "نتيجة الأشعة جاهزة", nDue: "حان وقت نتيجة التحليل: أدخلها", nReady: "النتائج مدخلة وما انرسلت", nCrit: "نتيجة حرجة", nHigh: "نتيجة مرتفعة", today: "اليوم", tomorrow: "بكرة" }
   };
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const svg = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">${p}</svg>`;
@@ -41,7 +41,9 @@ const DrPortal = (() => {
     const t = L[lang];
     menuCss();
     // Critical Results shows how many alerts are still open (alerts.js).
-    const openN = m => m.k === "alerts" && me && typeof MadaAlerts !== "undefined" ? MadaAlerts.open(me.doctorId || me.staffId).length : 0;
+    // Samples shows the results that are due or not sent yet (lab-samples.js).
+    const openN = m => m.k === "alerts" && me && typeof MadaAlerts !== "undefined" ? MadaAlerts.open(me.doctorId || me.staffId).length
+      : m.k === "samples" && me && typeof MadaSamples !== "undefined" ? MadaSamples.todo(me.nurseId).length : 0;
     const link = m => m.href
       ? `<a href="${m.href}" ${m.k === active ? 'aria-current="page"' : ""}${m.out ? ' class="dp-out" data-dp-logout' : ""}>${svg(m.icon)}${t[m.k]}${openN(m) ? `<span class="dp-cnt">${openN(m)}</span>` : ""}</a>`
       : `<a href="#" class="soon" aria-disabled="true" data-soon>${svg(m.icon)}${t[m.k]}<span class="soon-tag">${t.soon}</span></a>`;
@@ -57,6 +59,7 @@ const DrPortal = (() => {
     document.getElementById("userSpec").textContent = me.specialty ? me.specialty[lang] : me.role[lang];
     document.getElementById("avatar").innerHTML = me.photo ? `<img src="${esc(me.photo)}" alt="">` : esc(me.initials[lang]);
     bell(me, lang);
+    if (isNurse(me) && typeof MadaSamples !== "undefined") MadaSamples.watch(me, lang, () => bell(bellMe, bellLang));
   }
 
   // Bell: two kinds of notifications, newest first.
@@ -92,6 +95,8 @@ const DrPortal = (() => {
     if (!bookNurse) read("mada-medical", []).filter(r => r.doctorId === id && r.status === "open").forEach(r => r.items.forEach(it => {
       if (RES_STEP[it.type] === it.step && (it.type !== "lab" || it.v2)) out.push({ kind: "res", r, it, at: (it.log[it.log.length - 1] || {}).at || r.createdAt, unread: true });
     }));
+    // Nurse: lab results that are due, or entered and not sent (lab-samples.js). They stay until she sends them.
+    if (bookNurse && typeof MadaSamples !== "undefined") MadaSamples.todo(id).forEach(c => out.push({ kind: "smp", c, at: c.status === "due" ? c.nextDue : c.collectedAt, unread: true }));
     // Unopened critical and high results first, then the rest by time.
     return out.sort((a, b) => (b.kind === "crit") - (a.kind === "crit") || String(b.at).localeCompare(String(a.at)));
   }
@@ -148,6 +153,8 @@ const DrPortal = (() => {
     const pn = document.createElement("div"); pn.id = "dp-pn"; pn.className = "dp-pn"; pn.setAttribute("role", "dialog"); pn.setAttribute("aria-label", t.nT);
     const row = x => x.kind === "crit"
       ? `<a href="doctor-alerts.html?id=${encodeURIComponent(x.a.key)}" class="un"><span class="ic res">${svg('<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/>')}</span><span><b>${x.a.critical ? t.nCrit : t.nHigh}</b>${esc(nm(x.a.r.patient))} · <span dir="ltr">${esc(x.a.r.mrn || "")}</span><small>${esc(x.a.rows.map(y => y.a.code + " " + y.v).join(" · "))}</small></span><i class="dot"></i></a>`
+      : x.kind === "smp"
+      ? `<a href="nurse-samples.html?k=${encodeURIComponent(x.c.key)}" class="un"><span class="ic ${x.c.status === "due" ? "res" : "book"}">${svg(IC_RES)}</span><span><b>${x.c.status === "due" ? t.nDue : t.nReady}</b>${esc(nm(x.c.o.patient))}<small>${esc((x.c.status === "due" ? x.c.tests.filter(y => y.due) : x.c.tests).map(y => nm(y.name)).join(bellLang === "ar" ? "، " : ", "))}</small></span><i class="dot"></i></a>`
       : x.kind === "book"
       ? `<a href="${bookNurse ? "nurse-visits.html" : "doctor-visits.html"}" class="${x.unread ? "un" : ""}"><span class="ic book">${svg(IC_BOOK)}</span><span><b>${t.nBook}</b>${esc(nm(x.o.patient))}<small>${esc(when(x.o))}</small></span>${x.unread ? '<i class="dot"></i>' : ""}</a>`
       : `<a href="doctor-orders-list.html?id=${encodeURIComponent(x.r.id)}" class="un"><span class="ic res">${svg(IC_RES)}</span><span><b>${t["nRes_" + x.it.type]}</b>${esc(nm(x.r.patient))}<small>${esc(nm(x.it.title))}</small></span><i class="dot"></i></a>`;
