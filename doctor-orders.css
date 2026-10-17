@@ -428,3 +428,22 @@
   .or-lv .or-fa .hx-btn, .or-lv .or-fa .pl-addbtn { flex: 1 1 100%; justify-content: center; }
 }
 .or-lvemp { margin-bottom: 14px; }
+/* Send the orders to the patient (payment link) */
+.or-pab { display: flex; gap: 10px; flex-wrap: wrap; }
+.or-pab .hx-btn.out { color: #0b6b5c; border-color: #bfe3d3; }
+.or-lk { display: flex; gap: 8px; align-items: flex-start; margin: 12px 0 0; font-size: 13px; color: #6b7a80; line-height: 1.6; }
+.or-lk svg { width: 16px; height: 16px; flex: none; margin-top: 3px; color: #0b6b5c; }
+.or-lk b { font-weight: 600; color: #a35a00; }
+.or-lk b.ok { color: #0f8f6f; }
+.or-msg { height: auto; min-height: 220px; padding: 12px 14px; line-height: 1.7; resize: vertical; font-size: 14px; }
+.or-prev { display: inline-flex; align-items: center; gap: 8px; color: #0b6b5c; font-weight: 600; font-size: 14px; text-decoration: none; }
+.or-prev svg { width: 18px; height: 18px; }
+.or-shb { flex-wrap: wrap; }
+.or-shb .hx-btn { text-decoration: none; height: 48px; padding: 0 18px; font-size: 14.5px; flex: 1 1 140px; }
+.or-shb .hx-btn svg { width: 18px; height: 18px; }
+.hx-btn.or-wa { border: 0; background: #1fa855; color: #fff; }
+.hx-btn.or-wa:hover { background: #178f47; }
+@media (max-width: 640px) {
+  .or-pab { width: 100%; }
+  .or-pab .hx-btn { flex: 1 1 100%; }
+}

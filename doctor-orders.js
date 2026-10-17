@@ -28,6 +28,9 @@ const DrOrders = (() => {
     list: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h1M4 12h1M4 18h1"/>', xr: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M12 6v12M9 8.5c1 .8 2 1 3 1s2-.2 3-1M8.5 11.5c1.2.8 2.3 1.1 3.5 1.1s2.3-.3 3.5-1.1M9 14.5c1 .7 2 1 3 1s2-.3 3-1"/>',
     home: '<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/>', center: '<path d="M4 21V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16M15 9h4a1 1 0 0 1 1 1v11M3 21h18M8 8h3M8 12h3M8 16h3"/>',
     eye: '<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/>',
+    send: '<path d="M21 3 10 14"/><path d="M21 3l-7 18-4-7-7-4z"/>', wa: '<path d="M4 20l1.3-4A8 8 0 1 1 8 18.7z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 .8a4 4 0 0 1-1.8-1.8l.8-1-1-2z"/>',
+    sms: '<path d="M4 5h16v11H8l-4 4z"/><path d="M8 9h8M8 12h5"/>', copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',
+    share: '<circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.4M8.2 13.2l7.6 4.4"/>',
     wallet: '<path d="M4 7a2 2 0 0 1 2-2h11v4"/><path d="M4 7v11a2 2 0 0 0 2 2h14V9H6a2 2 0 0 1-2-2z"/><circle cx="16.5" cy="14.5" r="1.2"/>',
     cash: '<rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 9.5v5M18 9.5v5"/>', card: '<rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 10h19M6.5 15h4"/>',
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>',
@@ -199,6 +202,13 @@ const DrOrders = (() => {
       ps_open: "Payment open", ps_part: "Partly paid", ps_paid: "Paid", ps_refund: "Refund due", ps_none: "",
       openNote: "You can carry on with the visit. The payment stays open until you collect it.", collect: "Collect {n}", refundNote: "The orders total went down after payment. Refund {n} to the patient.",
       collectT: "Collect Payment", collectS: "Take the payment from the patient, then confirm.", methodT: "Payment method", pm_cash: "Cash", pm_card: "Card (mada terminal)",
+      sendPt: "Send to Patient", sendT: "Send the Orders to the Patient", sendS: "The patient gets a link with a clear summary of the orders and can pay from it.",
+      phoneT: "Patient mobile", msgT: "Message", msgLang: "Message language", viaWa: "WhatsApp", viaSms: "SMS", copyMsg: "Copy Message", shareT: "Share", preview: "Preview Patient Page",
+      copied: "Message copied. Paste it in the chat with the patient.", badPhone: "Enter a valid Saudi mobile number (05XXXXXXXX).", sentOk: "Sent. The payment updates here once the patient pays.",
+      linkSent: "Link sent by {c} · {t}", linkOpened: "Opened by the patient · {t}", linkNotOpened: "Not opened yet", ch_wa: "WhatsApp", ch_sms: "SMS", ch_copy: "copied message", ch_share: "share",
+      pm_link: "Payment link", via_apple: "Apple Pay", via_card: "mada / card", via_tamara: "Tamara", via_tabby: "Tabby",
+      m_hi: "Hello {n},", m_intro: "Here is a summary of the orders from your visit with {d} at Mada Care:", m_due: "Amount due: {n}", m_link: "See the details and pay here:", m_free: "no fee",
+      m_leave: "Sick leave · {n} days", m_leave1: "Sick leave · 1 day", m_ref: "Referral to {s}", m_thanks: "Wishing you good health.",
       receivedT: "Amount received", shortT: "The amount received is less than the amount due.", changeT: "Change {n}", refNo: "Approval no.", refPh: "From the terminal receipt",
       confirmCash: "The patient paid {n} in cash and I received it.", confirmCard: "The card payment of {n} was approved on the terminal.", confirmPay: "Confirm Payment",
       payNeedOk: "Tick the confirmation to record the payment.", paidOk: "Payment of {n} recorded.", undoPay: "Undo payment", undoAsk: "Remove this payment of {n}?", undone: "Payment removed.",
@@ -245,6 +255,13 @@ const DrOrders = (() => {
       ps_open: "الدفع مفتوح", ps_part: "مدفوع جزئياً", ps_paid: "مدفوع", ps_refund: "استرجاع مستحق", ps_none: "",
       openNote: "تقدر تكمل الزيارة عادي. الدفع يبقى مفتوح لين تحصّله.", collect: "تحصيل {n}", refundNote: "إجمالي الطلبات نقص بعد الدفع. رجّع {n} للمريض.",
       collectT: "تحصيل الدفع", collectS: "استلم المبلغ من المريض وبعدين أكّد.", methodT: "طريقة الدفع", pm_cash: "كاش", pm_card: "شبكة (جهاز مدى)",
+      sendPt: "إرسال للمريض", sendT: "إرسال الطلبات للمريض", sendS: "يوصل المريض رابط فيه ملخص واضح للطلبات ويقدر يدفع منه.",
+      phoneT: "جوال المريض", msgT: "الرسالة", msgLang: "لغة الرسالة", viaWa: "واتساب", viaSms: "رسالة SMS", copyMsg: "نسخ الرسالة", shareT: "مشاركة", preview: "معاينة صفحة المريض",
+      copied: "تم نسخ الرسالة. الصقها في المحادثة مع المريض.", badPhone: "اكتب رقم جوال سعودي صحيح (05XXXXXXXX).", sentOk: "تم الإرسال. الدفع يتحدث هنا أول ما يدفع المريض.",
+      linkSent: "أُرسل الرابط عبر {c} · {t}", linkOpened: "فتحه المريض · {t}", linkNotOpened: "ما فتحه المريض للحين", ch_wa: "واتساب", ch_sms: "رسالة SMS", ch_copy: "نسخ الرسالة", ch_share: "المشاركة",
+      pm_link: "رابط الدفع", via_apple: "Apple Pay", via_card: "مدى / بطاقة", via_tamara: "تمارا", via_tabby: "تابي",
+      m_hi: "مرحباً {n}،", m_intro: "هذا ملخص الطلبات من زيارتك مع {d} في مدى كير:", m_due: "المبلغ المطلوب: {n}", m_link: "التفاصيل والدفع من هنا:", m_free: "بدون رسوم",
+      m_leave: "إجازة مرضية · {n} أيام", m_leave1: "إجازة مرضية · يوم واحد", m_leave2: "إجازة مرضية · يومين", m_leaveN: "إجازة مرضية · {n} يوم", m_ref: "تحويل إلى {s}", m_thanks: "نتمنى لك الصحة والعافية.",
       receivedT: "المبلغ المستلم", shortT: "المبلغ المستلم أقل من المستحق.", changeT: "الباقي {n}", refNo: "رقم الموافقة", refPh: "من إيصال الجهاز",
       confirmCash: "المريض دفع {n} كاش واستلمته.", confirmCard: "تمت الموافقة على دفع {n} بالشبكة في الجهاز.", confirmPay: "تأكيد الدفع",
       payNeedOk: "أشّر على التأكيد عشان ينحفظ الدفع.", paidOk: "تم تسجيل دفع {n}.", undoPay: "إلغاء الدفعة", undoAsk: "تبي تلغي دفعة {n}؟", undone: "تم إلغاء الدفعة.",
@@ -255,14 +272,14 @@ const DrOrders = (() => {
   };
 
   let draft = null, forId = null, lang = "en", ctx = null, page = "hub", cat = {}, q = "", drawer = false, modal = null, rf = null, rEdit = -1, rTried = false;
-  let curO = null, payM = null, lv = null, lvTr = false;
+  let curO = null, payM = null, shM = null, lv = null, lvTr = false;
   let rSel = null, rForm = null, rCat = "all", rTr = false, labTab = "tests", lCat = "all", pkgView = null;
   const t = () => L[lang];
   const tx = (k, v) => t()[k].replace(/\{(\w+)\}/g, (_, n) => v[n]);
   const S = (p, w) => ctx.svg(p, w), E = s => ctx.esc(s);
   const ix = lang2 => lang2 === "ar" ? 1 : 0;
   const blankRef = () => ({ spec: "", priority: "routine", reason: "", rec: "", dest: "mada", provider: "", notes: "" });
-  const reset = () => { draft = null; forId = null; page = "hub"; cat = {}; q = ""; drawer = false; modal = null; rf = blankRef(); rEdit = -1; rTried = false; rSel = null; rForm = null; rCat = "all"; rTr = false; labTab = "tests"; lCat = "all"; pkgView = null; payM = null; lv = null; lvTr = false; };
+  const reset = () => { shM = null; draft = null; forId = null; page = "hub"; cat = {}; q = ""; drawer = false; modal = null; rf = blankRef(); rEdit = -1; rTried = false; rSel = null; rForm = null; rCat = "all"; rTr = false; labTab = "tests"; lCat = "all"; pkgView = null; payM = null; lv = null; lvTr = false; };
   reset();
   // Any catalogue code as { svc, code, en, ar, about: [en, ar], price }.
   function item(code) {
@@ -336,12 +353,57 @@ const DrOrders = (() => {
     return `<section class="or-pay ${ps.status}" id="orPay"><div class="or-ch"><span class="or-chi pay">${S(I.wallet)}</span><h2>${t().payT}</h2>${payTag(ps)}</div>
       <dl class="or-sum"><div><dt>${t().ordersTotal}</dt><dd>${money(ps.total)}</dd></div><div><dt>${t().paidT}</dt><dd>${money(ps.paid)}</dd></div>
         <div class="big"><dt>${ps.due < 0 ? t().refundT : t().dueT}</dt><dd>${money(Math.abs(ps.due))}</dd></div></dl>
-      ${ps.entries.length ? `<ul class="or-pays">${ps.entries.map(e => `<li><span class="or-pm ${e.method}">${S(e.method === "cash" ? I.cash : I.card)}</span><span class="or-pt"><b>${money(e.amount)} · ${t()["pm_" + e.method]}</b>
+      ${ps.entries.length ? `<ul class="or-pays">${ps.entries.map(e => `<li><span class="or-pm ${e.method}">${S(e.method === "cash" ? I.cash : I.card)}</span><span class="or-pt"><b>${money(e.amount)} · ${e.channel === "link" ? t().pm_link + (e.via ? " · " + t()["via_" + e.via] : "") : t()["pm_" + e.method]}</b>
           <small>${E(when(e.at))} · ${E((e.by && typeof e.by === "object" ? e.by[lang] : e.by) || "")}${e.ref ? ` · ${t().refNo} ${E(e.ref)}` : ""}${e.method === "cash" && e.received > e.amount ? ` · ${tx("changeT", { n: money(e.received - e.amount) })}` : ""}</small></span>
           <button type="button" class="or-ib del" data-unpay="${e.id}" aria-label="${t().undoPay}" title="${t().undoPay}">${S(I.undo)}</button></li>`).join("")}</ul>` : ""}
-      ${ps.due > 0 ? `<div class="or-pa"><p>${S(I.info)}<span>${t().openNote}</span></p><button type="button" class="hx-btn dark" id="orCollect">${S(I.card)}${tx("collect", { n: money(ps.due) })}</button></div>` : ""}
+      ${ps.due > 0 ? `<div class="or-pa"><p>${S(I.info)}<span>${t().openNote}</span></p><span class="or-pab"><button type="button" class="hx-btn out" id="orSend">${S(I.send)}${t().sendPt}</button><button type="button" class="hx-btn dark" id="orCollect">${S(I.card)}${tx("collect", { n: money(ps.due) })}</button></span></div>${linkLine(when)}` : ""}
       ${ps.due < 0 ? `<p class="or-rf">${S(I.info)}<span>${tx("refundNote", { n: money(-ps.due) })}</span></p>` : ""}
     </section>`;
+  }
+  // Payment link sent to the patient (visit-pay.html): doctorVisit.payLink = { token, createdAt, sent: [{ ch, at, by }], opens, openedAt, lastOpenAt }.
+  const payLink = () => (curO && curO.doctorVisit || {}).payLink || null;
+  function linkLine(when) {
+    const pl = payLink(), last = pl && (pl.sent || []).slice(-1)[0]; if (!last) return "";
+    return `<p class="or-lk">${S(I.send)}<span>${E(tx("linkSent", { c: t()["ch_" + last.ch], t: when(last.at) }))} · <b class="${pl.openedAt ? "ok" : ""}">${E(pl.openedAt ? tx("linkOpened", { t: when(pl.lastOpenAt || pl.openedAt) }) : t().linkNotOpened)}</b></span></p>`;
+  }
+  // Sick leave in words, with the Arabic count forms (1, 2, 3-10, 11+).
+  const leaveTxt = (M, n) => { n = Number(n); return n === 1 ? M.m_leave1 : n === 2 && M.m_leave2 ? M.m_leave2 : (n > 10 && M.m_leaveN ? M.m_leaveN : M.m_leave).replace("{n}", n); };
+  const newToken = () => { const a = new Uint8Array(16); crypto.getRandomValues(a); return [...a].map(b => b.toString(16).padStart(2, "0")).join(""); };
+  const linkUrl = ml => new URL(`visit-pay.html?t=${payLink().token}&l=${ml}`, location.href).href;
+  // Saudi mobile as 9665XXXXXXXX (for WhatsApp), or "" when it is not one.
+  function waNum(v) {
+    const d = String(v || "").replace(/[٠-٩]/g, c => "٠١٢٣٤٥٦٧٨٩".indexOf(c)).replace(/\D/g, "");
+    const m = d.match(/^(?:00966|966|0)?(5\d{8})$/); return m ? "966" + m[1] : "";
+  }
+  // The message: what was ordered, in plain words and grouped by service, the amount due and the link.
+  function shareMsg(ml) {
+    const M = L[ml], nm = v => v && typeof v === "object" ? v[ml] || v.en || "" : v || "", items = draft.items, ps = payNow();
+    const mny = n => `${Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 2 })} ${ml === "ar" ? "ريال" : "SAR"}`, sep = ml === "ar" ? "، " : ", ";
+    const first = nm(curO.patient).trim().split(/\s+/)[0] || "";
+    const lines = ORDER.filter(svc => items.some(o => o.svc === svc)).map(svc => {
+      const its = items.filter(o => o.svc === svc);
+      if (svc === "ref") return its.map(o => { const sp = SPECS.find(x => x[0] === o.spec); return `• ${M.m_ref.replace("{s}", sp ? sp[ml === "ar" ? 2 : 1] : o.spec)} (${M.m_free})`; }).join("\n");
+      if (svc === "leave") return its.map(o => `• ${leaveTxt(M, o.days)} (${M.m_free})`).join("\n");
+      return `• ${M["s_" + svc]}: ${its.map(o => (item(o.code) || {})[ml] || o.code).join(sep)}`;
+    });
+    return [M.m_hi.replace("{n}", first), M.m_intro.replace("{d}", nm(ctx.doctor)), ...lines, "", M.m_due.replace("{n}", mny(ps.due)), M.m_link, linkUrl(ml), "", M.m_thanks].join("\n");
+  }
+  function shareModal() {
+    const m = shM, ok = !!waNum(m.phone);
+    return `<div class="or-ov" id="orShOv"></div><div class="or-md" role="dialog" aria-modal="true" aria-labelledby="orShT">
+      <div class="or-mh"><span class="or-sic pay">${S(I.send)}</span><div class="or-mt"><b id="orShT">${t().sendT}</b><small>${t().sendS}</small></div><button type="button" class="or-x" id="orShX" aria-label="${t().close}">${S(I.x, 2.2)}</button></div>
+      <div class="or-mb">
+        <div class="pl-f"><label for="orShPh">${t().phoneT}</label><input class="hx-in ${m.tried && !ok ? "bad" : ""}" id="orShPh" value="${E(m.phone)}" inputmode="tel" maxlength="14" dir="ltr" placeholder="05XXXXXXXX"></div>
+        <div class="pl-f"><label>${t().msgLang}</label><div class="or-pills">${["ar", "en"].map(k => `<button type="button" class="or-pill ${m.ml === k ? "on" : ""}" data-ml="${k}" aria-pressed="${m.ml === k}"><span class="or-rd">${m.ml === k ? S(I.check, 3) : ""}</span>${k === "ar" ? "العربية" : "English"}</button>`).join("")}</div></div>
+        <div class="pl-f"><label for="orShMsg">${t().msgT}</label><textarea class="hx-in or-msg" id="orShMsg" rows="11" dir="${m.ml === "ar" ? "rtl" : "ltr"}">${E(m.msg)}</textarea></div>
+        <a class="or-prev" href="${E(linkUrl(m.ml))}" target="_blank" rel="noopener">${S(I.eye)}${t().preview}</a>
+      </div>
+      <div class="or-mf or-shb">
+        <a class="hx-btn or-wa" data-ch="wa" target="_blank" rel="noopener" href="#">${S(I.wa)}${t().viaWa}</a>
+        <a class="hx-btn out" data-ch="sms" href="#">${S(I.sms)}${t().viaSms}</a>
+        <button type="button" class="hx-btn out" data-ch="copy">${S(I.copy)}${t().copyMsg}</button>
+        ${navigator.share ? `<button type="button" class="hx-btn out" data-ch="share">${S(I.share)}${t().shareT}</button>` : ""}
+      </div></div>`;
   }
   function payModal() {
     const ps = payNow(), m = payM, bad = c => m.tried && c ? "bad" : "";
@@ -590,7 +652,7 @@ const DrOrders = (() => {
 
   function view(o, c) {
     ctx = c; lang = c.lang; load(o); curO = o;
-    if (page === "hub") return hubView(o, c) + (modal ? modalView() : "") + (payM ? payModal() : "");
+    if (page === "hub") return hubView(o, c) + (modal ? modalView() : "") + (payM ? payModal() : "") + (shM ? shareModal() : "");
     const body = page === "leave" ? leaveView() : page === "ref" ? refView() : page === "rad" ? radView() : page === "lab" || page === "iv" ? labView() : catalogView(page);
     return `<div class="or sub">${head(c, I[page], t()["s_" + page], t()["p_" + page])}${body}
       <div class="ex-foot"><button type="button" class="hx-btn out pl-prevb" id="orBack2"><span class="flip">${S(I.back)}</span><span><b>${t().prev}</b><small>${t().title}</small></span></button><span class="hx-sp"></span>
@@ -691,7 +753,32 @@ const DrOrders = (() => {
         payM = null; ctx.toast(tx("paidOk", { n: money(entry.amount) })); ctx.rerender();
       });
     }
+    if (shM) {
+      const close = () => { shM = null; ctx.rerender(); };
+      $("#orShX").addEventListener("click", close); $("#orShOv").addEventListener("click", close);
+      document.querySelector(".or-md").addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+      const hrefs = () => { const msg = encodeURIComponent(shM.msg), wa = waNum(shM.phone);
+        document.querySelector('[data-ch="wa"]').href = `https://wa.me/${wa}?text=${msg}`;
+        document.querySelector('[data-ch="sms"]').href = `sms:${wa ? "+" + wa : ""}?&body=${msg}`; };
+      hrefs();
+      $("#orShPh").addEventListener("input", e => { shM.phone = e.target.value; e.target.classList.remove("bad"); hrefs(); });
+      $("#orShMsg").addEventListener("input", e => { shM.msg = e.target.value; hrefs(); });
+      all("[data-ml]", b => b.addEventListener("click", () => { shM.ml = b.dataset.ml; shM.msg = shareMsg(shM.ml); ctx.rerender(); }));
+      all("[data-ch]", b => b.addEventListener("click", async e => {
+        const ch = b.dataset.ch;
+        if ((ch === "wa" || ch === "sms") && !waNum(shM.phone)) { e.preventDefault(); shM.tried = true; $("#orShPh").classList.add("bad"); $("#orShPh").focus(); return ctx.toast(t().badPhone); }
+        if (ch === "copy") { try { await navigator.clipboard.writeText(shM.msg); } catch (er) { $("#orShMsg").select(); document.execCommand("copy"); } }
+        if (ch === "share") { try { await navigator.share({ text: shM.msg }); } catch (er) { return; } }
+        const pl = payLink() || {};
+        try { ctx.payLink({ sent: [...(pl.sent || []), { ch, at: new Date().toISOString(), by: ctx.doctor }] }); } catch (er) { return ctx.toast(er.message || t().storeErr); }
+        ctx.toast(ch === "copy" ? t().copied : t().sentOk);
+      }));
+    }
     if (page === "hub") {
+      if ($("#orSend")) $("#orSend").addEventListener("click", () => {
+        if (!payLink() || !payLink().token) { try { ctx.payLink({ token: newToken(), createdAt: new Date().toISOString() }); } catch (er) { return ctx.toast(er.message || t().storeErr); } curO = ctx.order ? ctx.order() : curO; }
+        const ml = lang; shM = { phone: curO.mobile || "", ml, msg: "", tried: false }; shM.msg = shareMsg(ml); ctx.rerender();
+      });
       if ($("#orCollect")) $("#orCollect").addEventListener("click", () => { const ps = payNow(); payM = { method: "cash", received: String(ps.due), ref: "", ok: false, tried: false }; ctx.rerender(); });
       all("[data-unpay]", b => b.addEventListener("click", () => {
         const e = payNow().entries.find(x => x.id === b.dataset.unpay); if (!e || !confirm(tx("undoAsk", { n: money(e.amount) }))) return;
@@ -834,6 +921,16 @@ const DrOrders = (() => {
     if (o.svc === "ref") { const sp = SPECS.find(x => x[0] === o.spec); return { en: `Referral to ${sp ? sp[1] : o.spec}`, ar: `تحويل إلى ${sp ? sp[2] : o.spec}` }; }
     const r = item(o.code); return r ? { en: r.en, ar: r.ar } : { en: o.code, ar: o.code };
   }
+  // The visit's orders for the patient page (visit-pay.html), grouped by service, with what each one is and its price.
+  function bill(o, lg) {
+    const dv = o.doctorVisit || {}, src = dv.ordersDraft || (dv.steps && dv.steps.orders) || { items: [] }, items = src.items || [], M = L[lg], x = lg === "ar" ? 1 : 0;
+    const groups = ORDER.filter(svc => items.some(i => i.svc === svc)).map(svc => ({ svc, name: M["s_" + svc], items: items.filter(i => i.svc === svc).map(i => {
+      if (svc === "ref") { const r = refInfo(i); return { name: M.m_ref.replace("{s}", r.spec[lg]), about: i.dest === "ext" ? M.ext + (r.provider && r.provider[lg] ? " · " + r.provider[lg] : "") : M.mada, price: 0 }; }
+      if (svc === "leave") return { name: leaveTxt(M, i.days), about: "", price: 0 };
+      const r = item(i.code) || {}; return { code: i.code, name: r[lg] || i.code, about: (r.about || [])[x] || "", price: price(i) };
+    }) }));
+    return { groups, ...payOf(items, dv.payment) };
+  }
   // How many services each Doctor Portal catalogue holds (dashboard Services page).
   const counts = () => ({ lab: LAB.length, labPkg: PKG.length, rad: RAD.length, iv: IVS.length, ivPkg: IVPKG.length, nurse: SVC.nurse.items.length });
   // A referral's specialty and provider names in both languages (Medical Requests page and the referral form).
@@ -842,5 +939,5 @@ const DrOrders = (() => {
     return { spec: sp ? { en: sp[1], ar: sp[2] } : { en: o.spec || "", ar: o.spec || "" },
       provider: o.dest === "ext" ? { en: o.provider || "", ar: o.provider || "" } : pv ? { en: pv[1], ar: pv[2] } : null };
   }
-  return { view, bind, reset, L, SVC, payState, openPay, item, labs, labTests, titleOf, refInfo, counts };
+  return { view, bind, reset, L, SVC, bill, payState, openPay, item, labs, labTests, titleOf, refInfo, counts };
 })();

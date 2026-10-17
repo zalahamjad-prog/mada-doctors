@@ -950,6 +950,9 @@
       const pay = MadaOrders.get(id).doctorVisit.payment || {};
       putVisit({ payment: { ...pay, entries: (pay.entries || []).filter(e => e.id !== pid) } });
     },
+    // The payment link sent to the patient (visit-pay.html).
+    payLink(p) { putVisit({ payLink: { ...(MadaOrders.get(id).doctorVisit.payLink || {}), ...p } }); },
+    order: () => MadaOrders.get(id),
     go: goStep
   };
   const nuCtx = {
