@@ -196,8 +196,21 @@ const MadaLabs = (() => {
   const inPkg = p => p.tests.filter(c => byCode[c]);
   const pkgHours = p => Math.max(0, ...inPkg(p).map(c => byCode[c].hours || 0));
   const pkgValue = p => inPkg(p).reduce((s, c) => s + (byCode[c].price || 0), 0);
+  // Sample tubes and containers. Each test can name one (test.tube, set on services-lab.html); the nurse sees it on the visit.
+  // These are the usual tube types; which tube each test uses is set by the team from the lab's own list.
+  const TUBES = [
+    { id: "lavender", sample: "blood", color: "#8e5fc2", name: { en: "Lavender (EDTA)", ar: "بنفسجي (EDTA)" } },
+    { id: "red", sample: "blood", color: "#d23b3b", name: { en: "Red (Plain)", ar: "أحمر (بدون مادة)" } },
+    { id: "gold", sample: "blood", color: "#e2a72b", name: { en: "Gold (SST gel)", ar: "ذهبي (جل SST)" } },
+    { id: "blue", sample: "blood", color: "#4f9fdc", name: { en: "Light blue (Citrate)", ar: "أزرق فاتح (سترات)" } },
+    { id: "gray", sample: "blood", color: "#8a949b", name: { en: "Gray (Fluoride)", ar: "رمادي (فلورايد)" } },
+    { id: "green", sample: "blood", color: "#2e9e5b", name: { en: "Green (Heparin)", ar: "أخضر (هيبارين)" } },
+    { id: "urinecup", sample: "urine", color: "#e8c547", name: { en: "Sterile urine cup", ar: "علبة بول معقمة" } },
+    { id: "stoolcup", sample: "stool", color: "#8b5a2b", name: { en: "Stool container", ar: "علبة براز" } }
+  ];
+  const tubeOf = id => TUBES.find(x => x.id === id) || null;
   const save = (d, by) => MadaStore.setJSON(KEY, { cats: d.cats, tests: d.tests, packages: d.packages, updatedAt: new Date().toISOString(), updatedBy: by || null });
   const edit = () => copy({ cats: CATS, tests: ALL_TESTS, packages: ALL_PACKAGES });
 
-  return { TESTS, PACKAGES, PKG_CATS, TEST_CATS, CATS, ALL_TESTS, ALL_PACKAGES, catName, byCode, pkgById, pkgHours, pkgValue, KEY, defaults, edit, save, savedAt: saved && saved.updatedAt };
+  return { TUBES, tubeOf, TESTS, PACKAGES, PKG_CATS, TEST_CATS, CATS, ALL_TESTS, ALL_PACKAGES, catName, byCode, pkgById, pkgHours, pkgValue, KEY, defaults, edit, save, savedAt: saved && saved.updatedAt };
 })();
