@@ -109,8 +109,22 @@ const MadaOrders = (() => {
     }
     return inside;
   }
-  // The covered city for a point, or null when the point is outside every service area.
-  const coverageAt = (lat, lng) => COVERAGE.find(c => inPolygon(lat, lng, c.polygon)) || null;
+  // Districts the admin opened on coverage.html. MadaStore "mada-coverage": { zones: [{ id, city, name: {en, ar}, polygon: [[lat, lng], ...], active, createdAt, by }] }.
+  // Once a city has an active district, only its active districts are covered; until then the whole city outline is.
+  const ZKEY = "mada-coverage";
+  const zones = () => (MadaStore.getJSON(ZKEY, {}) || {}).zones || [];
+  const saveZones = list => MadaStore.setJSON(ZKEY, { zones: list });
+  const activeZones = city => zones().filter(z => z.active && z.city === city && z.polygon && z.polygon.length > 2);
+  const zoneAt = (lat, lng) => zones().find(z => z.active && z.polygon && z.polygon.length > 2 && inPolygon(lat, lng, z.polygon)) || null;
+  // The covered city for a point (with .zone when a district matched), or null when the point is outside every service area.
+  function coverageAt(lat, lng) {
+    for (const c of COVERAGE) {
+      const act = activeZones(c.id);
+      if (act.length) { const z = act.find(z => inPolygon(lat, lng, z.polygon)); if (z) return { ...c, zone: z }; }
+      else if (inPolygon(lat, lng, c.polygon)) return c;
+    }
+    return null;
+  }
   const DECLINES = [{ en: "The time is not suitable", ar: "الوقت غير مناسب" }, { en: "The price is high", ar: "السعر مرتفع" }];
   // Deterministic sample list so the page has something to show on first use.
   function samples() {
@@ -462,5 +476,5 @@ const MadaOrders = (() => {
     return f.idType === "national" || (!f.idType && f.nationality === "SA");
   }
   const vatRate = o => vatExempt(o) ? 0 : VAT;
-  return { VAT, vatExempt, vatRate, all, get, byReq, add, update, text, needsAction, sweepHolds, seedDoctorDemo, STAFF, PAY_MINUTES, CHECKS, OUTCOMES, CANCEL_OUTCOMES, CANCEL_REASONS, DOCTORS, DRIVERS, COVERAGE, coverageAt };
+  return { VAT, vatExempt, vatRate, all, get, byReq, add, update, text, needsAction, sweepHolds, seedDoctorDemo, STAFF, PAY_MINUTES, CHECKS, OUTCOMES, CANCEL_OUTCOMES, CANCEL_REASONS, DOCTORS, DRIVERS, COVERAGE, coverageAt, zones, saveZones, activeZones, zoneAt, inPolygon };
 })();
