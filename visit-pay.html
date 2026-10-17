@@ -63,6 +63,11 @@
   .ov { position: fixed; inset: 0; background: rgba(16,35,43,.55); display: grid; place-items: center; z-index: 9; color: #fff; font-weight: 700; }
   .spin { width: 42px; height: 42px; border-radius: 50%; border: 4px solid rgba(255,255,255,.35); border-top-color: #fff; animation: r 1s linear infinite; margin: 0 auto 12px; }
   .ov[hidden] { display: none; }
+  .invs { display: grid; gap: 8px; margin-top: 18px; }
+  .inv { height: 50px; border: 1.5px solid var(--g); border-radius: 14px; background: #fff; color: var(--g); font: inherit; font-size: 15.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+  .inv svg { width: 19px; height: 19px; }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #10232b; color: #fff; padding: 10px 16px; border-radius: 12px; font-size: 14px; z-index: 10; max-width: calc(100% - 32px); }
+  .toast[hidden] { display: none; }
   @keyframes r { to { transform: rotate(360deg); } }
 </style>
 </head>
@@ -72,6 +77,7 @@
   <h1 id="hTitle"></h1><p id="hSub"></p>
 </header>
 <main id="main"></main>
+<div class="toast" id="toast" hidden></div>
 <div class="ov" id="busy" hidden><div><div class="spin"></div><span id="busyT"></span></div></div>
 <script src="auth.js"></script>
 <script src="orders.js"></script>
@@ -88,7 +94,7 @@
   const svg = (p, w) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
   const IC = { doc: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>', spark: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',
     list: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h1M4 12h1M4 18h1"/>', wallet: '<path d="M4 7a2 2 0 0 1 2-2h11v4"/><path d="M4 7v11a2 2 0 0 0 2 2h14V9H6a2 2 0 0 1-2-2z"/><circle cx="16.5" cy="14.5" r="1.2"/>',
-    lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>', check: '<path d="m5 12 5 5 9-10"/>', x: '<path d="M6 6l12 12M18 6 6 18"/>', clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>' };
+    lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>', check: '<path d="m5 12 5 5 9-10"/>', dl: '<path d="M12 4v12M7 11l5 5 5-5M4 20h16"/>', x: '<path d="M6 6l12 12M18 6 6 18"/>', clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>' };
   const L = {
     ar: { brand: "مدى كير", tag: "رعاية كالعائلة", other: "English", title: "طلبات زيارتك", sub: "راجع ملخص الطلبات اللي طلبها لك الطبيب، وادفع بأمان.",
       visitT: "بيانات الزيارة", patient: "المريض", doctor: "الطبيب", date: "تاريخ الزيارة", visitNo: "رقم الزيارة",
@@ -97,7 +103,8 @@
       total: "إجمالي الطلبات", paid: "المدفوع", due: "المبلغ المطلوب", sar: "ريال", howPay: "طريقة الدفع",
       m_apple: "Apple Pay", m_card: "بطاقة مدى أو فيزا", m_tamara: "تمارا · قسّمها على 4", m_tabby: "تابي · قسّمها على 4", payBtn: "ادفع {n}", safe: "الدفع آمن ومشفّر",
       busy: "جاري الدفع…", paidT: "تم الدفع، شكراً لك", paidS: "وصل الدفع لفريق مدى كير. نتمنى لك الصحة والعافية.", paidAmt: "المبلغ المدفوع", paidAt: "وقت الدفع", via: "طريقة الدفع",
-      loading: "جاري تحميل طلبك…", badT: "الرابط غير صالح", badS: "تأكد من الرابط اللي وصلك، أو تواصل مع فريق مدى كير.", foot: "مدى كير · رعاية صحية منزلية" },
+      loading: "جاري تحميل طلبك…", invBtn: "تحميل الفاتورة", invBtnN: "تحميل فاتورة {n}", invT: "فاتورة", nameL: "الاسم", invNo: "رقم الفاتورة", invDate: "تاريخ الفاتورة", fileNo: "رقم الملف", mobile: "الجوال",
+      thNo: "#", thSvc: "الخدمة", thPrice: "السعر", making: "جاري تجهيز الفاتورة…", dlFail: "تعذر إنشاء الملف هنا. استخدم حفظ كـ PDF من نافذة الطباعة.", thanks: "شكراً لاختيارك مدى كير.", badT: "الرابط غير صالح", badS: "تأكد من الرابط اللي وصلك، أو تواصل مع فريق مدى كير.", foot: "مدى كير · رعاية صحية منزلية" },
     en: { brand: "Mada Care", tag: "Caring Like Family", other: "العربية", title: "Your Visit Orders", sub: "Review what your doctor ordered for you, then pay securely.",
       visitT: "Visit details", patient: "Patient", doctor: "Doctor", date: "Visit date", visitNo: "Visit No.",
       sumT: "Your order in brief", sumP: "After your visit, {d} ordered {n} for you. Below is each service and what it is. The amount due is {a}.", sumFree: "After your visit, {d} ordered {n} for you, all with no fee.",
@@ -105,7 +112,8 @@
       total: "Orders total", paid: "Paid", due: "Amount due", sar: "SAR", howPay: "Payment method",
       m_apple: "Apple Pay", m_card: "mada or Visa card", m_tamara: "Tamara · split in 4", m_tabby: "Tabby · split in 4", payBtn: "Pay {n}", safe: "Secure, encrypted payment",
       busy: "Processing payment…", paidT: "Payment received, thank you", paidS: "Your payment reached the Mada Care team. Wishing you good health.", paidAmt: "Amount paid", paidAt: "Paid on", via: "Method",
-      loading: "Loading your order…", badT: "This link is not valid", badS: "Check the link you received, or contact the Mada Care team.", foot: "Mada Care · Home healthcare" }
+      loading: "Loading your order…", invBtn: "Download Invoice", invBtnN: "Download invoice {n}", invT: "Invoice", nameL: "Name", invNo: "Invoice No.", invDate: "Invoice Date", fileNo: "File No.", mobile: "Mobile",
+      thNo: "#", thSvc: "Service", thPrice: "Price", making: "Preparing the invoice…", dlFail: "Could not create the file here. Use Save as PDF in the print window.", thanks: "Thank you for choosing Mada Care.", badT: "This link is not valid", badS: "Check the link you received, or contact the Mada Care team.", foot: "Mada Care · Home healthcare" }
   };
   const APPLE = '<svg viewBox="0 0 24 24" aria-hidden="true" style="width:12px;height:12px;vertical-align:-1px"><path fill="currentColor" d="M16.4 12.6c0-2.4 2-3.5 2.1-3.6-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.1-.8 1.5 0 1.9.8 3.2.8 1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8 0 0-2.5-1-2.5-4zM14 5.4c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1 .1 2.1-.6 2.8-1.4z"/></svg>';
   const VIA = [["apple", "b-apple", " Pay"], ["card", "b-mada", "mada · VISA"], ["tamara", "b-tamara", "tamara"], ["tabby", "b-tabby", "tabby"]];
@@ -115,7 +123,7 @@
   const T = v => v && typeof v === "object" ? v[lang] || v.en || v.ar || "" : v || "";
   const money = n => `${Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 2 })} ${t().sar}`;
   const fmtD = s => { if (!s) return ""; const d = /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(s + "T00:00") : new Date(s); return d.toLocaleDateString(lang === "ar" ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { day: "numeric", month: "long", year: "numeric" }); };
-  const fmtDT = s => new Date(s).toLocaleString(lang === "ar" ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { day: "numeric", month: "long", hour: "numeric", minute: "2-digit" });
+  const fmtDT = s => new Date(s).toLocaleString(lang === "ar" ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { day: "numeric", month: "long", hour: "numeric", minute: "2-digit", hour12: true });
   const find = () => token.length >= 32 ? MadaOrders.all().find(o => o.doctorVisit && o.doctorVisit.payLink && o.doctorVisit.payLink.token === token) || null : null;
   const doctorOf = o => { const id = (o.booking && o.booking.doctorId) || o.doctorId; const s = MadaStore.getJSON("mada-staff", []).find(x => x.id === id);
     return s ? s.name : ((MadaOrders.DOCTORS || []).find(x => x.id === id) || {}).name || (o.doctorVisit && o.doctorVisit.by) || ""; };
@@ -141,7 +149,9 @@
     if (b.total > 0 && b.due <= 0) {
       $("main").innerHTML = state("ok", IC.check, t().paidT, t().paidS, `<div class="rows receipt">
         <div class="row"><span>${t().paidAmt}</span><b>${money(b.paid)}</b></div>${last ? `<div class="row"><span>${t().paidAt}</span><b>${esc(fmtDT(last.at))}</b></div>` : ""}
-        ${last && last.via ? `<div class="row"><span>${t().via}</span><b>${esc(t()["m_" + last.via].split(" · ")[0])}</b></div>` : ""}<div class="row"><span>${t().visitNo}</span><b class="ltr">${esc(o.id)}</b></div></div>`) + `<p class="foot">${t().foot}</p>`;
+        ${last && last.via ? `<div class="row"><span>${t().via}</span><b>${esc(t()["m_" + last.via].split(" · ")[0])}</b></div>` : ""}<div class="row"><span>${t().visitNo}</span><b class="ltr">${esc(o.id)}</b></div></div>
+        <div class="invs">${b.entries.map((e, i) => `<button type="button" class="inv" data-inv="${esc(e.id)}">${svg(IC.dl)}${b.entries.length > 1 ? esc(tx(t().invBtnN, { n: i + 1 })) : t().invBtn}</button>`).join("")}</div>`) + `<p class="foot">${t().foot}</p>`;
+      document.querySelectorAll("[data-inv]").forEach(x => x.addEventListener("click", () => invoicePdf(o, b.entries.find(e => e.id === x.dataset.inv))));
       return;
     }
     const date = (o.appointment && o.appointment.date) || o.createdAt;
@@ -182,6 +192,61 @@
       }
       $("busy").hidden = true; scrollTo(0, 0); render();
     }, 1400);
+  }
+  function toast(m) { const el = $("toast"); el.textContent = m; el.hidden = !m; clearTimeout(toast.t); if (m) toast.t = setTimeout(() => el.hidden = true, 3000); }
+  // Simple invoice for one payment (A4 PDF). Same invoice number as the dashboard's Invoices page: the visit number plus the payment's own id.
+  // TODO: tax invoice fields (VAT number, VAT amount, e-invoice QR) once Mada Care's approved invoice format is provided.
+  async function invoicePdf(o, e) {
+    if (!e) return;
+    const rtl = lang === "ar", al = rtl ? "right" : "left", ar2 = rtl ? "left" : "right", b = DrOrders.bill(o, lang), d = T(doctorOf(o));
+    const no = `INV-${String(o.id).replace(/\D/g, "")}-${String(e.id).slice(-4).toUpperCase()}`, file = `Mada-Care-Invoice-${no}.pdf`;
+    // Numbers in their own left-to-right box without direction marks (Safari draws mixed-direction text over itself otherwise).
+    const L2R = v => `<span dir="ltr" style="display:inline-block">${esc(String(v).replace(/[\u2066-\u2069\u200e\u200f]/g, "")).replace(/ /g, "&nbsp;")}</span>`;
+    const amt = n => `${L2R(Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 2 }))} ${t().sar}`;
+    const kv = (k, v) => `<tr><td style="padding:4px 0;color:#6b7a80;width:42%">${esc(k)}</td><td style="padding:4px 0;font-weight:600">${v || "—"}</td></tr>`;
+    const cell = `padding:9px 10px;border-bottom:1px solid #e6ecee;text-align:${al}`, num = `padding:9px 10px;border-bottom:1px solid #e6ecee;text-align:${ar2};white-space:nowrap`;
+    const items = b.groups.flatMap(g => g.items), date = (o.appointment && o.appointment.date) || o.createdAt;
+    const wrap = document.createElement("div");
+    wrap.style.cssText = "position:fixed;left:-10000px;top:0;z-index:-1;width:748px";
+    wrap.innerHTML = `<div dir="ltr" style="width:748px;padding:0 0 24px;box-sizing:border-box;font-family:${rtl ? "Tajawal,Inter" : "Inter,Tajawal"},Arial,sans-serif;color:#15304a;background:#fff;font-size:12.5px"><div dir="${rtl ? "rtl" : "ltr"}" style="text-align:${al}">
+      <div style="background:linear-gradient(120deg,#07463d,#0b6b5c);color:#fff;padding:18px 26px;display:flex;align-items:center;gap:14px;border-radius:0 0 20px 20px">
+        <span style="width:56px;height:56px;border-radius:50%;background:#fff;display:inline-flex;align-items:center;justify-content:center;flex:none"><img src="assets/mada-logo.png" style="height:38px;width:auto" alt=""></span>
+        <div style="flex:1"><div style="font-size:20px;font-weight:700">${L2R("Mada Care")} <span style="font-weight:500">| مدى كير</span></div><div style="font-size:11.5px;opacity:.85">${esc(t().tag)}</div></div>
+        <div style="text-align:${ar2}"><div style="font-size:22px;font-weight:700">${esc(t().invT)}</div><div style="font-size:11px;opacity:.9;margin-top:3px">${esc(t().invNo)}: ${L2R(no)}</div><div style="font-size:11px;opacity:.9">${esc(t().invDate)}: ${esc(fmtD(e.at))}</div></div>
+      </div>
+      <div style="height:3px;background:#c8a45a;margin:0 44px;border-radius:2px"></div>
+      <div style="padding:0 26px">
+        <div style="display:flex;gap:16px;margin:18px 0">
+          <div style="flex:1;background:#f5f9f8;border-radius:12px;padding:12px 14px"><div style="font-weight:700;color:#0b6b5c;margin-bottom:6px">${esc(t().patient)}</div><table style="width:100%;border-collapse:collapse">
+            ${kv(t().nameL, esc(T(o.patient)))}${kv(t().fileNo, o.mrn ? L2R(o.mrn) : "")}${kv(t().mobile, o.mobile ? L2R(o.mobile) : "")}</table></div>
+          <div style="flex:1;background:#f5f9f8;border-radius:12px;padding:12px 14px"><div style="font-weight:700;color:#0b6b5c;margin-bottom:6px">${esc(t().visitT)}</div><table style="width:100%;border-collapse:collapse">
+            ${kv(t().visitNo, L2R(o.id))}${kv(t().doctor, esc(d))}${kv(t().date, esc(fmtD(date)))}</table></div>
+        </div>
+        <table style="width:100%;border-collapse:collapse"><thead><tr style="background:#eef5f3"><th style="${cell};width:30px">${t().thNo}</th><th style="${cell}">${esc(t().thSvc)}</th><th style="${num}">${esc(t().thPrice)}</th></tr></thead>
+          <tbody>${items.map((x, i) => `<tr><td style="${cell}">${L2R(i + 1)}</td><td style="${cell}">${esc(x.name)}</td><td style="${num}">${x.price ? amt(x.price) : esc(t().free)}</td></tr>`).join("")}
+          <tr><td colspan="2" style="${cell};font-weight:700;border-bottom:0">${esc(t().total)}</td><td style="${num};font-weight:700;border-bottom:0">${amt(b.total)}</td></tr></tbody></table>
+        <div style="margin-top:18px;border:1px solid #e3e8ea;border-radius:12px;padding:12px 14px"><table style="width:100%;border-collapse:collapse">
+          ${kv(t().via, esc((t()["m_" + e.via] || "").split(" · ")[0]))}${kv(t().paidAt, esc(fmtDT(e.at)))}${b.due > 0 ? kv(t().due, amt(b.due)) : ""}</table>
+          <div style="margin-top:10px;background:#0b6b5c;color:#fff;border-radius:10px;padding:11px 14px;display:flex;justify-content:space-between;font-size:14.5px"><span>${esc(t().paidAmt)}</span><b>${amt(e.amount)}</b></div></div>
+        <div style="margin-top:22px;text-align:center;color:#0b6b5c;font-weight:600">${esc(t().thanks)}</div>
+        <div style="margin-top:6px;text-align:center;font-size:11px;color:#8a979c">${esc(t().foot)}</div>
+      </div></div></div>`;
+    document.body.appendChild(wrap);
+    // The PDF renderer drops the spaces between Arabic words: each Arabic word gets its own box.
+    const walk = document.createTreeWalker(wrap, NodeFilter.SHOW_TEXT), nodes = [];
+    while (walk.nextNode()) if (/[\u0600-\u06ff]/.test(walk.currentNode.nodeValue)) nodes.push(walk.currentNode);
+    nodes.forEach(nd => { const f = document.createDocumentFragment(); nd.nodeValue.split(/(\s+|[()،,.:·\-–]+)/).forEach(part => { if (!part) return;
+      if (/^\s+$/.test(part)) f.appendChild(document.createTextNode(part)); else { const sp = document.createElement("span"); sp.textContent = rtl ? part.replace(/[()]/g, c => c === "(" ? ")" : "(") : part; f.appendChild(sp); } }); nd.replaceWith(f); });
+    toast(t().making); const sy = scrollY; scrollTo(0, 0);
+    try {
+      if (!window.html2pdf) await new Promise((ok, bad) => { const sc = document.createElement("script"); sc.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"; sc.onload = ok; sc.onerror = bad; document.head.appendChild(sc); setTimeout(bad, 15000); });
+      await window.html2pdf().set({ margin: [6, 6], filename: file, image: { type: "jpeg", quality: 0.96 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: "mm", format: "a4", orientation: "portrait" } }).from(wrap.firstElementChild).save();
+      toast("");
+    } catch (x) {
+      const w = window.open("", "_blank");
+      if (w) { w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${file}</title></head><body style="margin:0">${wrap.innerHTML}<script>onload=()=>print()<\/script></body></html>`); w.document.close(); }
+      toast(t().dlFail);
+    } finally { wrap.remove(); scrollTo(0, sy); }
   }
   $("langBtn").addEventListener("click", () => { lang = lang === "ar" ? "en" : "ar"; try { localStorage.setItem("mada-pay-lang", lang); } catch (e) {} render(); });
   // The doctor's changes (or a payment from another device) show up without a reload.
