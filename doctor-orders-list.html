@@ -223,6 +223,13 @@
   .tn li { list-style: none; padding: 10px 12px; border: 1px solid #e7ecee; border-radius: 10px; font-size: 13.5px; display: grid; gap: 4px; }
   .tn li.alert { border-color: #f3c5c5; background: #fffafa; } .tn .h { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 12px; color: var(--muted); }
   .sec .sub { font-size: 13px; color: var(--muted); margin: -6px 0 12px; }
+  .ad { display: grid; grid-template-columns: 200px 1fr; gap: 10px 12px; padding: 14px 16px; border: 1px solid #cfe7df; border-radius: 12px; background: #f7fcfa; }
+  .ad label { display: block; font-size: 12.5px; font-weight: 600; color: #44545a; margin-bottom: 5px; }
+  .ad select, .ad textarea { width: 100%; height: 42px; border: 1px solid #dfe5e8; border-radius: 10px; padding: 0 12px; font: inherit; font-size: 14px; background: #fff; outline: 0; }
+  .ad textarea { height: auto; min-height: 64px; padding: 10px 12px; resize: vertical; }
+  .ad .w { grid-column: 1 / -1; } .ad .rv-a { grid-column: 1 / -1; }
+  .ad-hint { font-size: 12px; color: var(--muted); }
+  @media (max-width: 640px) { .ad { grid-template-columns: 1fr; } }
   .wait-box { display: flex; align-items: center; gap: 10px; margin: 12px 16px 14px; padding: 12px 14px; border-radius: 10px; background: var(--orange-soft); color: #8a4b0f; font-size: 13.5px; }
   .wait-box svg { width: 18px; height: 18px; flex: none; }
   .ov { position: fixed; inset: 0; z-index: 70; background: rgba(16,35,43,.6); display: grid; place-items: center; padding: 16px; }
@@ -351,7 +358,7 @@
       ordered: "Ordered {d}", fileNo: "File {n}", tests1: "1 test", testsN: "{n} tests",
       ty_lab: "Laboratory", ty_radiology: "Radiology", ty_nursing: "Nursing", ty_iv: "IV Therapy", ty_referral: "Referral", ty_leave: "Sick Leave", ty_doctor: "Doctor Visit", ty_physio: "Physiotherapy",
       noneT: "No orders yet", noneS: "Orders appear here after you sign a visit with lab tests or radiology.", noMatchT: "No matching orders", noMatchS: "Try another name, file number or test.",
-      back: "All Orders", openFile: "Open Patient File", openVisit: "View Visit", orderNo: "Order", bookingNo: "Booking", repDate: "Report date", radRep: "Radiology Report", radReady: "Report ready", radWait: "Awaiting report", radReview: "Report to review", chResIn: "results in", chRepIn: "report in", chRepOk: "reviewed", visitNo: "Visit", by: "Ordered by", date: "Ordered on",
+      back: "All Orders", openFile: "Open Patient File", openVisit: "View Visit", orderNo: "Order", bookingNo: "Booking", repDate: "Report date", radRep: "Radiology Report", radReady: "Report ready", radWait: "Awaiting report", radReview: "Report to review", adT: "New orders", adS: "After reading the results, order more tests, imaging, nursing, IV therapy or a follow-up visit.", adTy: "Service", adIt: "Order", adPick: "Choose…", adOne: "Single items", adPkg: "Packages", adNote: "Note for the team", adOpt: "(optional)", adPh: "Example: repeat after two weeks, morning visit preferred.", adNeed: "Choose what to order.", adBtn: "Send order", adGo: "Goes to the operations team: they call the patient, book the visit and assign a nurse or doctor. The patient pays after the service.", adDone: "{n} sent to the operations team.", chResIn: "results in", chRepIn: "report in", chRepOk: "reviewed", visitNo: "Visit", by: "Ordered by", date: "Ordered on",
       sec_lab: "Laboratory", sec_radiology: "Radiology", sec_other: "Other Services",
       cCode: "Code", cTest: "Test", cRes: "Result", cRange: "Reference Range", cFlag: "Status",
       pending: "Pending", inReport: "See the report", fl_normal: "Normal", fl_high: "High", fl_low: "Low", fl_critical: "Critical",
@@ -387,7 +394,7 @@
       ordered: "طُلب {d}", fileNo: "ملف {n}", tests1: "تحليل واحد", testsN: "{n} تحاليل",
       ty_lab: "مختبر", ty_radiology: "أشعة", ty_nursing: "تمريض", ty_iv: "محاليل وريدية", ty_referral: "تحويل", ty_leave: "إجازة مرضية", ty_doctor: "زيارة طبيب", ty_physio: "علاج طبيعي",
       noneT: "ما فيه أوردرات للحين", noneS: "تظهر الأوردرات هنا بعد ما توقّع زيارة فيها تحاليل أو أشعة.", noMatchT: "ما فيه أوردر مطابق", noMatchS: "جرب اسم أو رقم ملف أو تحليل ثاني.",
-      back: "كل الأوردرات", openFile: "فتح ملف المريض", openVisit: "عرض الزيارة", orderNo: "الطلب", bookingNo: "الحجز", repDate: "تاريخ التقرير", radRep: "تقرير الأشعة", radReady: "التقرير جاهز", radWait: "بانتظار التقرير", radReview: "تقرير للمراجعة", chResIn: "وصلت النتائج", chRepIn: "وصل التقرير", chRepOk: "تمت المراجعة", visitNo: "الزيارة", by: "الطبيب", date: "تاريخ الطلب",
+      back: "كل الأوردرات", openFile: "فتح ملف المريض", openVisit: "عرض الزيارة", orderNo: "الطلب", bookingNo: "الحجز", repDate: "تاريخ التقرير", radRep: "تقرير الأشعة", radReady: "التقرير جاهز", radWait: "بانتظار التقرير", radReview: "تقرير للمراجعة", adT: "طلبات جديدة", adS: "بعد ما تشوف النتائج، اطلب تحاليل إضافية أو أشعة أو تمريض أو محاليل أو زيارة متابعة.", adTy: "الخدمة", adIt: "الطلب", adPick: "اختر…", adOne: "فحوصات مفردة", adPkg: "باقات", adNote: "ملاحظة للفريق", adOpt: "(اختياري)", adPh: "مثال: تُعاد بعد أسبوعين، يفضّل الزيارة الصباحية.", adNeed: "اختر الطلب.", adBtn: "إرسال الطلب", adGo: "يروح لفريق التشغيل: يتصلون بالمريض ويحجزون الزيارة ويسندونها لممرضة أو طبيب. والدفع بعد تقديم الخدمة.", adDone: "انرسل {n} لفريق التشغيل.", chResIn: "وصلت النتائج", chRepIn: "وصل التقرير", chRepOk: "تمت المراجعة", visitNo: "الزيارة", by: "الطبيب", date: "تاريخ الطلب",
       sec_lab: "المختبر", sec_radiology: "الأشعة", sec_other: "خدمات ثانية",
       cCode: "الكود", cTest: "التحليل", cRes: "النتيجة", cRange: "المعدل الطبيعي", cFlag: "الحالة",
       pending: "بانتظار النتيجة", inReport: "في التقرير", fl_normal: "طبيعي", fl_high: "مرتفع", fl_low: "منخفض", fl_critical: "حرج",
@@ -576,6 +583,30 @@
       <div class="rv-pdf">${svg(IC.alert, 2)}<span><b>${esc(it.type === "lab" ? t().rvPdf : t().rvPdfRad)}</b><small>${esc(t().rvOnly)}</small></span></div><small class="err" id="err-${esc(it.id)}" hidden>${t().needNote}</small>
       <div class="rv-a"><button type="button" class="btn btn-out" data-note="${esc(it.id)}">${t().saveNote}</button><button type="button" class="btn btn-green" data-approve="${esc(it.id)}">${svg(IC.check, 2.2)}${t().approve}</button></div></div>`;
   }
+  // New orders after reading the results (more tests, imaging, nursing, IV or a follow-up visit). They join this request and go to
+  // the operations team on Medical Requests, who call the patient, book the visit and assign a nurse or doctor (paid after the service).
+  const AD_TY = [["lab", "lab"], ["rad", "radiology"], ["nurse", "nursing"], ["iv", "iv"], ["doctor", "doctor"]];
+  let adTy = "lab";
+  const adOpts = ty => { const L = DrOrders.catalog(ty), one = L.filter(x => !x.pkg), pk = L.filter(x => x.pkg), o = x => `<option value="${esc(x.code)}">${esc(x[current] || x.en)}${x.price ? ` · ${x.price} ${t().sar}` : ""}</option>`;
+    return `<option value="">${t().adPick}</option>` + (pk.length ? `<optgroup label="${esc(t().adOne)}">${one.map(o).join("")}</optgroup><optgroup label="${esc(t().adPkg)}">${pk.map(o).join("")}</optgroup>` : one.map(o).join("")); };
+  function addBox(r) {
+    return `<section class="card sec" id="adSec"><h2 class="sec-t"><span class="ic">${svg(IC.list)}</span>${t().adT}</h2><p class="sub">${t().adS}</p>
+      <div class="ad"><div><label for="adTy">${t().adTy}</label><select id="adTy">${AD_TY.map(([k, ty]) => `<option value="${k}"${k === adTy ? " selected" : ""}>${t()["ty_" + ty]}</option>`).join("")}</select></div>
+        <div id="adItW"${adTy === "doctor" ? " hidden" : ""}><label for="adIt">${t().adIt}</label><select id="adIt">${adTy === "doctor" ? "" : adOpts(adTy)}</select></div>
+        <div class="w"><label for="adNote">${t().adNote} <span class="ad-hint">${t().adOpt}</span></label><textarea id="adNote" maxlength="400" dir="auto" placeholder="${esc(t().adPh)}"></textarea></div>
+        <small class="err w" id="err-ad" hidden>${t().adNeed}</small>
+        <div class="rv-a"><span class="ad-hint" style="margin-inline-end:auto;align-self:center">${t().adGo}</span><button type="button" class="btn btn-green" data-addord="1">${svg(IC.check, 2.2)}${t().adBtn}</button></div></div></section>`;
+  }
+  // One new order as a medical request item (same shape as the orders sent when a visit is signed, doctor-visit.html).
+  function newItem(ty, code, note) {
+    const det = { en: note, ar: note };
+    if (ty === "doctor") return { type: "doctor", title: { en: "Follow-up doctor visit", ar: "زيارة طبيب متابعة" }, details: det, orderCodes: [], order: { svc: "doctor" } };
+    const x = DrOrders.item(code) || { code, en: code, ar: code, price: 0 };
+    if (ty === "lab") { const codes = DrOrders.labTests(code), nm2 = l => codes.map(c => (DrOrders.item(c) || {})[l] || c).join(l === "ar" ? "، " : ", ");
+      return { type: "lab", v2: true, title: { en: nm2("en"), ar: nm2("ar") }, details: det, orderCodes: codes, tests: [...new Set(codes.map(c => M.CATALOG[c]).filter(Boolean))], order: { svc: "lab", code, price: x.price } }; }
+    const o = { svc: ty, code, price: x.price, note };
+    return { type: ty === "rad" ? "radiology" : ty === "nurse" ? "nursing" : "iv", title: DrOrders.titleOf(o), details: det, orderCodes: [code], order: o };
+  }
   // Request status from the Medical Requests page: open, closed (waiting quality review) or quality reviewed.
   function rqBox(r) {
     const c = r.closed, q = r.quality;
@@ -612,7 +643,7 @@
       <section class="card"><div class="od-h"><span class="pa">${esc(initials(nm(r.patient).en))}</span><div><h1>${esc(pName(r))}</h1>
         <div class="meta"><span>${t().orderNo}: <b class="num">${esc(r.id)}</b></span><span>${esc(tx("fileNo", { n: "" }).trim())}: <b class="num">${esc(r.mrn || "—")}</b></span>${r.orderId ? `<span>${t().visitNo}: <b class="num">${esc(r.orderId)}</b></span>` : ""}<span>${t().date}: <b>${esc(fmtT(r.createdAt))}</b></span><span class="st st-${s}">${t()["st_" + s]}</span></div></div>
         <div class="od-acts">${r.mrn ? `<a class="btn btn-out" href="doctor-patient.html?mrn=${encodeURIComponent(r.mrn)}">${svg(IC.folder)}${t().openFile}</a>` : ""}${done ? `<a class="btn btn-dark" href="doctor-visit.html?id=${encodeURIComponent(r.orderId)}&view=1">${svg(IC.eye)}${t().openVisit}</a>` : ""}</div></div></section>
-      ${rqBox(r)}${sec("lab")}${sec("radiology")}${sec("other")}${teamBox(r)}
+      ${rqBox(r)}${sec("lab")}${sec("radiology")}${sec("other")}${addBox(r)}${teamBox(r)}
       <p class="ol-note">${svg(IC.info, 2)}${t().demo}</p>`;
   }
   const qid = () => new URLSearchParams(location.search).get("id");
@@ -632,6 +663,11 @@
   document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("fileOv").hidden) closeFile(); });
 
   $("vw").addEventListener("input", e => { if (e.target.id !== "q") return; q = e.target.value; const pos = e.target.selectionStart; render(); const i = $("q"); i.focus(); i.setSelectionRange(pos, pos); });
+  $("vw").addEventListener("change", e => {
+    if (e.target.id === "adIt") { $("err-ad").hidden = true; return; }
+    if (e.target.id !== "adTy") return;
+    adTy = e.target.value; $("adItW").hidden = adTy === "doctor"; $("adIt").innerHTML = adTy === "doctor" ? "" : adOpts(adTy); $("err-ad").hidden = true;
+  });
   $("vw").addEventListener("click", e => {
     const b = e.target.closest("button"); if (!b) return;
     if (b.dataset.f) { filt = b.dataset.f; history.replaceState(null, "", location.pathname + "#" + filt); return render(); }
@@ -641,6 +677,17 @@
       if (r.status !== "open") return toast(t().dnClosed);
       M.update(r.id, { notes: [...(r.notes || []), { type: "doctor", text: v, by: me.name, at: new Date().toISOString() }] });
       render(); return toast(t().noteToast);
+    }
+    if (b.dataset.addord) {
+      const code = adTy === "doctor" ? "" : $("adIt").value, note = $("adNote").value.trim();
+      if (adTy !== "doctor" && !code) { $("err-ad").hidden = false; $("adIt").focus(); return; }
+      const it = newItem(adTy, code, note);
+      // A closed request takes no more items: the new order opens a new request for the same visit.
+      if (r.status === "open") M.addItem(r.id, it, me.name);
+      else { const nr = M.add({ orderId: r.orderId, bookingId: r.bookingId || null, mrn: r.mrn, patient: r.patient, mobile: r.mobile, service: r.service, doctorId: r.doctorId, source: "doctor", byDoctor: me.name, items: [{ ...it, addedBy: me.name }] });
+        history.replaceState(null, "", "?id=" + encodeURIComponent(nr.id)); }
+      DrPortal.render(me, current, "orders"); render(); toast(tx("adDone", { n: who(it.title) }));
+      const sc = $("adSec"); if (sc) sc.scrollIntoView({ block: "nearest" }); return;
     }
     if (b.dataset.lf) { const it2 = r.items.find(x => x.id === b.dataset.lf), l = it2 && it2.log[+b.dataset.li]; return showFile(l && l.data && l.data.file); }
     const itId = b.dataset.approve || b.dataset.note || b.dataset.file, it = r.items.find(x => x.id === itId); if (!it) return;

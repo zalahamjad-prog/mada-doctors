@@ -972,5 +972,14 @@ const DrOrders = (() => {
     return { spec: sp ? { en: sp[1], ar: sp[2] } : { en: o.spec || "", ar: o.spec || "" },
       provider: o.dest === "ext" ? { en: o.provider || "", ar: o.provider || "" } : pv ? { en: pv[1], ar: pv[2] } : null };
   }
-  return { view, bind, reset, L, SVC, bill, payState, openPay, item, labs, labTests, titleOf, refInfo, counts };
+  // The catalogue of one service ("lab", "rad", "nurse", "iv") as [{ code, en, ar, price }], packages after single items.
+  // Used by Orders (doctor-orders-list.html) for orders the doctor adds after reading results.
+  function catalog(svc) {
+    const row = x => ({ code: x[0], en: x[2], ar: x[3], price: x[svc === "nurse" ? 6 : 4] }), pk = x => ({ code: x.code, en: x.en, ar: x.ar, price: x.price, pkg: true });
+    if (svc === "lab") return LAB.map(row).concat(PKG.map(pk));
+    if (svc === "iv") return IVS.map(row).concat(IVPKG.map(pk));
+    if (svc === "rad") return RAD.map(x => ({ code: x.code, en: x.en, ar: x.ar, price: x.price }));
+    return SVC[svc] ? SVC[svc].items.map(row) : [];
+  }
+  return { view, bind, reset, L, SVC, bill, payState, openPay, item, labs, labTests, titleOf, refInfo, counts, catalog };
 })();
