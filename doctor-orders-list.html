@@ -358,7 +358,7 @@
       s_scheduled: "Appointment booked", s_requested: "Requested", s_booked: "Booked", s_done: "Done", s_referred: "Referred", s_attended: "Service delivered", s_issued: "Issued", s_sent: "Sent to patient",
       waitLab: "Waiting for the nurse to enter the results. You will get a notification when they are in.", waitRad: "Waiting for the radiology report. You will get a notification when it is in.",
       enteredBy: "Results entered by {n} · {t}", viewReport: "View Report", details: "Notes",
-      rvT: "Review these results", rvPdf: "Your note goes on the lab report (PDF) sent to the patient once you approve. Write it as you want the patient to read it.", rvPdfRad: "Your note is saved with the result once you approve.", rvOnly: "\"Save note only\" keeps the note for the care team and does not add it to the patient's report.", rvLbl: "Your note", rvPh: "Example: HbA1c is high. Continue Metformin and repeat in 3 months.", rvPhRad: "Example: Findings fit bronchitis. No further imaging needed.", reqTests: "Requested Tests",
+      rvT: "Review these results", rvPdf: "Your note goes on the lab report (PDF) sent to the patient once you approve. Write it as you want the patient to read it.", rvPdfRad: "Your note goes on the imaging report sent to the patient once you approve, with the imaging center's report attached. Write it as you want the patient to read it.", rvOnly: "\"Save note only\" keeps the note for the care team and does not add it to the patient's report.", rvLbl: "Your note", rvPh: "Example: HbA1c is high. Continue Metformin and repeat in 3 months.", rvPhRad: "Example: Findings fit bronchitis. No further imaging needed.", reqTests: "Requested Tests",
       approve: "Approve Results", saveNote: "Save Note Only", needNote: "Write the note first.",
       approvedBy: "Approved by {n} · {t}", notesT: "Your notes", approvedToast: "Results approved. Customer service can now share them with the patient.", noteToast: "Note saved.",
       notFound: "This order was not found, or it belongs to another doctor.", close: "Close", fileGone: "The file is not available on this device.",
@@ -394,7 +394,7 @@
       s_scheduled: "تم حجز الموعد", s_requested: "تم الطلب", s_booked: "تم الحجز", s_done: "تمت", s_referred: "تم التحويل", s_attended: "تم تقديم الخدمة", s_issued: "صدرت", s_sent: "أُرسلت للمريض",
       waitLab: "بانتظار الممرضة تدخل النتائج. يوصلك تنبيه أول ما تنزل.", waitRad: "بانتظار تقرير الأشعة. يوصلك تنبيه أول ما ينزل.",
       enteredBy: "أدخل النتائج {n} · {t}", viewReport: "عرض التقرير", details: "ملاحظات",
-      rvT: "راجع هذه النتائج", rvPdf: "ملاحظتك تنكتب في تقرير التحاليل (PDF) اللي يوصل للمريض بعد ما تعتمد النتائج. اكتبها بالشكل اللي تبي المريض يقرأه.", rvPdfRad: "ملاحظتك تنحفظ مع النتيجة بعد ما تعتمدها.", rvOnly: "\"حفظ الملاحظة فقط\" تخلي الملاحظة لفريق الرعاية، وما تنضاف لتقرير المريض.", rvLbl: "ملاحظتك", rvPh: "مثال: السكر التراكمي مرتفع، يستمر على الميتفورمين ويعيد التحليل بعد 3 شهور.", rvPhRad: "مثال: النتيجة تتوافق مع التهاب الشعب الهوائية، ما يحتاج أشعة إضافية.", reqTests: "التحاليل المطلوبة",
+      rvT: "راجع هذه النتائج", rvPdf: "ملاحظتك تنكتب في تقرير التحاليل (PDF) اللي يوصل للمريض بعد ما تعتمد النتائج. اكتبها بالشكل اللي تبي المريض يقرأه.", rvPdfRad: "ملاحظتك تنكتب في تقرير الأشعة اللي يوصل للمريض بعد ما تعتمد، ومعه تقرير مركز الأشعة. اكتبها بالشكل اللي تبي المريض يقرأه.", rvOnly: "\"حفظ الملاحظة فقط\" تخلي الملاحظة لفريق الرعاية، وما تنضاف لتقرير المريض.", rvLbl: "ملاحظتك", rvPh: "مثال: السكر التراكمي مرتفع، يستمر على الميتفورمين ويعيد التحليل بعد 3 شهور.", rvPhRad: "مثال: النتيجة تتوافق مع التهاب الشعب الهوائية، ما يحتاج أشعة إضافية.", reqTests: "التحاليل المطلوبة",
       approve: "اعتماد النتائج", saveNote: "حفظ الملاحظة فقط", needNote: "اكتب الملاحظة أول.",
       approvedBy: "اعتمدها {n} · {t}", notesT: "ملاحظاتك", approvedToast: "تم اعتماد النتائج. خدمة العملاء تقدر تشاركها مع المريض الحين.", noteToast: "تم حفظ الملاحظة.",
       notFound: "ما لقينا هذا الأوردر، أو أنه لطبيب ثاني.", close: "إغلاق", fileGone: "الملف مو متوفر على هذا الجهاز.",
@@ -557,7 +557,7 @@
     if (notes.length) h += `<div class="nts"><small>${t().notesT}</small>${notes.map(n => `<span dir="auto">${esc(n.text)} <small class="num">· ${esc(fmtT(n.at))}</small></span>`).join("")}</div>`;
     if (needs(it) && r.status === "open") h += `<div class="rv"><b>${svg(IC.alert, 2)}${t().rvT}</b><label class="sr" for="note-${esc(it.id)}">${t().rvLbl}</label>
       <textarea id="note-${esc(it.id)}" maxlength="600" dir="auto" placeholder="${esc(it.type === "lab" ? t().rvPh : t().rvPhRad)}"></textarea>
-      <div class="rv-pdf">${svg(IC.alert, 2)}<span><b>${esc(it.type === "lab" ? t().rvPdf : t().rvPdfRad)}</b>${it.type === "lab" ? `<small>${esc(t().rvOnly)}</small>` : ""}</span></div><small class="err" id="err-${esc(it.id)}" hidden>${t().needNote}</small>
+      <div class="rv-pdf">${svg(IC.alert, 2)}<span><b>${esc(it.type === "lab" ? t().rvPdf : t().rvPdfRad)}</b><small>${esc(t().rvOnly)}</small></span></div><small class="err" id="err-${esc(it.id)}" hidden>${t().needNote}</small>
       <div class="rv-a"><button type="button" class="btn btn-out" data-note="${esc(it.id)}">${t().saveNote}</button><button type="button" class="btn btn-green" data-approve="${esc(it.id)}">${svg(IC.check, 2.2)}${t().approve}</button></div></div>`;
     return h + `</div>`;
   }
