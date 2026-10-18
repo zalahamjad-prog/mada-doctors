@@ -383,6 +383,15 @@
       const items = ((o.doctorVisit && o.doctorVisit.steps && o.doctorVisit.steps.orders) || {}).items || [];
       const codes = [...new Set(items.filter(x => x.svc === "lab").flatMap(x => DrOrders.labTests ? DrOrders.labTests(x.code) : [x.code]))];
       if (codes.length) out.push({ key: o.id + "v", order: o.id, date: d, by: o.doctorVisit.steps && o.doctorVisit.steps.orders && o.doctorVisit.steps.orders.by, stage: "ordered", tests: codes.map(c => ({ code: c, name: drName(c) || c, rows: [] })) });
+      // Patient bookings: the nurse's results (order.labResults, lab-samples.js) join the file once she approves and sends them.
+      const lr = o.labResults;
+      if (o.service !== "doctor" && lr && lr.status === "sent") {
+        const tests = Object.entries(lr.tests || {}).map(([c, e]) => { const an = MadaMedical.ANALYTES[c] || [], v = e.values || {};
+          return { code: c, name: labName(c) || c, rows: an.length ? an.map(a => ({ code: a.code, name: a.name[current], value: v[a.code], unit: a.unit, range: labRange(a), flag: v[a.code] != null ? MadaMedical.labStatus(a, v[a.code]) : "" }))
+            : [{ code: c, name: labName(c) || c, value: e.text, unit: "", range: "", flag: "" }] }; });
+        out.push({ key: o.id + "r", order: o.id, date: String(lr.sentAt || "").slice(0, 10) || d, stage: "reviewed", approvedBy: lr.sentBy, tests, note: "", report: lr.report || null });
+        return;
+      }
       if (o.service === "blood") { const ts = (o.items || []).filter(x => x.kind === "test"); if (ts.length) out.push({ key: o.id + "b", order: o.id, date: d, stage: "ordered", tests: ts.map(x => ({ code: x.code, name: labName(x.code) || x.code, rows: [] })) }); }
     });
     return out.sort((a, b) => String(b.date).localeCompare(String(a.date)));
