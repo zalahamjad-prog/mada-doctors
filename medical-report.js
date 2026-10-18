@@ -35,7 +35,7 @@ const MadaReport = (() => {
       nurseBy: "Written by {n}", idfBy: "Confirmed and signed by {n} on {d}", draftTag: "Draft · not approved yet", apprBy: "Approved by {n} on {d}", stampT: "Doctor's stamp",
       none: "Not recorded", sign: "Doctor's name", signNote: "Generated from the Mada Care medical record on {d}.", page: "Mada Care · Home healthcare",
       making: "Preparing the PDF…", done: "{f} downloaded.", fail: "Could not create the file here. Use Save as PDF in the print window.",
-      refTitle: "Medical Referral", refNo: "Referral No.", refDate: "Referral Date", clinT: "Clinical Summary", measured: "Measured on {d}", vitNone: "Vital signs not recorded.", ccNone: "Not recorded",
+      rxTitle: "Medical Prescription", rxNo: "Prescription No.", rxDate: "Date", rxDx: "Diagnosis", rxMeds: "Prescribed medications", rxAl: "Allergies", rxBy: "Prescribing doctor", rxUpd: "Updated {d}", rxNote: "Issued from the Mada Care medical record on {d}.", rxQty: "Quantity", refTitle: "Medical Referral", refNo: "Referral No.", refDate: "Referral Date", clinT: "Clinical Summary", measured: "Measured on {d}", vitNone: "Vital signs not recorded.", ccNone: "Not recorded",
       workDx: "Working diagnosis", refT: "Referral Details", rf_spec: "Specialty", rf_pri: "Priority", rf_routine: "Routine", rf_urgent: "Urgent", rf_dest: "Referred to", rf_mada: "Mada Care service", rf_ext: "External healthcare provider",
       rf_prov: "Preferred provider", rf_reason: "Reason for referral", rf_rec: "Clinical recommendation", rf_notes: "Additional notes", rf_by: "Referring doctor", refSign: "Signature", refNote: "Issued from the Mada Care medical record on {d}. Please present this form at the receiving facility."
     },
@@ -60,7 +60,7 @@ const MadaReport = (() => {
       nurseBy: "كتبتها {n}", idfBy: "أكّدها ووقّع عليها {n} بتاريخ {d}", draftTag: "مسودة · لم يُعتمد بعد", apprBy: "اعتمده {n} بتاريخ {d}", stampT: "ختم الطبيب",
       none: "غير مسجل", sign: "اسم الطبيب", signNote: "صدر من السجل الطبي لمدى كير بتاريخ {d}.", page: "مدى كير · رعاية صحية منزلية",
       making: "جاري تجهيز الملف…", done: "تم تحميل {f}.", fail: "تعذر إنشاء الملف هنا. استخدم حفظ كـ PDF من نافذة الطباعة.",
-      refTitle: "نموذج تحويل طبي", refNo: "رقم التحويل", refDate: "تاريخ التحويل", clinT: "الملخص السريري", measured: "وقت القياس: {d}", vitNone: "لم تُسجل العلامات الحيوية.", ccNone: "غير مسجلة",
+      rxTitle: "وصفة طبية", rxNo: "رقم الوصفة", rxDate: "التاريخ", rxDx: "التشخيص", rxMeds: "الأدوية الموصوفة", rxAl: "الحساسية", rxBy: "الطبيب المعالج", rxUpd: "عُدّلت بتاريخ {d}", rxNote: "صدرت من السجل الطبي لمدى كير بتاريخ {d}.", rxQty: "الكمية", refTitle: "نموذج تحويل طبي", refNo: "رقم التحويل", refDate: "تاريخ التحويل", clinT: "الملخص السريري", measured: "وقت القياس: {d}", vitNone: "لم تُسجل العلامات الحيوية.", ccNone: "غير مسجلة",
       workDx: "التشخيص المبدئي", refT: "تفاصيل التحويل", rf_spec: "التخصص", rf_pri: "الأولوية", rf_routine: "عادي", rf_urgent: "عاجل", rf_dest: "جهة التحويل", rf_mada: "خدمة من مدى كير", rf_ext: "جهة صحية خارجية",
       rf_prov: "مقدم الخدمة المفضل", rf_reason: "سبب التحويل", rf_rec: "التوصية السريرية", rf_notes: "ملاحظات إضافية", rf_by: "الطبيب المحوّل", refSign: "التوقيع", refNote: "صادر من السجل الطبي لمدى كير بتاريخ {d}. يُرجى تقديم هذا النموذج لدى الجهة المحوَّل إليها."
     }
@@ -423,11 +423,75 @@ const MadaReport = (() => {
         <div style="margin-top:16px;padding-top:8px;border-top:1px solid ${LINE};display:flex;justify-content:space-between;gap:16px;color:${MU};font-size:10.5px"><span>${esc(t.refNote.replace("{d}", fmtD(now)))}</span><span style="white-space:nowrap">${t.page}</span></div>
       </div></div></div>`;
   }
+  // The doctor's prescription as its own A4 page: patient, allergies, diagnosis and the medicines from the Treatment Plan
+  // (doctorVisit.steps.plan.meds, including changes the doctor made after the results), with the doctor's name and stamp.
+  // Available once the visit is signed and at least one medicine was prescribed.
+  const hasRx = o => ready(o) && (((o.doctorVisit.steps || {}).plan || {}).meds || []).length > 0;
+  function prescription(o, lang) {
+    const d = data(o), t = R[lang], rtl = lang === "ar", al = rtl ? "right" : "left", ar2 = rtl ? "left" : "right";
+    const P = typeof DrPlan !== "undefined" ? DrPlan.L[lang] : {}, A = typeof DrAllergy !== "undefined" ? DrAllergy.L[lang] : {}, lb = (dict, k, fb) => dict[k] || fb || k;
+    const loc = rtl ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB";
+    const fmtD = s => { if (!s) return ""; const dt = /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(s + "T00:00") : new Date(s); return isNaN(dt) ? "" : dt.toLocaleDateString(loc, { day: "numeric", month: "long", year: "numeric" }); };
+    const ltr = v => `<span dir="ltr" style="display:inline-block">${esc(String(v).replace(/[⁦-⁩‎‏]/g, "")).replace(/ /g, "&nbsp;")}</span>`;
+    const txt = v => `<span dir="auto" style="unicode-bidi:plaintext">${esc(v)}</span>`;
+    const dash = `<span style="color:${MU};font-weight:400">—</span>`;
+    const kv = (k, v, w) => `<div style="flex:0 0 ${w || "33.33%"};box-sizing:border-box;padding:5px 0;padding-${ar2}:12px"><div style="color:${MU};font-size:10.5px">${k}</div><div style="font-weight:600;color:${INK};font-size:12.5px;margin-top:2px;white-space:pre-line">${v || dash}</div></div>`;
+    const ic = p => `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+    const card = (n, icon, title, body) => `<div class="pdf-avoid" style="border:1px solid ${LINE};border-radius:14px;margin-top:10px;background:#fff;overflow:hidden;break-inside:avoid;page-break-inside:avoid">
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 16px;background:${SOFT};border-bottom:1px solid ${LINE}"><span style="width:28px;height:28px;border-radius:8px;background:${G};display:inline-flex;align-items:center;justify-content:center">${ic(icon)}</span>
+        <span style="font-size:14.5px;font-weight:700;color:${GD}">${ltr(n)}&nbsp; ${title}</span></div><div style="padding:6px 16px 10px">${body}</div></div>`;
+    const pt = d.p, pl = d.st.plan || {}, meds = pl.meds || [];
+    const s = d.st.allergy, hm = (d.hist || {}).meds;
+    const alTxt = s && s.status === "yes" && (s.items || []).length ? s.items.map(it => esc(typeof DrAllergy !== "undefined" ? DrAllergy.nameIn(it, lang) : it.id)).join(rtl ? "، " : ", ")
+      : s && s.status === "no" ? esc(t.nka) : s && s.status === "unknown" ? esc(t.unkAllergy) : hm && hm.nkda ? esc(t.nkda) : hm && (hm.allergies || []).length ? hm.allergies.map(a => txt(a.drug)).join(", ") : "";
+    const ptBody = `<div style="display:flex;flex-wrap:wrap">${kv(t.name, txt(pt.name[lang] || pt.name.en || ""))}${kv(t.fileNo, pt.fileNo && ltr(pt.fileNo))}${kv(t.idNo, pt.idNumber && ltr(pt.idNumber))}
+      ${kv(t.dob, pt.dob && esc(fmtD(pt.dob)) + (has(pt.age) ? ` <span style="color:${MU};font-weight:400">· ${esc(tx(t.years, { n: pt.age }))}</span>` : ""))}${kv(t.gender, pt.gender ? t["g_" + pt.gender] : "")}${kv(t.mobile, pt.mobile && ltr(pt.mobile))}
+      ${kv(t.rxAl, alTxt, "100%")}</div>`;
+    const as = d.st.assess || {}, dxs = [as.primary, ...(as.secondary || as.additional || [])].filter(Boolean);
+    const dxBody = dxs.length ? dxs.map((x, i) => `<div style="font-size:12.5px;color:${INK};padding:2px 0">${i ? "• " : ""}${x.code ? `${ltr(x.code)} · ` : ""}<b style="font-weight:${i ? 500 : 700}">${txt(x[lang] || x.en || x.ar || x.text || "")}</b></div>`).join("") : `<div style="font-size:12px;color:${MU}">${t.none}</div>`;
+    const medsBody = meds.map((m, i) => {
+      const name = (m.generic && (m.generic[lang] || m.generic.en)) || m.name;
+      const dose = `${m.doseN || ""} ${lb(P, "us_" + m.doseU, m.doseU || "")}`.trim(), freq = m.prn ? `${t.prn}${m.prnFor ? " · " + m.prnFor : ""}` : lb(P, "q_" + m.freq, m.freq || "");
+      const dur = m.durU === "ongoing" ? lb(P, "ongoing") : m.durN ? `${m.durN} ${lb(P, "ds_" + m.durU, m.durU)}` : "";
+      const bits = [[t.dose, dose], [t.route, lb(P, "r_" + m.route, m.route || "")], [t.freq, freq], [t.dur, dur], [t.rxQty, m.qty]].filter(x => has(x[1]));
+      return `<div class="pdf-avoid" style="display:flex;gap:12px;padding:10px 0;${i ? `border-top:1px solid #eef2f3;` : ""}break-inside:avoid;page-break-inside:avoid">
+        <span style="flex:none;width:26px;height:26px;border-radius:50%;background:#e6f3ef;color:${G};font-weight:700;font-size:12px;display:inline-flex;align-items:center;justify-content:center">${ltr(i + 1)}</span>
+        <div style="flex:1"><div style="font-size:14px;font-weight:700;color:${INK}">${txt(name)}${m.strength ? ` ${ltr(m.strength)}` : ""}${m.form ? ` <span style="color:${MU};font-weight:500;font-size:12px">· ${esc(lb(P, "f_" + m.form, m.form))}</span>` : ""}</div>
+          ${m.name && m.name !== name ? `<div style="font-size:11px;color:${MU}">${txt(m.name)}</div>` : ""}
+          <div style="display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:5px;font-size:12px">${bits.map(([k, v]) => `<span><span style="color:${MU}">${k}:</span> <b style="font-weight:600">${txt(v)}</b></span>`).join("")}</div>
+          ${m.instr ? `<div style="margin-top:4px;font-size:12px;color:#2c3d43"><span style="color:${MU}">${t.instr}:</span> ${txt(m.instr)}</div>` : ""}</div></div>`; }).join("");
+    const doc = d.doc, stamp = doc && typeof MadaStamps !== "undefined" ? MadaStamps.get(doc.id) : null;
+    const docName = doc ? doc.name[lang] : nm(d.dv.by)[lang] || nm(d.dv.by).en || "", now = new Date().toISOString();
+    const amended = (d.dv.amendments || []).filter(a => a.step === "plan").slice(-1)[0];
+    const date = pl.at || d.dv.completedAt || d.date, no = `RX-${String(o.id).replace(/\D/g, "") || o.id}`;
+    const IC2 = { pt: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>', dx: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 11h6M9 15h4"/>', rx: '<rect x="3" y="8.5" width="18" height="7" rx="3.5" transform="rotate(-45 12 12)"/><path d="m9.5 9.5 5 5"/>' };
+    return `<div dir="ltr" style="width:748px;margin:0 auto;background:#fff"><div dir="${rtl ? "rtl" : "ltr"}" lang="${lang}" style="width:748px;background:#fff;color:${INK};font-family:${rtl ? "Tajawal, Inter" : "Inter, Tajawal"}, Arial, sans-serif;text-align:${al};box-sizing:border-box;position:relative">
+      <div style="background:linear-gradient(120deg, ${GD}, ${G});color:#fff;padding:16px 26px;display:flex;align-items:center;gap:16px;border-radius:0 0 22px 22px">
+        <span style="width:62px;height:62px;border-radius:50%;background:#fff;display:inline-flex;align-items:center;justify-content:center;flex:none;box-shadow:0 0 0 3px rgba(200,164,90,.6)"><img src="${LOGO}" style="height:42px;width:auto" alt=""></span>
+        <div style="flex:1"><div style="font-size:21px;font-weight:700">Mada Care <span style="font-weight:500">| مدى كير</span></div><div style="font-size:11.5px;opacity:.85">${rtl ? "رعاية كالعائلة" : "Caring Like Family"}</div></div>
+        <div style="text-align:${ar2}"><div style="font-size:20px;font-weight:700">${t.rxTitle}</div><div style="font-size:11px;opacity:.9;margin-top:3px">${t.rxNo}: ${ltr(no)}</div><div style="font-size:11px;opacity:.9">${t.rxDate}: ${esc(fmtD(date))}</div>
+          ${amended ? `<div style="font-size:11px;opacity:.9">${esc(t.rxUpd.replace("{d}", fmtD(amended.at)))}</div>` : ""}</div>
+      </div>
+      <div style="height:3px;background:${GOLD};margin:0 44px;border-radius:2px"></div>
+      <div style="padding:2px 22px 8px">
+        ${card("1", IC2.pt, t.patientT, ptBody)}
+        ${card("2", IC2.dx, t.rxDx, dxBody)}
+        ${card("3", IC2.rx, t.rxMeds, medsBody)}
+        <div class="pdf-avoid" style="break-inside:avoid;page-break-inside:avoid;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-top:16px">
+          <div style="flex:1"><div style="color:${MU};font-size:10.5px">${t.rxBy}</div><div style="font-weight:700;font-size:14px;margin-top:2px">${esc(docName) || dash}</div>${doc ? `<div style="color:${MU};font-size:11px">${esc(doc.spec[lang])}</div>` : ""}
+            <div style="margin-top:24px;width:220px;border-top:1px solid #9aa7ab;padding-top:5px;color:${MU};font-size:10.5px">${t.refSign}</div></div>
+          <div style="width:170px;height:92px;border:1px dashed ${LINE};border-radius:12px;display:flex;align-items:center;justify-content:center">${stamp ? `<img src="${esc(stamp.data)}" alt="${t.stampT}" style="max-height:92px;max-width:170px;object-fit:contain">` : `<span style="color:#b9c3c6;font-size:11px">${t.stampT}</span>`}</div>
+        </div>
+        <div style="margin-top:16px;padding-top:8px;border-top:1px solid ${LINE};display:flex;justify-content:space-between;gap:16px;color:${MU};font-size:10.5px"><span>${esc(t.rxNote.replace("{d}", fmtD(now)))}</span><span style="white-space:nowrap">${t.page}</span></div>
+      </div></div></div>`;
+  }
+  const rxFile = (o, lang) => `Mada-Care-Prescription-${o.id}${lang === "ar" ? "-AR" : ""}.pdf`;
+  const downloadRx = (o, lang, toast) => save(prescription(o, lang), rxFile(o, lang), lang, toast);
   const referralFile = (r, it) => `Mada-Care-Referral-${r.id}-${it.id}.pdf`;
   const downloadReferral = (o, r, it, lang, toast) => save(referral(o, r, it, lang), referralFile(r, it), lang, toast);
   // A visit has a report once it is completed.
   const ready = o => !!(o && o.doctorVisit && o.doctorVisit.status === "done");
   // A finished visit's report is shown and downloaded once the doctor approved it.
   const approved = o => ready(o) && ((o.doctorVisit.report || {}).status === "approved");
-  return { html, download, referral, downloadReferral, referralFile, ready, approved, fileName, clean, stepHas, STEP_KEYS, STEP_SECS, L: R };
+  return { html, download, referral, downloadReferral, referralFile, prescription, downloadRx, rxFile, hasRx, ready, approved, fileName, clean, stepHas, STEP_KEYS, STEP_SECS, L: R };
 })();
