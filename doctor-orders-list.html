@@ -229,6 +229,12 @@
   .ad textarea { height: auto; min-height: 64px; padding: 10px 12px; resize: vertical; }
   .ad .w { grid-column: 1 / -1; } .ad .rv-a { grid-column: 1 / -1; }
   .ad-hint { font-size: 12px; color: var(--muted); }
+  .fu-acts { display: flex; flex-wrap: wrap; gap: 10px; } .fu-acts .btn { text-decoration: none; }
+  .fu-tbl { display: grid; gap: 8px; margin-top: 14px; }
+  .fu-row { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "tg t dec" "tg s dec"; align-items: center; gap: 2px 10px; padding: 10px 12px; border: 1px solid #f0e2c0; border-radius: 10px; background: #fffcf5; }
+  .fu-row > .tg-t { grid-area: tg; } .fu-row b { grid-area: t; font-size: 13.5px; } .fu-row > small { grid-area: s; font-size: 12px; color: var(--muted); }
+  .fu-dec { grid-area: dec; display: grid; justify-items: end; gap: 3px; } .fu-dec small { font-size: 11px; color: var(--muted); }
+  @media (max-width: 640px) { .fu-row { grid-template-columns: 1fr; grid-template-areas: "tg" "t" "s" "dec"; } .fu-dec { justify-items: start; } }
   @media (max-width: 640px) { .ad { grid-template-columns: 1fr; } }
   .wait-box { display: flex; align-items: center; gap: 10px; margin: 12px 16px 14px; padding: 12px 14px; border-radius: 10px; background: var(--orange-soft); color: #8a4b0f; font-size: 13.5px; }
   .wait-box svg { width: 18px; height: 18px; flex: none; }
@@ -315,6 +321,8 @@
 <script src="patients.js"></script>
 <script src="medical.js"></script>
 <script src="doctor-orders.js"></script>
+<script src="nurses.js"></script>
+<script src="visit-book.js"></script>
 <script src="alerts.js"></script>
 <script src="doctor-portal.js"></script>
 <script>
@@ -358,7 +366,7 @@
       ordered: "Ordered {d}", fileNo: "File {n}", tests1: "1 test", testsN: "{n} tests",
       ty_lab: "Laboratory", ty_radiology: "Radiology", ty_nursing: "Nursing", ty_iv: "IV Therapy", ty_referral: "Referral", ty_leave: "Sick Leave", ty_doctor: "Doctor Visit", ty_physio: "Physiotherapy",
       noneT: "No orders yet", noneS: "Orders appear here after you sign a visit with lab tests or radiology.", noMatchT: "No matching orders", noMatchS: "Try another name, file number or test.",
-      back: "All Orders", openFile: "Open Patient File", openVisit: "View Visit", orderNo: "Order", bookingNo: "Booking", repDate: "Report date", radRep: "Radiology Report", radReady: "Report ready", radWait: "Awaiting report", radReview: "Report to review", adT: "New orders", adS: "After reading the results, order more tests, imaging, nursing, IV therapy or a follow-up visit.", adTy: "Service", adIt: "Order", adPick: "Choose…", adOne: "Single items", adPkg: "Packages", adNote: "Note for the team", adOpt: "(optional)", adPh: "Example: repeat after two weeks, morning visit preferred.", adNeed: "Choose what to order.", adBtn: "Send order", adGo: "Goes to the operations team: they call the patient, book the visit and assign a nurse or doctor. The patient pays after the service.", adDone: "{n} sent to the operations team.", chResIn: "results in", chRepIn: "report in", chRepOk: "reviewed", visitNo: "Visit", by: "Ordered by", date: "Ordered on",
+      back: "All Orders", openFile: "Open Patient File", openVisit: "View Visit", orderNo: "Order", bookingNo: "Booking", repDate: "Report date", radRep: "Radiology Report", radReady: "Report ready", radWait: "Awaiting report", radReview: "Report to review", adT: "Follow-up after the results", adS: "Order more tests, imaging, nursing or IV therapy with the visit's orders cart, or update the diagnosis or the medications. New orders go to the operations team; the patient pays after the service.", fu_add: "Add new orders", fu_dx: "Update diagnosis", fu_rx: "Update or add medications", fu_new: "New order after results", fu_dec: "Patient's decision", fu_wait: "Team has not called yet", fu_trying: "Team is trying to reach the patient", fu_yes: "Patient agreed", fu_no: "Patient declined", fu_booked: "Booked {b} · {d}", fu_done: "Done", fu_am: "Visit updates after the results", fu_am_assess: "Diagnosis updated", fu_am_plan: "Medications updated", fu_sent: "{n} orders sent to the operations team.", ty_medication: "Medications", ty_plan: "Treatment plan", ty_followup: "Follow-up visit", adTy: "Service", adIt: "Order", adPick: "Choose…", adOne: "Single items", adPkg: "Packages", adNote: "Note for the team", adOpt: "(optional)", adPh: "Example: repeat after two weeks, morning visit preferred.", adNeed: "Choose what to order.", adBtn: "Send order", adGo: "Goes to the operations team: they call the patient, book the visit and assign a nurse or doctor. The patient pays after the service.", adDone: "{n} sent to the operations team.", chResIn: "results in", chRepIn: "report in", chRepOk: "reviewed", visitNo: "Visit", by: "Ordered by", date: "Ordered on",
       sec_lab: "Laboratory", sec_radiology: "Radiology", sec_other: "Other Services",
       cCode: "Code", cTest: "Test", cRes: "Result", cRange: "Reference Range", cFlag: "Status",
       pending: "Pending", inReport: "See the report", fl_normal: "Normal", fl_high: "High", fl_low: "Low", fl_critical: "Critical",
@@ -394,7 +402,7 @@
       ordered: "طُلب {d}", fileNo: "ملف {n}", tests1: "تحليل واحد", testsN: "{n} تحاليل",
       ty_lab: "مختبر", ty_radiology: "أشعة", ty_nursing: "تمريض", ty_iv: "محاليل وريدية", ty_referral: "تحويل", ty_leave: "إجازة مرضية", ty_doctor: "زيارة طبيب", ty_physio: "علاج طبيعي",
       noneT: "ما فيه أوردرات للحين", noneS: "تظهر الأوردرات هنا بعد ما توقّع زيارة فيها تحاليل أو أشعة.", noMatchT: "ما فيه أوردر مطابق", noMatchS: "جرب اسم أو رقم ملف أو تحليل ثاني.",
-      back: "كل الأوردرات", openFile: "فتح ملف المريض", openVisit: "عرض الزيارة", orderNo: "الطلب", bookingNo: "الحجز", repDate: "تاريخ التقرير", radRep: "تقرير الأشعة", radReady: "التقرير جاهز", radWait: "بانتظار التقرير", radReview: "تقرير للمراجعة", adT: "طلبات جديدة", adS: "بعد ما تشوف النتائج، اطلب تحاليل إضافية أو أشعة أو تمريض أو محاليل أو زيارة متابعة.", adTy: "الخدمة", adIt: "الطلب", adPick: "اختر…", adOne: "فحوصات مفردة", adPkg: "باقات", adNote: "ملاحظة للفريق", adOpt: "(اختياري)", adPh: "مثال: تُعاد بعد أسبوعين، يفضّل الزيارة الصباحية.", adNeed: "اختر الطلب.", adBtn: "إرسال الطلب", adGo: "يروح لفريق التشغيل: يتصلون بالمريض ويحجزون الزيارة ويسندونها لممرضة أو طبيب. والدفع بعد تقديم الخدمة.", adDone: "انرسل {n} لفريق التشغيل.", chResIn: "وصلت النتائج", chRepIn: "وصل التقرير", chRepOk: "تمت المراجعة", visitNo: "الزيارة", by: "الطبيب", date: "تاريخ الطلب",
+      back: "كل الأوردرات", openFile: "فتح ملف المريض", openVisit: "عرض الزيارة", orderNo: "الطلب", bookingNo: "الحجز", repDate: "تاريخ التقرير", radRep: "تقرير الأشعة", radReady: "التقرير جاهز", radWait: "بانتظار التقرير", radReview: "تقرير للمراجعة", adT: "متابعة بعد النتائج", adS: "اطلب تحاليل أو أشعة أو تمريض أو محاليل من سلة الطلبات نفسها اللي في الزيارة، أو عدّل التشخيص أو الأدوية. الطلبات الجديدة تروح لفريق التشغيل، والدفع بعد الخدمة.", fu_add: "إضافة طلبات جديدة", fu_dx: "تعديل التشخيص", fu_rx: "تعديل أو إضافة أدوية", fu_new: "طلب جديد بعد النتائج", fu_dec: "قرار المريض", fu_wait: "الفريق ما اتصل للحين", fu_trying: "الفريق يحاول يتواصل مع المريض", fu_yes: "المريض موافق", fu_no: "المريض غير موافق", fu_booked: "محجوز {b} · {d}", fu_done: "مكتمل", fu_am: "تعديلات الزيارة بعد النتائج", fu_am_assess: "تم تعديل التشخيص", fu_am_plan: "تم تعديل الأدوية", fu_sent: "انرسل {n} طلبات لفريق التشغيل.", ty_medication: "أدوية", ty_plan: "خطة علاجية", ty_followup: "زيارة متابعة", adTy: "الخدمة", adIt: "الطلب", adPick: "اختر…", adOne: "فحوصات مفردة", adPkg: "باقات", adNote: "ملاحظة للفريق", adOpt: "(اختياري)", adPh: "مثال: تُعاد بعد أسبوعين، يفضّل الزيارة الصباحية.", adNeed: "اختر الطلب.", adBtn: "إرسال الطلب", adGo: "يروح لفريق التشغيل: يتصلون بالمريض ويحجزون الزيارة ويسندونها لممرضة أو طبيب. والدفع بعد تقديم الخدمة.", adDone: "انرسل {n} لفريق التشغيل.", chResIn: "وصلت النتائج", chRepIn: "وصل التقرير", chRepOk: "تمت المراجعة", visitNo: "الزيارة", by: "الطبيب", date: "تاريخ الطلب",
       sec_lab: "المختبر", sec_radiology: "الأشعة", sec_other: "خدمات ثانية",
       cCode: "الكود", cTest: "التحليل", cRes: "النتيجة", cRange: "المعدل الطبيعي", cFlag: "الحالة",
       pending: "بانتظار النتيجة", inReport: "في التقرير", fl_normal: "طبيعي", fl_high: "مرتفع", fl_low: "منخفض", fl_critical: "حرج",
@@ -589,13 +597,20 @@
   let adTy = "lab";
   const adOpts = ty => { const L = DrOrders.catalog(ty), one = L.filter(x => !x.pkg), pk = L.filter(x => x.pkg), o = x => `<option value="${esc(x.code)}">${esc(x[current] || x.en)}${x.price ? ` · ${x.price} ${t().sar}` : ""}</option>`;
     return `<option value="">${t().adPick}</option>` + (pk.length ? `<optgroup label="${esc(t().adOne)}">${one.map(o).join("")}</optgroup><optgroup label="${esc(t().adPkg)}">${pk.map(o).join("")}</optgroup>` : one.map(o).join("")); };
+  // Follow-up after the results: new orders (the visit's Orders & Services cart), diagnosis and medication updates, all on
+  // doctor-visit.html?fu=. Below: the follow-up orders with the patient's decision (the operations team's call) and the booking.
   function addBox(r) {
+    const o = MadaOrders.get(r.orderId); if (!o || !o.doctorVisit) return "";
+    const u = step => `doctor-visit.html?id=${encodeURIComponent(o.id)}&fu=${encodeURIComponent(r.id)}${step ? "&step=" + step : ""}`;
+    const fus = M.byOrder(r.orderId).flatMap(x => x.items.filter(i => i.drAdded).map(i => ({ r: x, it: i })));
+    const am = (o.doctorVisit.amendments || []).slice().reverse();
+    const dec = it => { if (M.isDone(it)) return ["grn", t().fu_done]; const v = typeof MadaVisitBook !== "undefined" ? MadaVisitBook.visitOf(it) : null; if (v) return ["grn", tx("fu_booked", { b: v.bookingId, d: fmtD(v.appointment.date + "T00:00") })];
+      const c = (it.contacts || []).slice(-1)[0]; if (!c) return ["org", t().fu_wait]; return c.outcome === "reached" ? ["grn", t().fu_yes] : c.outcome === "declined" ? ["red", t().fu_no] : ["org", t().fu_trying]; };
     return `<section class="card sec" id="adSec"><h2 class="sec-t"><span class="ic">${svg(IC.list)}</span>${t().adT}</h2><p class="sub">${t().adS}</p>
-      <div class="ad"><div><label for="adTy">${t().adTy}</label><select id="adTy">${AD_TY.map(([k, ty]) => `<option value="${k}"${k === adTy ? " selected" : ""}>${t()["ty_" + ty]}</option>`).join("")}</select></div>
-        <div id="adItW"${adTy === "doctor" ? " hidden" : ""}><label for="adIt">${t().adIt}</label><select id="adIt">${adTy === "doctor" ? "" : adOpts(adTy)}</select></div>
-        <div class="w"><label for="adNote">${t().adNote} <span class="ad-hint">${t().adOpt}</span></label><textarea id="adNote" maxlength="400" dir="auto" placeholder="${esc(t().adPh)}"></textarea></div>
-        <small class="err w" id="err-ad" hidden>${t().adNeed}</small>
-        <div class="rv-a"><span class="ad-hint" style="margin-inline-end:auto;align-self:center">${t().adGo}</span><button type="button" class="btn btn-green" data-addord="1">${svg(IC.check, 2.2)}${t().adBtn}</button></div></div></section>`;
+      <div class="fu-acts"><a class="btn btn-green" href="${u()}">${svg(IC.list, 2)}${t().fu_add}</a><a class="btn btn-out" href="${u("assess")}">${t().fu_dx}</a><a class="btn btn-out" href="${u("plan")}">${t().fu_rx}</a></div>
+      ${fus.length ? `<div class="fu-tbl">${fus.map(({ it }) => { const [c, txt] = dec(it); return `<div class="fu-row"><span class="tg-t org">${t().fu_new}</span><b dir="auto">${esc(who(it.title))}</b><small>${t()["ty_" + it.type] || it.type} · ${esc(fmtT(it.fuAt || (it.log[0] || {}).at))}</small>
+        <span class="fu-dec"><small>${t().fu_dec}</small><span class="tg-t ${c}">${esc(txt)}</span></span></div>`; }).join("")}</div>` : ""}
+      ${am.length ? `<div class="nts" style="margin-top:10px"><small>${t().fu_am}</small>${am.map(a => `<span>${t()["fu_am_" + a.step] || a.step} <small class="num">· ${esc(who(a.by))} · ${esc(fmtT(a.at))}</small></span>`).join("")}</div>` : ""}</section>`;
   }
   // One new order as a medical request item (same shape as the orders sent when a visit is signed, doctor-visit.html).
   function newItem(ty, code, note) {
@@ -631,13 +646,16 @@
         : `<div class="none-box" style="margin:0">${t().noTeam}</div>`}</section>`;
   }
   function detail(id) {
+    const sent = new URLSearchParams(location.search).get("sent");
+    if (sent && !detail.told) { detail.told = true; setTimeout(() => toast(tx("fu_sent", { n: sent })), 300); }
     const r = only(M.get(id));
     if (!r || r.doctorId !== docId || !r.items.length) { $("vw").innerHTML = `<a class="back" href="doctor-orders-list.html">${svg(IC.l, 2)}${t().back}</a><section class="card"><div class="none-box"><b>${t().notFound}</b></div></section>`; return; }
     const o = MadaOrders.get(r.orderId), done = o && o.doctorVisit && o.doctorVisit.status === "done";
     // Opening the order marks entered lab results as seen by the doctor (shown on the dashboard's Lab Results page).
     r.items.filter(i => (i.type === "lab" && i.results || radReady(i)) && !i.docSeen).forEach(i => M.patchItem(r.id, i.id, { docSeen: { at: new Date().toISOString(), by: me.name } }));
     const grp = { lab: r.items.filter(i => i.type === "lab"), radiology: r.items.filter(i => i.type === "radiology"), other: r.items.filter(i => i.type !== "lab" && i.type !== "radiology") };
-    const sec = k => grp[k].length ? `<section class="card sec"><h2 class="sec-t"><span class="ic">${svg(icOf(k))}</span>${t()["sec_" + k]}</h2>${grp[k].map(it => item(r, it)).join("")}</section>` : "";
+    const tagNew = (it, h) => it.drAdded ? h.replace('<div class="it-h">', `<div class="it-h"><span class="tg-t org">${t().fu_new}</span>`) : h;
+    const sec = k => grp[k].length ? `<section class="card sec"><h2 class="sec-t"><span class="ic">${svg(icOf(k))}</span>${t()["sec_" + k]}</h2>${grp[k].map(it => tagNew(it, item(r, it))).join("")}</section>` : "";
     const s = stateOf(r);
     $("vw").innerHTML = `<a class="back" href="doctor-orders-list.html">${svg(IC.l, 2)}${t().back}</a>
       <section class="card"><div class="od-h"><span class="pa">${esc(initials(nm(r.patient).en))}</span><div><h1>${esc(pName(r))}</h1>
@@ -683,7 +701,7 @@
       if (adTy !== "doctor" && !code) { $("err-ad").hidden = false; $("adIt").focus(); return; }
       const it = newItem(adTy, code, note);
       // A closed request takes no more items: the new order opens a new request for the same visit.
-      it.drAdded = true; // shows on the dashboard's Doctor Orders page (doctor-requests.html)
+      it.drAdded = true; // shows on the dashboard's Doctor Orders page (followup-orders.html)
       if (r.status === "open") M.addItem(r.id, it, me.name);
       else { const nr = M.add({ orderId: r.orderId, bookingId: r.bookingId || null, mrn: r.mrn, patient: r.patient, mobile: r.mobile, service: r.service, doctorId: r.doctorId, source: "doctor", byDoctor: me.name, items: [{ ...it, addedBy: me.name }] });
         history.replaceState(null, "", "?id=" + encodeURIComponent(nr.id)); }

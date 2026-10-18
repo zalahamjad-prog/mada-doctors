@@ -250,6 +250,16 @@
   .step[aria-current="step"] .n { background: var(--navy); color: #fff; }
   .step.done .n { background: var(--teal); color: #fff; }
   .step.locked { cursor: not-allowed; opacity: .55; }
+  .fu .ex-stp, .fu #orPrev { visibility: hidden; }
+  .fu-bar { background: #eef7f4; border-color: #b9d9cf; color: #0b4d42; }
+  .fu-prev { border: 1px solid #dfe7ea; border-radius: 14px; padding: 14px 16px; margin: 0 0 16px; background: #fafcfc; }
+  .fu-prev h2 { font-size: 15px; color: #15304a; margin-bottom: 8px; } .fu-prev p { font-size: 13px; color: #6b7a80; }
+  .fu-prev ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .fu-prev li { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; padding: 8px 10px; border-radius: 10px; background: #fff; border: 1px solid #edf1f2; }
+  .fu-prev li b { flex: 1; min-width: 160px; font-weight: 600; }
+  .fu-ty { font-size: 11.5px; font-weight: 700; color: #0b6b5c; background: #e9f6f1; border-radius: 6px; padding: 2px 8px; }
+  .fu-new { font-size: 11px; font-weight: 700; color: #8a6a1f; background: #fbf4e4; border-radius: 6px; padding: 2px 8px; }
+  .fu-st { font-size: 12px; font-weight: 700; }
   .step.locked:hover { background: #eef1f3; }
   .card { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px 30px 30px; }
   .sec-h { display: flex; align-items: center; gap: 22px; margin-bottom: 18px; }
@@ -669,6 +679,69 @@
     MadaOrders.update = (oid, patch) => oid === id ? MadaOrders.get(oid) : upd(oid, patch);
     MadaPatients.upsert = p => p && p.fileNo && MadaPatients.get(p.fileNo) || p;
   }
+  // Follow-up after the results (doctor-visit.html?id=<visit>&fu=<medical request>[&step=assess|plan], from Doctor Portal > Orders):
+  // the doctor adds new orders with the same Orders & Services cart (sent to the operations team, paid after the service, marked
+  // drAdded so they show on the dashboard's Doctor Orders page), and can update the diagnosis or the medications. Every update keeps
+  // the earlier version in doctorVisit.amendments [{ step, before, at, by, fu }] and adds a doctor's note on the medical request.
+  const FU_ID = new URLSearchParams(location.search).get("fu"), FU = !!FU_ID && !VIEW, FU_STEPS = ["orders", "assess", "plan"];
+  const fuReq = () => { const r = FU_ID && MadaMedical.get(FU_ID); return r && r.orderId === id ? r : null; };
+  const FUL = {
+    en: { back: "Back to the order", barT: "Follow-up after the results", barS: "New orders go to the operations team: they call the patient, book the visit and assign a nurse or doctor. The patient pays after the service. Changes to the diagnosis or medications are kept with the earlier version.",
+      listT: "Follow-up", s_orders: "New orders", s_assess: "Update diagnosis", s_plan: "Update medications", upd: "Updated",
+      ordT: "New orders after the results", ordS: "Add orders from any service to the cart, then send them to the operations team.", send: "Send to operations", need: "Add at least one order to the cart.",
+      prevT: "Orders so far for this visit", prevNone: "No orders yet.", tagNew: "New after results", st_done: "Done", st_res: "Results in", st_wait: "In progress", st_rej: "Not approved",
+      sent: "{n} orders sent to the operations team.", amendT: "You are updating the visit after it was signed.", amendS: "The earlier version is kept with the time and your name.", amendSaved: "Update saved. The team can see it.",
+      note_assess: "The doctor updated the diagnosis after reading the results.", note_plan: "The doctor updated the medications after reading the results.", ty_doctor: "Doctor visit", ty_medication: "Medications", ty_plan: "Treatment plan", ty_followup: "Follow-up visit", ty_physio: "Physiotherapy" },
+    ar: { back: "رجوع للطلب", barT: "متابعة بعد النتائج", barS: "الطلبات الجديدة تروح لفريق التشغيل: يتصلون بالمريض ويحجزون الزيارة ويسندونها لممرضة أو طبيب. والدفع بعد الخدمة. وأي تعديل على التشخيص أو الأدوية تنحفظ معه النسخة السابقة.",
+      listT: "المتابعة", s_orders: "طلبات جديدة", s_assess: "تعديل التشخيص", s_plan: "تعديل الأدوية", upd: "تم التعديل",
+      ordT: "طلبات جديدة بعد النتائج", ordS: "أضف الطلبات من أي خدمة للسلة، وبعدين أرسلها لفريق التشغيل.", send: "إرسال للتشغيل", need: "أضف طلب واحد على الأقل للسلة.",
+      prevT: "الطلبات السابقة لهذه الزيارة", prevNone: "ما فيه طلبات للحين.", tagNew: "جديد بعد النتائج", st_done: "مكتمل", st_res: "وصلت النتيجة", st_wait: "قيد التنفيذ", st_rej: "ما انعتمد",
+      sent: "انرسل {n} طلبات لفريق التشغيل.", amendT: "أنت تعدّل الزيارة بعد توقيعها.", amendS: "النسخة السابقة تنحفظ مع الوقت واسمك.", amendSaved: "انحفظ التعديل، والفريق يقدر يشوفه.",
+      note_assess: "الطبيب عدّل التشخيص بعد الاطلاع على النتائج.", note_plan: "الطبيب عدّل الأدوية بعد الاطلاع على النتائج.", ty_doctor: "زيارة طبيب", ty_medication: "أدوية", ty_plan: "خطة علاجية", ty_followup: "زيارة متابعة", ty_physio: "علاج طبيعي" }
+  };
+  const ft = () => FUL[current];
+  if (FU) document.body.classList.add("fu");
+  // The previous orders of this visit, shown above the services in the follow-up cart.
+  function fuPrevHtml() {
+    const items = MadaMedical.byOrder(id).flatMap(r => r.items);
+    const st = it => it.rejected ? ["rej", "#b91c1c"] : MadaMedical.isDone(it) ? ["done", "#15803d"] : ["lab", "radiology"].includes(it.type) && MadaMedical.keyOf(it) === "resulted" ? ["res", "#7c3aed"] : ["wait", "#b45309"];
+    return `<section class="fu-prev"><h2>${ft().prevT}</h2>${items.length ? `<ul>${items.map(it => { const [k, c] = st(it); return `<li><span class="fu-ty">${esc(ft()["ty_" + it.type] || DrOrders.L[current]["s_" + ({ radiology: "rad", nursing: "nurse", referral: "ref" }[it.type] || it.type)] || it.type)}</span>
+      <b dir="auto">${esc(T(it.title))}</b>${it.drAdded ? `<span class="fu-new">${ft().tagNew}</span>` : ""}<span class="fu-st" style="color:${c}">${ft()["st_" + k]}</span></li>`; }).join("")}</ul>` : `<p>${ft().prevNone}</p>`}</section>`;
+  }
+  const fuOrder = o => ({ ...o, id: o.id + "~fu", doctorVisit: { ordersDraft: (fuReq() || {}).fuDraft || null, steps: {} } });
+  function fuList(o) {
+    const am = (o.doctorVisit && o.doctorVisit.amendments) || [];
+    return `<nav class="steps" aria-label="${esc(ft().listT)}"><div class="chk-card"><div class="hd"><b>${ft().listT}</b></div></div>
+      <ol>${FU_STEPS.map((k, i) => { const n = am.filter(a => a.step === k).length; return `<li><button type="button" class="step ${n ? "done" : ""}" data-step="${k}" ${k === active ? 'aria-current="step"' : ""}>
+        <span class="n">${n ? svg(IC.check, 2.6) : String(i + 1).padStart(2, "0")}</span>${n ? `<span class="st-t">${ft()["s_" + k]}<span class="st-bs"><span class="st-draft">${ft().upd}</span></span></span>` : ft()["s_" + k]}</button></li>`; }).join("")}</ol></nav>`;
+  }
+  // Follow-up orders as medical request items (the same shapes as sendOrders), marked drAdded.
+  function fuSend(d) {
+    const r = fuReq(), all = d.items || [], items = [], labs = all.filter(x => x.svc === "lab"), at = new Date().toISOString();
+    if (labs.length) {
+      const codes = [...new Set(labs.flatMap(x => DrOrders.labTests(x.code)))], names = l => codes.map(c => (DrOrders.item(c) || {})[l] || c).join(l === "ar" ? "، " : ", ");
+      const note = labs.map(x => x.note).filter(Boolean).join(" · ");
+      items.push({ type: "lab", v2: true, title: { en: names("en"), ar: names("ar") }, details: { en: note, ar: note }, orderCodes: codes, tests: [...new Set(codes.map(c => MadaMedical.CATALOG[c]).filter(Boolean))],
+        order: { svc: "lab", code: labs[0].code, price: labs.reduce((a, x) => a + Number(x.price || 0), 0) } });
+    }
+    all.filter(x => SEND_TYPE[x.svc]).forEach(x => {
+      const det = x.svc === "ref" ? [x.reason, x.notes].filter(Boolean).join(" · ") : x.svc === "leave" ? [x.start, x.reason].filter(Boolean).join(" · ") : (x.note || "");
+      items.push({ type: SEND_TYPE[x.svc], title: DrOrders.titleOf(x), details: { en: det, ar: det }, orderCodes: x.code ? [x.code] : [], order: x });
+    });
+    items.forEach(it => { it.drAdded = true; it.fuAt = at; });
+    let rid = r.id;
+    if (r.status === "open") items.forEach(it => MadaMedical.addItem(r.id, it, me.name));
+    else rid = MadaMedical.add({ orderId: r.orderId, bookingId: r.bookingId || null, mrn: r.mrn, patient: r.patient, mobile: r.mobile, service: r.service, doctorId: r.doctorId, source: "doctor", byDoctor: me.name,
+      items: items.map(it => ({ ...it, addedBy: me.name })) }).id;
+    MadaMedical.update(r.id, { fuDraft: null });
+    return { rid, n: items.length };
+  }
+  // Diagnosis or medications changed after the visit: keep the earlier version and tell the team.
+  function fuAmend(k, dv) {
+    const r = fuReq(), at = new Date().toISOString();
+    if (r) MadaMedical.update(r.id, { notes: [...(r.notes || []), { type: "doctor", text: ft()["note_" + k], by: me.name, at }] });
+    return [...(dv.amendments || []), { step: k, before: (dv.steps || {})[k] || null, at, by: me.name, fu: FU_ID }];
+  }
   // Buttons that only move around (open a section, a catalogue tab, a cart, close a popup) still work in view only.
   const RO_OK = "[data-sub],[data-go],[data-cat],[data-rcat],[data-lcat],[data-ltab],[data-tab],[data-pview],[data-gostep],[data-step],[data-view]";
   const RO_IDS = /^(hxBack|orBack2?|orCart|orDrX|orDrHub|prevToggle|advToggle|plDetails|plNext|plPrev|nuFull|nuFX|orMdX|orRdX|orPkX|orPkClose|orPyX|orQClr|pfOpen|pfX|idDl)$/;
@@ -856,19 +929,23 @@
     if (!$("pfOv").hidden && o) $("pfOv").innerHTML = pfDrawer(o);
     if (!$("doneOv").hidden) openDone();
     if (!o) { $("vw").innerHTML = `<div class="card missing"><h1 style="font-size:22px;color:#15304a">${t().missingT}</h1><p style="margin:8px 0 18px;color:var(--muted)">${t().missingS}</p><a class="back" href="doctor-visits.html">${svg(IC.back, 2)}${t().back}</a></div>`; return; }
+    if (FU && !FU_STEPS.includes(active)) active = FU_STEPS.includes(new URLSearchParams(location.search).get("step")) ? new URLSearchParams(location.search).get("step") : "orders";
     if (!active) active = STEPS[Math.min(doneCount(o), STEPS.length - 1)].k;
-    if (!VIEW) markOpen(o, active);
-    const hx = active === "history", body = active === "arrival" ? arrivalCard(o) : hx ? DrHistory.view(o, hxCtx) : active === "vitals" ? vitalsCard(o) : active === "exam" ? DrExam.view(o, exCtx) : active === "allergy" ? DrAllergy.view(o, alCtx) : active === "assess" ? DrDiagnosis.view(o, dxCtx) : active === "plan" ? DrPlan.view(o, planCtx) : active === "orders" ? DrOrders.view(o, orCtx) : active === "nurse" ? DrNurse.view(o, nuCtx) : active === "edu" ? DrEdu.view(o, edCtx) : active === "idform" ? DrIdForm.view(o, idCtx) : active === "consent" ? DrConsent.view(o, csCtx) : soonCard(active);
-    const backA = VIEW && o.mrn ? `<a class="back" href="doctor-patient.html?mrn=${encodeURIComponent(o.mrn)}">${svg(IC.back, 2)}${t().backFile}</a>` : `<a class="back" href="doctor-visits.html">${svg(IC.back, 2)}${t().back}</a>`;
-    $("vw").innerHTML = `${backA}${VIEW ? `<div class="ro-bar">${svg(IC.info, 2)}<span><b>${t().roT}</b> ${t().roS}</span></div>` : ""}${strip(o)}${VIEW ? "" : payBar(o)}
-      <div class="vw-body">${stepList(o)}<section class="card ${hx && DrHistory.isOpen() ? "hx-card" : ""}" id="stepCard">${body}</section></div>`;
+    if (!VIEW && !FU) markOpen(o, active);
+    const hx = active === "history";
+    let body = active === "arrival" ? arrivalCard(o) : hx ? DrHistory.view(o, hxCtx) : active === "vitals" ? vitalsCard(o) : active === "exam" ? DrExam.view(o, exCtx) : active === "allergy" ? DrAllergy.view(o, alCtx) : active === "assess" ? DrDiagnosis.view(o, dxCtx) : active === "plan" ? DrPlan.view(o, planCtx) : active === "orders" ? DrOrders.view(o, orCtx) : active === "nurse" ? DrNurse.view(o, nuCtx) : active === "edu" ? DrEdu.view(o, edCtx) : active === "idform" ? DrIdForm.view(o, idCtx) : active === "consent" ? DrConsent.view(o, csCtx) : soonCard(active);
+    if (FU && active === "orders") body = DrOrders.view(fuOrder(o), fuCtx);
+    const backA = FU ? `<a class="back" href="doctor-orders-list.html?id=${encodeURIComponent(FU_ID)}">${svg(IC.back, 2)}${ft().back}</a>` : VIEW && o.mrn ? `<a class="back" href="doctor-patient.html?mrn=${encodeURIComponent(o.mrn)}">${svg(IC.back, 2)}${t().backFile}</a>` : `<a class="back" href="doctor-visits.html">${svg(IC.back, 2)}${t().back}</a>`;
+    $("vw").innerHTML = `${backA}${VIEW ? `<div class="ro-bar">${svg(IC.info, 2)}<span><b>${t().roT}</b> ${t().roS}</span></div>` : ""}${strip(o)}${VIEW || FU ? "" : payBar(o)}
+      ${FU ? `<div class="ro-bar fu-bar">${svg(IC.info, 2)}<span><b>${active === "orders" ? ft().barT : ft().amendT}</b> ${active === "orders" ? ft().barS : ft().amendS}</span></div>` : ""}
+      <div class="vw-body">${FU ? fuList(o) : stepList(o)}<section class="card ${hx && DrHistory.isOpen() ? "hx-card" : ""}" id="stepCard">${body}</section></div>`;
     bind(o);
     if (hx) DrHistory.bind($("stepCard"), o, hxCtx);
     if (active === "exam") DrExam.bind($("stepCard"), o, exCtx);
     if (active === "allergy") DrAllergy.bind($("stepCard"), o, alCtx);
     if (active === "assess") DrDiagnosis.bind($("stepCard"), o, dxCtx);
     if (active === "plan") DrPlan.bind($("stepCard"), o, planCtx);
-    if (active === "orders") DrOrders.bind($("stepCard"), o, orCtx);
+    if (active === "orders") DrOrders.bind($("stepCard"), FU ? fuOrder(o) : o, FU ? fuCtx : orCtx);
     if (active === "nurse") DrNurse.bind($("stepCard"), o, nuCtx);
     if (active === "edu") DrEdu.bind($("stepCard"), o, edCtx);
     if (active === "idform") DrIdForm.bind($("stepCard"), o, idCtx);
@@ -885,10 +962,12 @@
   }
   // Shared by the step modules: position in the step list, and moving between steps.
   const stepNav = k => {
-    const i = STEPS.findIndex(x => x.k === k), pad = n => String(n).padStart(2, "0");
+    const pad = n => String(n).padStart(2, "0");
+    if (FU && FU_STEPS.includes(k)) { const j = FU_STEPS.indexOf(k); return { get stepOf() { return { n: pad(j + 1), m: pad(FU_STEPS.length) }; }, prevKey: FU_STEPS[Math.max(j - 1, 0)], nextKey: FU_STEPS[Math.min(j + 1, FU_STEPS.length - 1)] }; }
+    const i = STEPS.findIndex(x => x.k === k);
     return { get stepOf() { return { n: pad(i + 1), m: pad(STEPS.length) }; }, prevKey: STEPS[Math.max(i - 1, 0)].k, nextKey: STEPS[Math.min(i + 1, STEPS.length - 1)].k };
   };
-  function goStep(k) { active = k; DrHistory.reset(); DrExam.reset(); DrAllergy.reset(); DrDiagnosis.reset(); DrPlan.reset(); DrOrders.reset(); DrNurse.reset(); DrEdu.reset(); DrIdForm.reset(); DrConsent.reset(); editing = false; tried = false; render(); window.scrollTo(0, 0); }
+  function goStep(k) { if (FU && !FU_STEPS.includes(k)) k = "orders"; active = k; DrHistory.reset(); DrExam.reset(); DrAllergy.reset(); DrDiagnosis.reset(); DrPlan.reset(); DrOrders.reset(); DrNurse.reset(); DrEdu.reset(); DrIdForm.reset(); DrConsent.reset(); editing = false; tried = false; render(); window.scrollTo(0, 0); }
   // What the examination module needs from this page. Saving throws when browser storage is full (photos).
   function putVisit(patch) {
     const o = MadaOrders.get(id), dv = { ...o.doctorVisit, ...patch };
@@ -912,7 +991,8 @@
     saveDraft(d) { putVisit({ assessDraft: { ...d, at: new Date().toISOString() } }); },
     save(d) {
       const dv = MadaOrders.get(id).doctorVisit;
-      putVisit({ assessDraft: undefined, steps: { ...(dv.steps || {}), assess: { ...d, at: new Date().toISOString(), by: me.name } } });
+      putVisit({ assessDraft: undefined, ...(FU ? { amendments: fuAmend("assess", dv) } : {}), steps: { ...(dv.steps || {}), assess: { ...d, at: new Date().toISOString(), by: me.name } } });
+      if (FU) setTimeout(() => toast(ft().amendSaved), 50);
     },
     go: goStep
   };
@@ -923,9 +1003,20 @@
     saveDraft(d) { putVisit({ planDraft: { ...d, at: new Date().toISOString() } }); },
     save(d) {
       const dv = MadaOrders.get(id).doctorVisit;
-      putVisit({ planDraft: undefined, steps: { ...(dv.steps || {}), plan: { ...d, at: new Date().toISOString(), by: me.name } } });
+      putVisit({ planDraft: undefined, ...(FU ? { amendments: fuAmend("plan", dv) } : {}), steps: { ...(dv.steps || {}), plan: { ...d, at: new Date().toISOString(), by: me.name } } });
+      if (FU) setTimeout(() => toast(ft().amendSaved), 50);
     },
     go: goStep
+  };
+  // The follow-up cart (see FU above): saved on the medical request until it is sent.
+  const fuCtx = {
+    followUp: true, stepOf: { n: "", m: "" }, prevKey: "orders", nextKey: "orders", prevName: "",
+    get lang() { return current; }, svg, esc, loc, toast: m => toast(m), rerender() { render(); },
+    get fuTitle() { return ft().ordT; }, get fuSub() { return ft().ordS; }, get fuSave() { return ft().send; }, get fuNeed() { return ft().need; }, get topHtml() { return fuPrevHtml(); },
+    saveDraft(d) { MadaMedical.update(FU_ID, { fuDraft: { ...d, at: new Date().toISOString() } }); },
+    save(d) { const s = fuSend(d); fuCtx.sent = s; },
+    go() { const s = fuCtx.sent; if (s) location.href = `doctor-orders-list.html?id=${encodeURIComponent(s.rid)}&sent=${s.n}`; else location.href = `doctor-orders-list.html?id=${encodeURIComponent(FU_ID)}`; },
+    get doctor() { return me.name; }, patient(o) { return orCtx.patient(o); }, payLink() { return null; }, addPayment() {}, removePayment() {}
   };
   const orCtx = {
     ...stepNav("orders"),

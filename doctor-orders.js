@@ -435,10 +435,12 @@ const DrOrders = (() => {
   }
 
   function hubView(o, c) {
-    const saved = o.doctorVisit && o.doctorVisit.steps && o.doctorVisit.steps.orders;
+    // Follow-up orders after the results (c.followUp, doctor-visit.html?fu=...): the same cart, sent to the operations team.
+    // No payment at the visit (the patient pays after the service), no "no orders" tick, and the previous orders above the services.
+    const fu = !!c.followUp, saved = !fu && o.doctorVisit && o.doctorVisit.steps && o.doctorVisit.steps.orders;
     const when = saved && new Date(saved.at).toLocaleString(c.loc(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
     return `<div class="or">
-      ${head(c, I.cart, t().title, t().sub)}
+      ${fu ? head(c, I.cart, c.fuTitle, c.fuSub) + (c.topHtml || "") : head(c, I.cart, t().title, t().sub)}
       ${saved ? `<div class="info ok">${S(I.check, 2.4)}<span>${tx("savedInfo", { t: E(when) })}</span></div>` : ""}
       <div class="or-svcs">${ORDER.map(svc => `<button type="button" class="or-svc ${svc}" data-go="${svc}"><span class="or-sic">${S(I[svc])}</span>
         <span class="or-st"><b>${t()["s_" + svc]}</b><small>${t()["d_" + svc]}</small></span><span class="or-cnt">${countOf(svc)}</span><span class="or-go">${S(I.chev, 2.2)}</span></button>`).join("")}</div>
@@ -447,12 +449,12 @@ const DrOrders = (() => {
           ${groups()}
           <div class="or-tot"><span><b>${totalText()}</b><button type="button" class="or-clrl" id="orClear">${S(I.trash)}${t().clearCart}</button></span><strong>${money(payNow().total)}</strong></div>`
         : `<div class="or-empty"><span class="or-eic">${S(I.clip)}<i>${S(I.plus, 2.6)}</i></span><h2>${t().emptyT}</h2><p>${t().emptyS}</p></div>
-          <label class="hx-ck or-none"><input type="checkbox" id="orNone" ${draft.none ? "checked" : ""}><span>${t().none}</span></label>`}
+          ${fu ? "" : `<label class="hx-ck or-none"><input type="checkbox" id="orNone" ${draft.none ? "checked" : ""}><span>${t().none}</span></label>`}`}
       </section>
-      ${paySection()}
+      ${fu ? "" : paySection()}
       <div class="ex-foot"><button type="button" class="hx-btn out pl-prevb" id="orPrev"><span class="flip">${S(I.back)}</span><span><b>${t().prev}</b><small>${E(c.prevName || "")}</small></span></button><span class="hx-sp"></span>
         <button type="button" class="hx-btn soft" id="orDraft">${S(I.doc)}${t().draft}</button>
-        <button type="button" class="hx-btn dark" id="orSave">${t().saveCont}${S(I.arrow)}</button></div>
+        <button type="button" class="hx-btn dark" id="orSave">${fu ? E(c.fuSave) : t().saveCont}${S(I.arrow)}</button></div>
     </div>`;
   }
 
@@ -821,9 +823,9 @@ const DrOrders = (() => {
       if ($("#orNone")) $("#orNone").addEventListener("change", e => { draft.none = e.target.checked; });
       $("#orPrev").addEventListener("click", () => ctx.go(ctx.prevKey));
       $("#orSave").addEventListener("click", () => {
-        if (!draft.items.length && !draft.none) return ctx.toast(t().needOrder);
+        if (!draft.items.length && (!draft.none || ctx.followUp)) return ctx.toast(ctx.followUp ? ctx.fuNeed : t().needOrder);
         try { ctx.save(clean()); } catch (e) { return ctx.toast(e.message || t().storeErr); }
-        reset(); ctx.toast(t().saved); ctx.go(ctx.nextKey);
+        reset(); if (!ctx.followUp) ctx.toast(t().saved); ctx.go(ctx.nextKey);
       });
       return;
     }
