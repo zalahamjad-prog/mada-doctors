@@ -24,7 +24,9 @@ const DrNurse = (() => {
       smT: "Sample Collection", opt: "(Optional)", smS: "The doctor ordered tests that need a sample. Confirm it was collected.", smTests: "Ordered", smYes: "Sample collected", smNo: "Not collected",
       smNote: "Sample note", smNotePh: "e.g. 2 tubes, collected from the left arm", smReason: "Why was it not collected?", smReasonPh: "e.g. Patient refused, difficult vein", smOk: "Confirm",
       smDone: "Sample collected · {t} · {n}", smNot: "Not collected · {t} · {n}", smEdit: "Change", smSaved: "Sample confirmation saved.", needSm: "Confirm the sample collection first.",
-      needSmPick: "Choose whether the sample was collected.", needReason: "Write why the sample was not collected."
+      needSmPick: "Choose whether the sample was collected.", needReason: "Write why the sample was not collected.",
+      smList: "Tests to collect", smTubes: "Tubes", smRes: "Result in {h} h", smNoH: "No result time set", smDue: "Result expected {t}",
+      smFast: "Fasting {h} h", smMorning: "Morning sample", sp_blood: "Blood", sp_urine: "Urine", sp_stool: "Stool", smCount: "{n} tests"
     },
     ar: {
       title: "ملاحظة الممرضة", sub: "أضف ملاحظات التمريض والمشاهدات.", stepOf: "الخطوة {n} من {m}", label: "ملاحظة الممرضة", ph: "اكتب ملاحظة الممرضة هنا ...",
@@ -36,7 +38,9 @@ const DrNurse = (() => {
       smT: "سحب العينة", opt: "(اختياري)", smS: "الطبيب طلب فحوصات تحتاج عينة. أكّدي إنه تم سحبها.", smTests: "المطلوب", smYes: "تم سحب العينة", smNo: "ما تم السحب",
       smNote: "ملاحظة على العينة", smNotePh: "مثال: أنبوبين، من الذراع اليسار", smReason: "ليش ما تم السحب؟", smReasonPh: "مثال: المريض رفض، صعوبة في الوريد", smOk: "تأكيد",
       smDone: "تم سحب العينة · {t} · {n}", smNot: "ما تم السحب · {t} · {n}", smEdit: "تغيير", smSaved: "انحفظ تأكيد سحب العينة.", needSm: "أكّدي سحب العينة أول.",
-      needSmPick: "اختاري هل تم سحب العينة أو لا.", needReason: "اكتبي ليش ما تم سحب العينة."
+      needSmPick: "اختاري هل تم سحب العينة أو لا.", needReason: "اكتبي ليش ما تم سحب العينة.",
+      smList: "التحاليل المطلوب سحبها", smTubes: "الأنابيب", smRes: "النتيجة خلال {h} ساعة", smNoH: "ما فيه وقت محدد للنتيجة", smDue: "النتيجة المتوقعة {t}",
+      smFast: "صيام {h} ساعة", smMorning: "عينة صباحية", sp_blood: "دم", sp_urine: "بول", sp_stool: "براز", smCount: "{n} تحاليل"
     }
   };
   let ctx = null, lang = "en", st = null, forId = null, full = false, editing = false, tried = false, timer = null, sm = null;
@@ -55,13 +59,36 @@ const DrNurse = (() => {
   // Orders that need a sample: lab tests and packages, or the Home Sample Collection service.
   const sampleOrders = o => { const dv = o.doctorVisit || {}, src = (dv.steps && dv.steps.orders) || dv.ordersDraft || {};
     return (src.items || []).filter(x => x.svc === "lab" || x.code === "NS-051"); };
+  // The tests to collect, one line each (tube, name, sample, fasting, result time), like the nurse's Samples page.
+  // Doctor Portal codes map to the lab's tests (MadaMedical.CATALOG, labs.js); a code with no lab test shows its name only.
+  function testsHtml(need, sv, when) {
+    const Lb = typeof MadaLabs !== "undefined" ? MadaLabs : null, M = typeof MadaMedical !== "undefined" ? MadaMedical : null;
+    const codes = [...new Set(need.flatMap(x => x.svc === "lab" ? DrOrders.labTests(x.code) : []))];
+    const got = sv && sv.status === "collected" && sv.at, tubes = {};
+    const rows = codes.map(c => {
+      const lc = M && M.CATALOG[c], x = Lb && lc ? Lb.byCode[lc] : null, tube = x && Lb.tubeOf ? Lb.tubeOf(x.tube) : null;
+      const name = x ? x.name[lang] || x.name.en : (DrOrders.item(c) || {})[lang] || c;
+      if (tube) tubes[tube.id || tube.color] = tube;
+      const meta = [x && x.sample ? t()["sp_" + x.sample] || x.sample : "", tube ? (tube.name[lang] || tube.name.en) : "",
+        x && x.fasting === "fast" ? tx("smFast", { h: x.fastHours || "" }) : x && x.fasting === "morning" ? t().smMorning : ""].filter(Boolean);
+      const h = x && x.hours ? +x.hours : null;
+      const due = h ? (got ? tx("smDue", { t: when(new Date(new Date(sv.at).getTime() + h * 3600000)) }) : tx("smRes", { h })) : t().smNoH;
+      return `<li><i class="nu-tube" style="background:${tube ? tube.color : "#c9d3d6"}"></i><div><b>${E(name)}</b>${lc ? `<span class="nu-code">${E(lc)}</span>` : ""}
+        ${meta.length ? `<small>${E(meta.join(" · "))}</small>` : ""}</div><span class="nu-due ${h ? "" : "na"}">${S('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', 2)}${E(due)}</span></li>`;
+    });
+    // Home Sample Collection with no lab tests ordered: its name only.
+    need.filter(x => x.svc !== "lab").forEach(x => rows.push(`<li><i class="nu-tube" style="background:#c9d3d6"></i><div><b>${E((DrOrders.titleOf(x) || {})[lang] || x.code)}</b></div></li>`));
+    const tb = Object.values(tubes);
+    return `<div class="nu-smh"><span>${t().smList}</span><em>${E(tx("smCount", { n: rows.length }))}</em></div><ul class="nu-tests">${rows.join("")}</ul>
+      ${tb.length ? `<div class="nu-tubes"><span>${t().smTubes}:</span>${tb.map(x => `<span class="nu-tb"><i class="nu-tube" style="background:${x.color}"></i>${E(x.name[lang] || x.name.en)}</span>`).join("")}</div>` : ""}`;
+  }
   function sampleCard(o, c) {
     const need = sampleOrders(o); if (!need.length) return "";
     const sv = (o.doctorVisit || {}).sample, names = need.map(x => (DrOrders.titleOf(x) || {})[lang] || x.code).join(lang === "ar" ? "، " : ", ");
     const when = d => new Date(d).toLocaleString(c.loc(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
     const head = (done) => `<div class="nu-ch"><span class="nu-n0 sm ${done ? "done" : ""}">${S(done ? I.check : I.tube, done ? 2.6 : 2)}</span><div><b>${t().smT}</b><small>${done ? E(tx(sv.status === "collected" ? "smDone" : "smNot", { t: when(sv.at), n: nameOf(sv.by) })) : t().smS}</small></div>
       ${done ? `<button type="button" class="hx-btn out sm" id="smEdit">${S(I.pen)}${t().smEdit}</button>` : ""}</div>`;
-    const tests = `<p class="nu-smt"><span>${t().smTests}:</span> ${E(names)}</p>`;
+    const tests = testsHtml(need, sv, when);
     if (sv && !sm) return `<section class="nu-card nu-sm ${sv.status === "not" ? "no" : "ok"}">${head(true)}<div class="nu-cb">${tests}${sv.note || sv.reason ? `<p class="nu-txt" dir="auto">${E(sv.note || sv.reason)}</p>` : ""}</div></section>`;
     if (!sm) sm = { status: sv ? sv.status : "", note: sv ? sv.note || "" : "", reason: sv ? sv.reason || "" : "", tried: false };
     const bad = cond => sm.tried && cond ? "bad" : "";

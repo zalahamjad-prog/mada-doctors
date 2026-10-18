@@ -367,7 +367,7 @@
     const drName = c => { const r = DrOrders.item(c); return r ? r[current] : ""; };
     const labName = c => { const r = MadaLabs.byCode[c]; return r ? r.name[current] : ""; };
     reqs.forEach(r => r.items.filter(it => it.type === "lab").forEach(it => {
-      const stage = MadaMedical.STEPS.lab[it.step], res = it.results || {}, rv = it.log.find(l => MadaMedical.STEPS.lab[l.step] === "reviewed");
+      const stage = MadaMedical.keyOf(it), res = it.results || {}, rv = it.log.find(l => MadaMedical.STEPS.lab[l.step] === "reviewed");
       const rowsOf = keys => keys.flatMap(k => MadaMedical.ANALYTES[k] || []).map(a => ({ code: a.code, name: a.name[current], value: res[a.code], unit: a.unit, range: labRange(a), flag: res[a.code] != null ? MadaMedical.labStatus(a, res[a.code]) : "" }));
       // Tests by catalogue code when the doctor ordered them; otherwise by the lab's own test codes.
       const tests = it.orderCodes && it.orderCodes.length

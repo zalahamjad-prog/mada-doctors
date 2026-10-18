@@ -28,6 +28,15 @@ const MadaMedical = (() => {
     // Older request types, kept so requests saved before still open.
     followup: ["requested", "booked", "done"]
   };
+  // "Sample at the lab" is no longer a step: the sample goes from collected straight to results entered.
+  // It stays in STEPS so items saved before keep their place; pages skip it and an item still on it reads as collected.
+  const SKIP = { lab: ["received"] };
+  const skipped = (type, k) => (SKIP[type] || []).includes(k);
+  // The steps a page shows, each with its index in STEPS.
+  const shownSteps = type => (STEPS[type] || []).map((k, i) => ({ k, i })).filter(x => !skipped(type, x.k));
+  // The item's step key as pages show it, and the index of the next step it waits for.
+  const keyOf = it => { const S = STEPS[it.type] || []; let i = it.step; while (i > 0 && skipped(it.type, S[i])) i--; return S[i]; };
+  const nextIdx = it => { const S = STEPS[it.type] || []; let i = it.step + 1; while (i < S.length && skipped(it.type, S[i])) i++; return i; };
   // Quality review checklist.
   const CHECKS = ["onTime", "informed", "reviewed", "documented"];
 
@@ -67,11 +76,11 @@ const MadaMedical = (() => {
     return v < a.low ? "low" : v > a.high ? "high" : "normal";
   }
   const LAB_LATE_HOURS = 24;
-  // Sample at the lab for more than a day and no results yet.
+  // Sample taken more than a day ago and no results yet.
   function labLate(it) {
-    if (it.type !== "lab" || isDone(it)) return false;
-    const rcv = (it.log.find(l => STEPS.lab[l.step] === "received") || {}).at;
-    return !!rcv && STEPS.lab[it.step] === "received" && Date.now() - new Date(rcv) > LAB_LATE_HOURS * 3600000;
+    if (it.type !== "lab" || isDone(it) || it.step >= STEPS.lab.indexOf("resulted")) return false;
+    const col = (it.log.find(l => STEPS.lab[l.step] === "collected") || {}).at;
+    return !!col && it.step >= 1 && Date.now() - new Date(col) > LAB_LATE_HOURS * 3600000;
   }
   const openEsc = it => (it.escalations || []).filter(e => !e.resolved);
 
@@ -143,8 +152,8 @@ const MadaMedical = (() => {
     const items = r.items.map(it => {
       if (it.id !== itemId || isDone(it)) return it;
       const rejected = !!(data && data.decision === "rejected");
-      const step = rejected ? STEPS[it.type].length - 1 : it.step + 1;
-      return { ...it, step, ...(rejected ? { rejected: true } : {}), log: [...it.log, { step: it.step + 1, by, at: new Date().toISOString(), data: data || null }] };
+      const step = rejected ? STEPS[it.type].length - 1 : nextIdx(it);
+      return { ...it, step, ...(rejected ? { rejected: true } : {}), log: [...it.log, { step: rejected ? it.step + 1 : step, by, at: new Date().toISOString(), data: data || null }] };
     });
     return update(id, { items });
   }
@@ -176,5 +185,5 @@ const MadaMedical = (() => {
   };
   const sampleItem = type => ({ type, title: SAMPLE[type][0], details: SAMPLE[type][1], ...(type === "lab" ? { tests: ["CBC", "HBA1C", "FBS"], v2: true } : {}) });
 
-  return { CATALOG, all, get, byOrder, add, addItem, linkBookings, update, patchItem, advance, logStep, ANALYTES, analytesOf, labStatus, labLate, openEsc, LAB_LATE_HOURS, isDone, progress, needsFollowUp, sampleItem, TYPES, STEPS, CHECKS };
+  return { CATALOG, all, get, byOrder, add, addItem, linkBookings, update, patchItem, advance, logStep, ANALYTES, analytesOf, labStatus, labLate, shownSteps, keyOf, nextIdx, openEsc, LAB_LATE_HOURS, isDone, progress, needsFollowUp, sampleItem, TYPES, STEPS, CHECKS };
 })();
