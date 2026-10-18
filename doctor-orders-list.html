@@ -129,6 +129,7 @@
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 8px; background: #f2f5f6; color: #44545a; font-size: 12.5px; font-weight: 600; }
   .chip svg { width: 14px; height: 14px; }
+  .chip.need { background: #fdecec; color: #b42318; } .chip.ok { background: #e3f4ee; color: #0f6b52; }
   .st { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 14px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
   .st::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
   .st-need { background: #fdecec; color: #b42318; } .st-wait { background: var(--orange-soft); color: #a35a00; } .st-done { background: #e3f4ee; color: #0f6b52; }
@@ -327,10 +328,10 @@
   const nm = v => v && typeof v === "object" ? v : { en: v || "", ar: v || "" };
   const stepOf = it => M.keyOf(it); // "sample at the lab" reads as collected
   const logAt = (it, s) => [...(it.log || [])].reverse().find(l => (STEPS[it.type] || [])[l.step] === s);
-  // Lab results wait for the doctor's review. Radiology has no review: the provider's report is shown as it is.
-  const needs = it => it.type === "lab" && stepOf(it) === "resulted";
+  // Lab results and the imaging center's report wait for the doctor's review (the doctor's note goes on the patient's PDF).
+  const needs = it => (it.type === "lab" || it.type === "radiology") && !it.rejected && stepOf(it) === "resulted";
   const radReady = it => it.type === "radiology" && !!logAt(it, "resulted");
-  const itDone = it => radReady(it) || M.isDone(it);
+  const itDone = it => M.isDone(it);
   // Everything on the staff Medical Requests page shows here for the doctor, view only: every item type with its steps and
   // what staff entered at each step, the team's notes, escalations, the late-lab flag, closing and quality review.
   // Requests the team opened for this doctor (source "staff") show too, marked "Added by the team".
@@ -350,7 +351,7 @@
       ordered: "Ordered {d}", fileNo: "File {n}", tests1: "1 test", testsN: "{n} tests",
       ty_lab: "Laboratory", ty_radiology: "Radiology", ty_nursing: "Nursing", ty_iv: "IV Therapy", ty_referral: "Referral", ty_leave: "Sick Leave", ty_doctor: "Doctor Visit", ty_physio: "Physiotherapy",
       noneT: "No orders yet", noneS: "Orders appear here after you sign a visit with lab tests or radiology.", noMatchT: "No matching orders", noMatchS: "Try another name, file number or test.",
-      back: "All Orders", openFile: "Open Patient File", openVisit: "View Visit", orderNo: "Order", bookingNo: "Booking", repDate: "Report date", radRep: "Radiology Report", radReady: "Report ready", radWait: "Awaiting report", visitNo: "Visit", by: "Ordered by", date: "Ordered on",
+      back: "All Orders", openFile: "Open Patient File", openVisit: "View Visit", orderNo: "Order", bookingNo: "Booking", repDate: "Report date", radRep: "Radiology Report", radReady: "Report ready", radWait: "Awaiting report", radReview: "Report to review", chResIn: "results in", chRepIn: "report in", chRepOk: "reviewed", visitNo: "Visit", by: "Ordered by", date: "Ordered on",
       sec_lab: "Laboratory", sec_radiology: "Radiology", sec_other: "Other Services",
       cCode: "Code", cTest: "Test", cRes: "Result", cRange: "Reference Range", cFlag: "Status",
       pending: "Pending", inReport: "See the report", fl_normal: "Normal", fl_high: "High", fl_low: "Low", fl_critical: "Critical",
@@ -386,7 +387,7 @@
       ordered: "طُلب {d}", fileNo: "ملف {n}", tests1: "تحليل واحد", testsN: "{n} تحاليل",
       ty_lab: "مختبر", ty_radiology: "أشعة", ty_nursing: "تمريض", ty_iv: "محاليل وريدية", ty_referral: "تحويل", ty_leave: "إجازة مرضية", ty_doctor: "زيارة طبيب", ty_physio: "علاج طبيعي",
       noneT: "ما فيه أوردرات للحين", noneS: "تظهر الأوردرات هنا بعد ما توقّع زيارة فيها تحاليل أو أشعة.", noMatchT: "ما فيه أوردر مطابق", noMatchS: "جرب اسم أو رقم ملف أو تحليل ثاني.",
-      back: "كل الأوردرات", openFile: "فتح ملف المريض", openVisit: "عرض الزيارة", orderNo: "الطلب", bookingNo: "الحجز", repDate: "تاريخ التقرير", radRep: "تقرير الأشعة", radReady: "التقرير جاهز", radWait: "بانتظار التقرير", visitNo: "الزيارة", by: "الطبيب", date: "تاريخ الطلب",
+      back: "كل الأوردرات", openFile: "فتح ملف المريض", openVisit: "عرض الزيارة", orderNo: "الطلب", bookingNo: "الحجز", repDate: "تاريخ التقرير", radRep: "تقرير الأشعة", radReady: "التقرير جاهز", radWait: "بانتظار التقرير", radReview: "تقرير للمراجعة", chResIn: "وصلت النتائج", chRepIn: "وصل التقرير", chRepOk: "تمت المراجعة", visitNo: "الزيارة", by: "الطبيب", date: "تاريخ الطلب",
       sec_lab: "المختبر", sec_radiology: "الأشعة", sec_other: "خدمات ثانية",
       cCode: "الكود", cTest: "التحليل", cRes: "النتيجة", cRange: "المعدل الطبيعي", cFlag: "الحالة",
       pending: "بانتظار النتيجة", inReport: "في التقرير", fl_normal: "طبيعي", fl_high: "مرتفع", fl_low: "منخفض", fl_critical: "حرج",
@@ -447,7 +448,8 @@
     r.items.forEach(it => { by[it.type] = by[it.type] || []; by[it.type].push(it); });
     return Object.keys(by).map(ty => {
       const its = by[ty], n = ty === "lab" ? its.reduce((s, it) => s + Math.max(1, (it.orderCodes || it.tests || []).length), 0) : 0;
-      return `<span class="chip">${svg(icOf(ty))}${t()["ty_" + ty] || ty}${ty === "lab" ? ` · ${n === 1 ? t().tests1 : tx("testsN", { n })}` : its.length > 1 ? ` · ${its.length}` : ""}</span>`;
+      const nd = its.filter(needs).length, ok = !nd && ty === "radiology" && its.every(M.isDone);
+      return `<span class="chip${nd ? " need" : ok ? " ok" : ""}">${svg(icOf(ty))}${t()["ty_" + ty] || ty}${ty === "lab" ? ` · ${n === 1 ? t().tests1 : tx("testsN", { n })}` : its.length > 1 ? ` · ${its.length}` : ""}${nd ? ` · ${ty === "lab" ? t().chResIn : t().chRepIn}` : ok ? ` · ${t().chRepOk}` : ""}</span>`;
     }).join("");
   }
   function list() {
@@ -497,12 +499,15 @@
     const codes = (it.orderCodes || []).map(c => `<span class="code">${esc(c)}</span>`).join(" ");
     const ref = (l, v, txt) => v ? `<span>${l}: <b class="${txt ? "" : "num"}">${esc(v)}</b></span>` : "";
     let h = `<div class="it" id="it-${esc(it.id)}"><div class="it-h">${codes}<b>${esc(who(it.title))}</b>
-      <span class="st st-${rl ? "done" : "wait"}">${rl ? t().radReady : t().radWait}</span></div>
+      <span class="st st-${needs(it) ? "need" : M.isDone(it) ? "done" : "wait"}">${needs(it) ? t().radReview : M.isDone(it) ? t().s_reviewed : rl ? t().radReady : t().radWait}</span></div>
       <div class="rad-ref">${ref(t().orderNo, r.id)}${ref(t().bookingNo, r.bookingId)}${ref(t().visitNo, r.orderId)}${rl ? ref(t().repDate, fmtT(rl.at), 1) : ""}</div>`;
     h += logBox(it) + escBox(it);
     if (!rl) return h + `<div class="wait-box">${svg(IC.clock, 2)}${t().waitRad}</div></div>`;
     h += `<div class="rad-rep"><small>${t().radRep}</small>${rd.result ? `<p dir="auto">${esc(rd.result)}</p>` : ""}${file ? `<button type="button" class="btn btn-out" data-file="${esc(it.id)}">${svg(IC.eye)}${t().viewReport}</button>` : ""}</div>`;
-    return h + `</div>`;
+    const notes = it.docNotes || [];
+    h += apvBox(it);
+    if (notes.length) h += `<div class="nts"><small>${t().notesT}</small>${notes.map(n => `<span dir="auto">${esc(n.text)} <small class="num">· ${esc(fmtT(n.at))}</small></span>`).join("")}</div>`;
+    return h + rvBox(r, it) + `</div>`;
   }
   // What staff entered at each step (Medical Requests page), e.g. referral facility, booked date, leave number, pharmacy.
   const LOG_SKIP = ["result", "file", "docNote"];
@@ -553,13 +558,23 @@
     if (isRes && rl) h += `<div class="it-f"><span>${esc(tx("enteredBy", { n: who(it.enteredBy || rl.by) || "—", t: fmtT(it.enteredAt || rl.at) }))}</span>${file ? `<button type="button" class="btn btn-out" data-file="${esc(it.id)}">${svg(IC.eye)}${t().viewReport}</button>` : ""}</div>`;
     h += logBox(it) + escBox(it);
     const notes = it.docNotes || [];
-    if (ap) h += `<div class="apv"><b>${svg(IC.check, 2.2)}${esc(tx("approvedBy", { n: who(ap.by), t: fmtT(ap.at) }))}</b>${ap.data && ap.data.docNote ? `<span dir="auto">${esc(ap.data.docNote)}</span>` : ""}</div>`;
+    h += apvBox(it);
     if (notes.length) h += `<div class="nts"><small>${t().notesT}</small>${notes.map(n => `<span dir="auto">${esc(n.text)} <small class="num">· ${esc(fmtT(n.at))}</small></span>`).join("")}</div>`;
-    if (needs(it) && r.status === "open") h += `<div class="rv"><b>${svg(IC.alert, 2)}${t().rvT}</b><label class="sr" for="note-${esc(it.id)}">${t().rvLbl}</label>
+    h += rvBox(r, it);
+    return h + `</div>`;
+  }
+  // The doctor's approval, with the note that went on the patient's PDF.
+  function apvBox(it) {
+    const ap = logAt(it, "reviewed");
+    return ap ? `<div class="apv"><b>${svg(IC.check, 2.2)}${esc(tx("approvedBy", { n: who(ap.by), t: fmtT(ap.at) }))}</b>${ap.data && ap.data.docNote ? `<span dir="auto">${esc(ap.data.docNote)}</span>` : ""}</div>` : "";
+  }
+  // The doctor's review: a note (goes on the patient's PDF once approved) and Approve, or a note for the care team only.
+  function rvBox(r, it) {
+    if (!(needs(it) && r.status === "open")) return "";
+    return `<div class="rv"><b>${svg(IC.alert, 2)}${t().rvT}</b><label class="sr" for="note-${esc(it.id)}">${t().rvLbl}</label>
       <textarea id="note-${esc(it.id)}" maxlength="600" dir="auto" placeholder="${esc(it.type === "lab" ? t().rvPh : t().rvPhRad)}"></textarea>
       <div class="rv-pdf">${svg(IC.alert, 2)}<span><b>${esc(it.type === "lab" ? t().rvPdf : t().rvPdfRad)}</b><small>${esc(t().rvOnly)}</small></span></div><small class="err" id="err-${esc(it.id)}" hidden>${t().needNote}</small>
       <div class="rv-a"><button type="button" class="btn btn-out" data-note="${esc(it.id)}">${t().saveNote}</button><button type="button" class="btn btn-green" data-approve="${esc(it.id)}">${svg(IC.check, 2.2)}${t().approve}</button></div></div>`;
-    return h + `</div>`;
   }
   // Request status from the Medical Requests page: open, closed (waiting quality review) or quality reviewed.
   function rqBox(r) {
