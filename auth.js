@@ -42,7 +42,7 @@ const MadaStore = (() => {
     // Kept on this device only: the login, language and menu choices, and the demo bookkeeping.
     const LOCAL = /^mada-(session|lang|pay-lang|admin-nav|bk-cols|dr-tips-off-.+|orders-.+-v\d+|dr-demo-.+|lab-demo-.+|dr-orders-demo-.+|dr-report-demo-.+|dr-family-demo|cloud-.+)$/;
     // Lists kept one row per record: key -> the record's id field.
-    const LIST = { "mada-orders": "id", "mada-medical": "id", "mada-staff": "id", "mada-patients": "fileNo", "mada-requests": "id", "mada-internal-bookings": "id", "mada-support": "ref" };
+    const LIST = { "mada-orders": "id", "mada-medical": "id", "mada-staff": "id", "mada-patients": "fileNo", "mada-requests": "id", "mada-internal-bookings": "id", "mada-support": "ref", "mada-providers": "id" };
     const QKEY = "mada-cloud-queue", rows = new Map(), lastRead = {}, status = { on, ready: false, offline: false, pending: 0, error: null };
     const rk = (k, rid) => k + "\u0001" + rid;
     const shared = k => /^mada-/.test(k) && !LOCAL.test(k);
