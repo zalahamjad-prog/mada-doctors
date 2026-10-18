@@ -683,6 +683,7 @@
       if (adTy !== "doctor" && !code) { $("err-ad").hidden = false; $("adIt").focus(); return; }
       const it = newItem(adTy, code, note);
       // A closed request takes no more items: the new order opens a new request for the same visit.
+      it.drAdded = true; // shows on the dashboard's Doctor Orders page (doctor-requests.html)
       if (r.status === "open") M.addItem(r.id, it, me.name);
       else { const nr = M.add({ orderId: r.orderId, bookingId: r.bookingId || null, mrn: r.mrn, patient: r.patient, mobile: r.mobile, service: r.service, doctorId: r.doctorId, source: "doctor", byDoctor: me.name, items: [{ ...it, addedBy: me.name }] });
         history.replaceState(null, "", "?id=" + encodeURIComponent(nr.id)); }

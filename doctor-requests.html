@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="assets/mada-logo.png">
+<title>Mada Care | Doctor Orders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #0b6b5c;
+    --primary-dark: #08584b;
+    --primary-soft: #e6f3ef;
+    --ink: #10232b;
+    --muted: #6b7a80;
+    --border: #e3e8ea;
+    --page: #f5f7f8;
+    --card: #ffffff;
+    --red: #dc2626; --red-soft: #fdecec;
+    --orange: #d97706; --orange-soft: #fef3e2;
+    --blue: #3b82f6; --blue-soft: #e8f0fe;
+    --purple: #7c3aed; --purple-soft: #f1eafe;
+    --green: #15803d; --green-soft: #e7f6ec;
+    --font: "Inter", "Tajawal", system-ui, sans-serif;
+  }
+  [dir="rtl"] { --font: "Tajawal", "Inter", system-ui, sans-serif; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--page); color: var(--ink); min-height: 100vh; }
+  button, input, select { font: inherit; color: inherit; }
+  svg { flex-shrink: 0; }
+  [hidden] { display: none !important; }
+
+  /* ---------- Top bar ---------- */
+  .topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 20px; height: 68px; padding: 0 28px; background: #fff; border-bottom: 1px solid var(--border); }
+  .logo { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--ink); }
+  .logo img { width: auto; height: 40px; }
+  .logo-name { font-size: 17px; font-weight: 600; line-height: 1.1; }
+  .logo-tag { font-size: 10.5px; color: var(--primary); }
+  .nav { display: flex; gap: 4px; margin-inline-start: 18px; }
+  .nav a { display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 8px; font-size: 13.5px; font-weight: 500; color: #44545a; text-decoration: none; }
+  .nav a:hover { background: #f1f4f5; }
+  .nav a[aria-current="page"] { background: var(--primary-soft); color: var(--primary); }
+  .nav-count { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--red); color: #fff; font-size: 10.5px; font-weight: 600; line-height: 18px; text-align: center; }
+  .top-actions { margin-inline-start: auto; display: flex; align-items: center; gap: 10px; }
+  .lang-btn { display: flex; align-items: center; gap: 6px; background: none; border: 0; cursor: pointer; font-size: 13px; color: #44545a; padding: 8px; border-radius: 8px; }
+  .lang-btn:hover { background: #f1f4f5; }
+  .user { position: relative; }
+  .user-btn { display: flex; align-items: center; gap: 10px; background: none; border: 0; cursor: pointer; padding: 4px 6px; border-radius: 10px; text-align: start; }
+  .user-btn:hover { background: #f1f4f5; }
+  .avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; font-weight: 600; font-size: 14px; }
+  .user-name { display: block; font-size: 13px; font-weight: 600; }
+  .user-role { display: block; font-size: 11px; color: var(--muted); }
+  .user-menu { position: absolute; top: 110%; inset-inline-end: 0; min-width: 170px; background: #fff; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 24px rgba(16,35,43,.08); padding: 6px; display: none; }
+  .user.open .user-menu { display: block; }
+  .user-menu a { display: block; padding: 9px 10px; border-radius: 6px; font-size: 13px; color: var(--ink); text-decoration: none; }
+  .user-menu a:hover { background: var(--primary-soft); color: var(--primary); }
+
+  main { max-width: 1320px; margin: 0 auto; padding: 24px 28px 40px; display: grid; gap: 18px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; }
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .page-head h1 { font-size: 24px; font-weight: 600; }
+  .page-head p { margin-top: 4px; font-size: 13.5px; color: var(--muted); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 18px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; font-size: 13.5px; font-weight: 500; text-decoration: none; white-space: nowrap; }
+  .btn svg { width: 17px; height: 17px; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-ghost { background: #fff; color: var(--ink); border-color: #d9e1e3; }
+  .btn-ghost:hover { background: #f5f8f8; }
+  /* ---------- Lab Results ---------- */
+  .ph-title { display: flex; align-items: center; gap: 14px; }
+  .ph-icon { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; background: var(--primary-soft); color: var(--primary); }
+  .ph-icon svg { width: 25px; height: 25px; }
+  .nav a.nav-soon { cursor: default; color: #9aa7ab; }
+  .nav a.nav-soon:hover { background: none; }
+  .soon-tag { height: 18px; padding: 0 7px; border-radius: 9px; background: var(--orange-soft); color: var(--orange); font-size: 10.5px; font-weight: 600; line-height: 18px; }
+  .nav { min-width: 0; overflow-x: auto; scrollbar-width: none; }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav a { flex: none; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 60; background: var(--ink); color: #fff; padding: 11px 18px; border-radius: 10px; font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,.2); max-width: calc(100% - 32px); }
+  .stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+  .stat { display: flex; align-items: center; gap: 12px; padding: 14px; text-align: start; cursor: pointer; font: inherit; color: inherit; }
+  .stat:hover { border-color: #c9d4d8; }
+  .stat[aria-pressed="true"] { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary) inset; }
+  .stat-icon { width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center; flex: none; }
+  .stat-icon svg { width: 21px; height: 21px; }
+  .stat b { display: block; font-size: 22px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+  .stat small { display: block; font-size: 12px; color: var(--muted); margin-top: 5px; font-weight: 600; line-height: 1.3; }
+  .s-green { background: var(--primary-soft); color: var(--primary); } .s-orange { background: var(--orange-soft); color: var(--orange); } .s-red { background: var(--red-soft); color: var(--red); }
+  .s-blue { background: var(--blue-soft); color: var(--blue); } .s-purple { background: var(--purple-soft); color: var(--purple); } .s-gray { background: #f0f3f4; color: #5b6b70; }
+  .filters { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px; }
+  .search { flex: 1 1 280px; display: flex; align-items: center; gap: 10px; height: 42px; padding: 0 14px; border: 1px solid var(--border); border-radius: 9px; background: #fff; }
+  .search svg { width: 18px; height: 18px; color: #5b6b70; }
+  .search input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font-size: 13.5px; }
+  .search:focus-within, .sel:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(11,107,92,.12); outline: 0; }
+  .sel { height: 42px; padding: 0 12px; border: 1px solid var(--border); border-radius: 9px; background: #fff; font-size: 13.5px; min-width: 180px; }
+  .table-wrap { overflow-x: auto; border-top: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  thead th { background: #f5f8f9; text-align: start; font-weight: 600; font-size: 12.5px; color: #44545a; padding: 12px 12px; white-space: nowrap; }
+  tbody td { padding: 12px; border-top: 1px solid #eef2f3; vertical-align: top; }
+  tbody tr:hover td { background: #fbfdfc; }
+  td b.pn, td a.pl { display: block; color: #15304a; font-weight: 600; text-decoration: none; }
+  td a.pl:hover { color: #0f766e; text-decoration: underline; }
+  a.fl { color: #0f766e; font-weight: 600; text-decoration: none; border-bottom: 1px dashed currentColor; }
+  a.fl:hover { border-bottom-style: solid; }
+  td.c-who small { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; margin-top: 3px; }
+  td.c-who a.fl { display: inline-block; background: #e6f4f1; border: 1px solid #b7e0d6; border-radius: 6px; padding: 1px 7px; font-size: 12px; }
+  td.c-who a.fl:hover { background: #0f766e; color: #fff; border-color: #0f766e; }
+  td small { display: block; font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.45; }
+  .num { direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; }
+  td .num { white-space: nowrap; }
+  td.c-who { min-width: 140px; } td.c-taken { white-space: nowrap; } .pv-logo { display: block; height: 24px; max-width: 90px; object-fit: contain; margin-bottom: 4px; }
+  .dr small { display: block; font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .tests { display: flex; flex-wrap: wrap; gap: 4px; max-width: 260px; }
+  .exam { font-weight: 600; color: #15304a; min-width: 110px; max-width: 180px; display: block; }
+  td small { max-width: 180px; }
+  .dr .q { max-width: 190px !important; }
+  .tc { font-size: 11px; font-weight: 700; color: #0b6b5c; background: #e3f4ee; padding: 2px 7px; border-radius: 6px; direction: ltr; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 12px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .p-orange { background: var(--orange-soft); color: #b45309; } .p-red { background: var(--red-soft); color: #b91c1c; } .p-blue { background: var(--blue-soft); color: #1d4ed8; }
+  .p-green { background: var(--green-soft); color: var(--green); } .p-purple { background: var(--purple-soft); color: var(--purple); } .p-gray { background: #f0f3f4; color: #5b6b70; }
+  .p-crit { background: #b42318; color: #fff; }
+  .due { font-weight: 600; color: #b45309; white-space: nowrap; } .due.late { color: #b91c1c; } .due.ok { color: var(--green); }
+  .dr { min-width: 150px; }
+  .dr b { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
+  .dr b svg { width: 15px; height: 15px; }
+  .dr .tl { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 2px; font-size: 11.5px; color: var(--muted); }
+  .dr .tl li { display: flex; flex-wrap: wrap; gap: 0 5px; align-items: baseline; }
+  .dr .tl b { font-size: 11.5px; font-weight: 600; color: #15304a; display: inline; }
+  .dr .tl em { font-style: normal; color: #6b7a80; }
+  .dr .took { display: inline-flex; align-items: center; gap: 4px; margin-top: 5px; font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+  .dr .took svg { width: 13px; height: 13px; }
+  .dr .took.ok { background: #e7f6ec; color: #15803d; } .dr .took.wait { background: #fff4e5; color: #b45309; }
+  .stat small.avg { color: #15803d; font-weight: 700; margin-top: 3px; }
+  .dr .q { margin-top: 4px; font-size: 12px; color: #44545a; font-style: italic; max-width: 240px; }
+  .d-no { color: #b91c1c; } .d-seen { color: #b45309; } .d-ok { color: var(--green); } .d-na { color: var(--muted); }
+  .acts { display: flex; gap: 6px; justify-content: flex-end; }
+  .ib { width: 36px; height: 36px; border-radius: 8px; border: 1px solid #d9e1e3; background: #fff; display: grid; place-items: center; cursor: pointer; color: #15304a; text-decoration: none; }
+  .ib:hover { background: #f5f8f8; }
+  .ib svg { width: 17px; height: 17px; }
+  .ib[disabled] { opacity: .35; cursor: default; }
+  .none { padding: 48px 20px; text-align: center; color: var(--muted); }
+  .none b { display: block; font-size: 16px; color: var(--ink); margin-bottom: 6px; }
+  .ov { position: fixed; inset: 0; z-index: 60; background: rgba(16,35,43,.42); display: grid; place-items: center; padding: 16px; overflow-y: auto; }
+  .dlg { position: relative; width: 100%; max-width: 760px; background: #fff; border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,.18); margin: auto; padding: 22px 22px 18px; }
+  .x { position: absolute; top: 14px; inset-inline-end: 14px; width: 34px; height: 34px; border: 0; background: none; border-radius: 8px; cursor: pointer; display: grid; place-items: center; color: #44545a; }
+  .x:hover { background: #f1f4f5; } .x svg { width: 20px; height: 20px; }
+  .dlg h3 { font-size: 19px; color: #15304a; padding-inline-end: 36px; }
+  .dlg .sub { font-size: 13px; color: var(--muted); margin: 4px 0 14px; }
+  .kv { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 16px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; font-size: 13px; }
+  .kv span { display: block; font-size: 11.5px; color: var(--muted); margin-bottom: 3px; }
+  .rt { border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; overflow: hidden; }
+  .rt h4 { display: flex; gap: 8px; align-items: center; padding: 9px 12px; background: #f5f8f9; font-size: 13.5px; color: #15304a; }
+  .rt td, .rt th { padding: 8px 12px; }
+  .rt th { font-size: 11.5px; color: var(--muted); font-weight: 600; text-align: start; }
+  .fl { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 11.5px; font-weight: 700; background: #e3f4ee; color: #0f6b52; }
+  .fl.low, .fl.high { background: #fff1e0; color: #a4520a; } .fl.critical { background: #b42318; color: #fff; }
+  .df { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+  .df a { text-decoration: none; }
+  @media (max-width: 1180px) { .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } .user-meta { display: none; } }
+  @media (max-width: 980px) {
+    .table-wrap thead { display: none; }
+    .table-wrap table, .table-wrap tbody { display: block; }
+    .table-wrap tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px 14px; padding: 14px 16px; border-top: 1px solid var(--border); }
+    .table-wrap td { display: block; padding: 0; border: 0; min-width: 0; background: none !important; }
+    .table-wrap td[data-l]::before { content: attr(data-l); display: block; font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+    .table-wrap td.c-who, .table-wrap td.c-tests, .table-wrap td.c-dr { grid-column: 1 / -1; }
+    .table-wrap td.c-acts { grid-column: 1 / -1; }
+    .acts { justify-content: stretch; } .acts .ib { flex: 1; }
+  }
+  @media (max-width: 760px) {
+    .topbar { padding: 10px 16px; gap: 8px; height: auto; flex-wrap: wrap; }
+    .nav { order: 3; flex-basis: 100%; margin-inline-start: 0; }
+    .lang-label { display: none; }
+    main { padding: 16px 16px 32px; gap: 14px; }
+    .page-head h1 { font-size: 21px; }
+    .ph-icon { width: 40px; height: 40px; }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .sel { flex: 1 1 100%; }
+    .kv { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .dlg { padding: 18px 14px 14px; }
+    .rt .hm { display: none; }
+  }
+  /* Doctor Orders */
+  .stats { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  td.c-ord { min-width: 220px; } td.c-ord b { display: block; font-size: 13.5px; } td.c-ord small, td small { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  td.c-ord .nt { font-size: 12px; color: #44545a; font-style: italic; margin-top: 4px; max-width: 280px; }
+  .ty { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 6px; background: #eef4f2; color: var(--primary); font-size: 11.5px; font-weight: 700; margin-bottom: 4px; }
+  .ty svg { width: 13px; height: 13px; }
+  .bk b { font-size: 13px; } .tel { color: var(--primary); text-decoration: none; font-weight: 600; direction: ltr; unicode-bidi: isolate; }
+  .btn-sm { height: 36px; padding: 0 12px; font-size: 13px; }
+  .sec2 { border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-top: 12px; }
+  .sec2 h4 { font-size: 14.5px; color: #15304a; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; } .sec2 h4 svg { width: 17px; height: 17px; color: var(--primary); }
+  .fg { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; } .fg .w { grid-column: 1 / -1; }
+  .fg label { display: block; font-size: 12.5px; font-weight: 600; color: #44545a; margin-bottom: 5px; }
+  .fg .inp { width: 100%; height: 42px; padding: 0 12px; border: 1px solid #d9e1e3; border-radius: 8px; background: #fff; font: inherit; font-size: 14px; outline: 0; }
+  .fg textarea.inp { height: auto; min-height: 60px; padding: 10px 12px; resize: vertical; }
+  .fg .inp:focus { border-color: var(--primary); } .fg .inp.bad { border-color: #dc2626; }
+  .clog { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 6px; }
+  .clog li { font-size: 12.5px; padding: 8px 10px; border-radius: 8px; background: #f6f8f9; } .clog li b { font-weight: 700; } .clog li span { color: var(--muted); }
+  .vcard { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; background: #e9f6f1; border: 1px solid #b9d9cf; color: #0b4d42; text-decoration: none; }
+  .vcard svg { width: 20px; height: 20px; flex: none; } .vcard b { display: block; font-size: 14px; } .vcard small { display: block; font-size: 12px; color: #3f6b62; margin-top: 2px; }
+  .err { color: #b91c1c; font-size: 12.5px; font-weight: 600; margin-top: 8px; }
+  .kv .pill { display: inline-flex; margin: 0; }
+  @media (max-width: 1100px) { .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 640px) { .fg { grid-template-columns: 1fr; } .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="logo" href="dashboard.html" aria-label="Mada care">
+    <img src="assets/mada-logo.png" alt="" width="301" height="320">
+    <div>
+      <div class="logo-name">Mada Care</div>
+      <div class="logo-tag" data-i18n="tagline">Caring Like Family</div>
+    </div>
+  </a>
+  <nav class="nav">
+    <a href="dashboard.html" data-i18n="navDashboard">Dashboard</a>
+    <a href="requests.html"><span data-i18n="navRequests">Requests</span><span class="nav-count" id="navCount" hidden>0</span></a>
+    <a href="bookings.html" data-i18n="navBookings">Bookings</a>
+    <a href="patients.html" data-i18n="navPatients">Patients</a>
+    <a href="medical-requests.html" data-i18n="navMedical">Medical Requests</a>
+    <a href="invoices.html" data-i18n="navInvoices">Invoices</a>
+    <a href="services.html" data-i18n="navServices">Services</a>
+    <a href="#" class="nav-soon" aria-disabled="true" onclick="event.preventDefault()"><span data-i18n="navQuality">Quality</span><span class="soon-tag" data-i18n="navSoon">Soon</span></a>
+    <a href="staff.html" data-i18n="navStaff">Staff</a>
+    <a href="policies.html" data-i18n="navPolicies">Policies</a>
+  </nav>
+  <div class="top-actions">
+    <button class="lang-btn" id="langToggle" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>
+      <span class="lang-label" data-i18n="otherLang">العربية</span>
+    </button>
+    <div class="user" id="user">
+      <button class="user-btn" id="userBtn" type="button" aria-haspopup="menu" aria-expanded="false">
+        <span class="avatar" id="avatar">SA</span>
+        <span class="user-meta"><span class="user-name" id="userName">Sarah Ahmed</span><span class="user-role" id="userRole">Administrator</span></span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#44545a" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="user-menu" role="menu">
+        <a href="#" role="menuitem" data-i18n="profile">My Profile</a>
+        <a href="#" role="menuitem" data-i18n="settings">Settings</a>
+        <a href="index.html" role="menuitem" id="logout" data-i18n="logout">Log out</a>
+      </div>
+    </div>
+  </div>
+</header>
+<script src="admin-nav.js"></script>
+
+<main>
+  <div class="page-head">
+    <div class="ph-title">
+      <span class="ph-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 4h6v3H9z"/><path d="M8 5H6v16h12V5h-2M9 12h6M9 16h4"/></svg></span>
+      <div><h1 data-i18n="title">Doctor Orders</h1><p data-i18n="subtitle">Orders a doctor wrote after reading lab or imaging results. Call the patient, book the visit and assign a nurse or doctor.</p></div>
+    </div>
+  </div>
+  <div class="stats" id="stats"></div>
+  <section class="card">
+    <div class="filters">
+      <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" id="q" data-i18n-ph="searchPh" data-i18n-aria="search" placeholder="Search" autocomplete="off"></label>
+      <select class="sel" id="ty" data-i18n-aria="tyLbl"></select>
+    </div>
+    <div class="table-wrap"><table><thead><tr id="thead"></tr></thead><tbody id="rows"></tbody></table></div>
+    <div class="none" id="none" hidden></div>
+  </section>
+</main>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="dT"><div class="dlg" id="dlg"></div></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="auth.js"></script>
+<script src="orders.js"></script>
+<script src="medical.js"></script>
+<script src="nurses.js"></script>
+<script src="labs.js"></script>
+<script src="doctor-orders.js"></script>
+<script src="providers.js"></script>
+<script src="visit-book.js"></script>
+<script>
+  const me = MadaAuth.requireAuth("agent");
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  // Doctor Orders: only the orders a doctor wrote after reading results (Doctor Portal > Orders > New orders, item.drAdded).
+  // Nothing else shows here. The operations team calls the patient (item.contacts), then books the visit and assigns a nurse or
+  // doctor (visit-book.js; imaging is booked at an imaging center instead). The patient pays after the service.
+  const i18n = {
+    en: { tagline: "Caring Like Family", otherLang: "العربية", profile: "My Profile", settings: "Settings", logout: "Log out",
+      navDashboard: "Dashboard", navRequests: "Requests", navBookings: "Bookings", navPatients: "Patients", navMedical: "Medical Requests", navInvoices: "Invoices", navQuality: "Quality", navSoon: "Soon", navStaff: "Staff", navPolicies: "Policies", navServices: "Services",
+      title: "Doctor Orders", subtitle: "Orders a doctor wrote after reading lab or imaging results. Call the patient, book the visit and assign a nurse or doctor.",
+      searchPh: "Patient, file number, mobile, order or doctor", search: "Search", tyLbl: "Service", tyAll: "All services",
+      ty_lab: "Lab tests", ty_radiology: "Imaging", ty_nursing: "Nursing", ty_iv: "IV therapy", ty_doctor: "Doctor visit", ty_physio: "Physiotherapy",
+      k_all: "All orders", k_new: "New, not called", k_call: "Called, not booked", k_booked: "Booked", k_done: "Done",
+      cPatient: "Patient", cOrder: "Order", cDoctor: "Doctor", cStatus: "Status", cBook: "Booking", cActs: "",
+      st_new: "New", st_call: "Called", st_declined: "Patient declined", st_booked: "Booked", st_done: "Done",
+      noBook: "Not booked yet", payAfter: "Pays after the service", payPaid: "Paid", act: "Take action", open: "Open medical request", close: "Close",
+      dT: "Doctor's order", noteBy: "Doctor's note", orderedAt: "Ordered {t}",
+      cT: "Contact the patient", cOut: "Call result", o_reached: "Reached, agreed to book", o_noAnswer: "No answer", o_callback: "Asked to call back", o_declined: "Declined the service", cNote: "Note", optional: "(optional)", cSave: "Save call",
+      bT: "Book and assign", bTrad: "Book at the imaging center", fDate: "Date", fTime: "Time", fAssign: "Assign to", pick: "Choose a nurse or doctor", nurses: "Nurses", doctors: "Doctors", fCenter: "Imaging center", pickC: "Choose the imaging center", noProv: "No imaging centers added yet.", addProv: "Add one in Service Providers",
+      fNote: "Note for the team", bSave: "Book and assign", bSaveRad: "Save appointment", need: "Fill in the required fields.", badPast: "Choose today or a later date.",
+      visit: "Visit {b} with {n}", radAt: "At {c} on {d}", doneMsg: "The service is done.", callSaved: "Call saved.", booked: "Visit {b} booked with {n}.", radSaved: "Imaging appointment saved.",
+      none: "No doctor orders here", noneSub: "Orders a doctor writes after reading results show here.", noneQ: "No orders match your search.",
+      d: "{n}d", h: "{n}h", m: "{n}m", today: "today", ytd: "yesterday", tmr: "tomorrow" },
+    ar: { tagline: "رعاية كالعائلة", otherLang: "English", profile: "ملفي الشخصي", settings: "الإعدادات", logout: "تسجيل الخروج",
+      navDashboard: "الرئيسية", navRequests: "الطلبات", navBookings: "الحجوزات", navPatients: "المرضى", navMedical: "الطلبات الطبية", navInvoices: "الفواتير", navQuality: "الجودة", navSoon: "قريباً", navStaff: "الموظفين", navPolicies: "السياسات", navServices: "الخدمات",
+      title: "طلبات الطبيب", subtitle: "الطلبات اللي يكتبها الطبيب بعد ما يشوف نتائج التحاليل أو الأشعة. اتصل على المريض واحجز الزيارة وأسندها لممرضة أو طبيب.",
+      searchPh: "المريض أو رقم الملف أو الجوال أو الطلب أو الطبيب", search: "بحث", tyLbl: "الخدمة", tyAll: "كل الخدمات",
+      ty_lab: "تحاليل", ty_radiology: "أشعة", ty_nursing: "تمريض", ty_iv: "محاليل وريدية", ty_doctor: "زيارة طبيب", ty_physio: "علاج طبيعي",
+      k_all: "كل الطلبات", k_new: "جديدة، ما تم الاتصال", k_call: "تم الاتصال، ما انحجزت", k_booked: "محجوزة", k_done: "مكتملة",
+      cPatient: "المريض", cOrder: "الطلب", cDoctor: "الطبيب", cStatus: "الحالة", cBook: "الحجز", cActs: "",
+      st_new: "جديد", st_call: "تم الاتصال", st_declined: "المريض رفض", st_booked: "محجوز", st_done: "مكتمل",
+      noBook: "ما انحجز للحين", payAfter: "الدفع بعد الخدمة", payPaid: "مدفوع", act: "اتخذ إجراء", open: "فتح الطلب الطبي", close: "إغلاق",
+      dT: "طلب الطبيب", noteBy: "ملاحظة الطبيب", orderedAt: "انطلب {t}",
+      cT: "التواصل مع المريض", cOut: "نتيجة الاتصال", o_reached: "رد ووافق على الحجز", o_noAnswer: "ما رد", o_callback: "طلب نتصل عليه بعدين", o_declined: "رفض الخدمة", cNote: "ملاحظة", optional: "(اختياري)", cSave: "حفظ الاتصال",
+      bT: "احجز وأسند", bTrad: "احجز في مركز الأشعة", fDate: "التاريخ", fTime: "الوقت", fAssign: "إسناد إلى", pick: "اختر ممرضة أو طبيب", nurses: "الممرضات", doctors: "الأطباء", fCenter: "مركز الأشعة", pickC: "اختر مركز الأشعة", noProv: "ما فيه مراكز أشعة مضافة.", addProv: "أضفها من مقدمو الخدمة",
+      fNote: "ملاحظة للفريق", bSave: "احجز وأسند", bSaveRad: "حفظ الموعد", need: "عبّ الخانات المطلوبة.", badPast: "اختر اليوم أو تاريخ بعده.",
+      visit: "زيارة {b} مع {n}", radAt: "في {c} بتاريخ {d}", doneMsg: "تم تقديم الخدمة.", callSaved: "انحفظ الاتصال.", booked: "انحجزت الزيارة {b} مع {n}.", radSaved: "انحفظ موعد الأشعة.",
+      none: "ما فيه طلبات من الأطباء هنا", noneSub: "الطلبات اللي يكتبها الطبيب بعد النتائج تطلع هنا.", noneQ: "ما فيه طلبات تطابق البحث.",
+      d: "{n} يوم", h: "{n} س", m: "{n} د", today: "اليوم", ytd: "أمس", tmr: "بكرة" }
+  };
+  let current = "en", kind = "all", openKey = null;
+  const t = () => i18n[current], tx = (k, v) => t()[k].replace(/\{(\w+)\}/g, (_, n) => v[n] != null ? v[n] : "");
+  const T = v => v && typeof v === "object" ? v[current] || v.en : v || "";
+  const S = (p, w) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 1.9}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+  const I = { all: '<path d="M9 4h6v3H9z"/><path d="M8 5H6v16h12V5h-2M9 12h6M9 16h4"/>', new: '<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>', call: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
+    booked: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>', done: '<path d="m5 12 5 5 9-10"/>', x: '<path d="M6 6l12 12M18 6 6 18"/>', go: '<path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"/>',
+    lab: '<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/>', radiology: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 8v8M9 10h6M9 13h6"/>',
+    nursing: '<path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/>', iv: '<path d="M8 3h8v9a4 4 0 0 1-8 0zM12 16v5"/>', doctor: '<circle cx="12" cy="7" r="4"/><path d="M5 21v-1a7 7 0 0 1 14 0v1"/>', physio: '<circle cx="12" cy="5" r="2"/><path d="M12 7v7l-3 7M12 14l3 7M8 10h8"/>' };
+  const KS = [["all", "s-green"], ["new", "s-red"], ["call", "s-orange"], ["booked", "s-blue"], ["done", "s-green"]];
+  const PILL = { new: "p-red", call: "p-orange", declined: "p-gray", booked: "p-blue", done: "p-green" };
+  const loc = () => current === "ar" ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB";
+  function when(iso) {
+    if (!iso) return ""; const d = new Date(iso), a = new Date(d), b = new Date(); a.setHours(0, 0, 0, 0); b.setHours(0, 0, 0, 0);
+    const diff = Math.round((a - b) / 864e5), day = diff === 0 ? t().today : diff === -1 ? t().ytd : diff === 1 ? t().tmr : d.toLocaleDateString(loc(), { day: "numeric", month: "short" });
+    return day + " " + d.toLocaleTimeString(current === "ar" ? "ar-SA-u-nu-latn" : "en-US", { hour: "numeric", minute: "2-digit" });
+  }
+  const dayTxt = ymd => { if (!ymd) return ""; const [y, m, d] = ymd.split("-").map(Number); return new Date(y, m - 1, d).toLocaleDateString(loc(), { day: "numeric", month: "short", year: "numeric" }); };
+  const minTxt = mn => { const h = Math.floor(mn / 60), m = mn % 60; return `${((h + 11) % 12) + 1}:${String(m).padStart(2, "0")} ${h >= 12 ? (current === "ar" ? "م" : "PM") : (current === "ar" ? "ص" : "AM")}`; };
+  const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+  const M = MadaMedical, B = MadaVisitBook, step = it => M.STEPS[it.type][it.step];
+  const logOf = (it, k) => [...(it.log || [])].reverse().find(l => M.STEPS[it.type][l.step] === k) || null;
+
+  // One row per order the doctor added.
+  function cards() {
+    const out = [];
+    M.all().filter(r => r.status !== "cancelled").forEach(r => {
+      if (B.sync(r, t().doneMsg)) r = M.get(r.id); // a finished nurse or doctor visit marks the service done
+      r.items.filter(it => it.drAdded).forEach(it => {
+        const v = B.visitOf(it), sc = it.type === "radiology" ? logOf(it, "scheduled") : null, cs = it.contacts || [], last = cs[cs.length - 1];
+        const done = M.isDone(it) || B.visitDone(v) || (it.type === "lab" && M.keyOf(it) !== "ordered") || (it.type === "radiology" && !!logOf(it, "resulted"));
+        const booked = !!v || !!sc;
+        const status = done ? "done" : booked ? "booked" : last ? (last.outcome === "declined" ? "declined" : "call") : "new";
+        const first = (it.log || [])[0] || {};
+        out.push({ key: r.id + "|" + it.id, r, it, v, sc, cs, status, at: it.addedAt || first.at || r.createdAt, doctor: it.addedBy || r.byDoctor });
+      });
+    });
+    const rank = { new: 0, call: 1, declined: 2, booked: 3, done: 4 };
+    return out.sort((a, b) => rank[a.status] - rank[b.status] || String(b.at).localeCompare(String(a.at)));
+  }
+  const IN = { all: () => true, new: c => c.status === "new", call: c => c.status === "call" || c.status === "declined", booked: c => c.status === "booked", done: c => c.status === "done" };
+  function bookHtml(c) {
+    if (c.v) return `<div class="bk"><b class="num">${esc(c.v.bookingId)}</b><small>${esc(dayTxt(c.v.appointment.date))} · ${esc(minTxt(c.v.appointment.minute))}</small><small>${esc(T(B.assignee(c.v)))}</small>
+      <small style="color:${c.v.payment === "paid" ? "var(--green)" : "#b45309"};font-weight:600">${c.v.payment === "paid" ? t().payPaid : t().payAfter}</small></div>`;
+    if (c.sc) { const d = c.sc.data || {}, p = d.providerId && MadaProviders.get(d.providerId); return `<div class="bk"><b>${esc(p ? T(p.name) : d.center || "—")}</b><small>${esc(dayTxt(d.date))}</small></div>`; }
+    return `<span style="color:var(--muted);font-size:12.5px">${t().noBook}</span>`;
+  }
+  function match(c, q) {
+    if (!q) return true;
+    const r = c.r; return [r.patient && r.patient.en, r.patient && r.patient.ar, r.mrn, r.mobile, r.id, c.it.title && c.it.title.en, c.it.title && c.it.title.ar, T(c.doctor), c.v && c.v.bookingId].join(" ").toLowerCase().includes(q.toLowerCase());
+  }
+  function render() {
+    const list = cards(), q = $("q").value.trim(), ty = $("ty").value;
+    $("stats").innerHTML = KS.map(([k, cls]) => `<button type="button" class="card stat" data-k="${k}" aria-pressed="${kind === k}"><span class="stat-icon ${cls}">${S(I[k], 2)}</span><span><b>${list.filter(IN[k]).length}</b><small>${t()["k_" + k]}</small></span></button>`).join("");
+    $("thead").innerHTML = ["cPatient", "cOrder", "cDoctor", "cStatus", "cBook", "cActs"].map(k => `<th>${t()[k]}</th>`).join("");
+    const rows = list.filter(c => IN[kind](c) && (!ty || c.it.type === ty) && match(c, q));
+    $("rows").innerHTML = rows.map(c => { const r = c.r, det = T(c.it.details); return `<tr>
+        <td class="c-who" data-l="${t().cPatient}">${r.mrn ? `<a class="pn pl" href="patient.html?file=${encodeURIComponent(r.mrn)}">${esc(T(r.patient))}</a>` : `<b class="pn">${esc(T(r.patient))}</b>`}<small><span class="num">${esc(r.mrn || "")}</span></small>${r.mobile ? `<small><a class="tel" href="tel:${esc(r.mobile)}">${esc(r.mobile)}</a></small>` : ""}</td>
+        <td class="c-ord" data-l="${t().cOrder}"><span class="ty">${S(I[c.it.type] || I.all, 2)}${t()["ty_" + c.it.type] || c.it.type}</span><b>${esc(T(c.it.title))}</b>${det ? `<div class="nt" dir="auto">“${esc(det)}”</div>` : ""}</td>
+        <td data-l="${t().cDoctor}"><b style="font-size:13px">${esc(T(c.doctor) || "—")}</b><small>${esc(tx("orderedAt", { t: when(c.at) }))}</small></td>
+        <td data-l="${t().cStatus}"><span class="pill ${PILL[c.status]}">${t()["st_" + c.status]}</span>${c.cs.length ? `<small>${esc(t()["o_" + c.cs[c.cs.length - 1].outcome])} · ${esc(when(c.cs[c.cs.length - 1].at))}</small>` : ""}</td>
+        <td data-l="${t().cBook}">${bookHtml(c)}</td>
+        <td class="c-acts"><div class="acts"><button type="button" class="btn ${c.status === "done" || c.status === "booked" ? "btn-ghost" : "btn-primary"} btn-sm" data-act="${esc(c.key)}">${t().act}</button>
+          <a class="ib" href="medical-request.html?id=${encodeURIComponent(r.id)}#item-${encodeURIComponent(c.it.id)}" title="${t().open}" aria-label="${t().open}">${S(I.go)}</a></div></td></tr>`; }).join("");
+    $("none").hidden = !!rows.length;
+    $("none").innerHTML = `<b>${t().none}</b>${q ? t().noneQ : t().noneSub}`;
+    if (openKey && !$("ov").hidden) openAct(openKey, true);
+  }
+
+  // The action window: call log, then the booking (nurse or doctor visit, or the imaging center).
+  function assignSel(it) {
+    const ns = `<optgroup label="${esc(t().nurses)}">${(MadaNurses.NURSES || []).map(n => `<option value="N:${esc(n.id)}">${esc(T(n.name))}</option>`).join("")}</optgroup>`;
+    const ds = `<optgroup label="${esc(t().doctors)}">${(MadaOrders.DOCTORS || []).map(d => `<option value="D:${esc(d.id)}">${esc(T(d.name))}</option>`).join("")}</optgroup>`;
+    return `<select class="inp" id="bWho"><option value="">${t().pick}</option>${it.type === "doctor" ? ds + ns : ns + ds}</select>`;
+  }
+  function bookForm(c) {
+    const it = c.it;
+    if (c.status === "done") return `<div class="sec2"><div class="vcard">${S(I.done, 2.4)}<span><b>${t().doneMsg}</b>${c.v ? `<small>${esc(tx("visit", { b: c.v.bookingId, n: T(B.assignee(c.v)) }))}</small>` : ""}</span></div></div>`;
+    if (c.v) return `<div class="sec2"><a class="vcard" href="request-details.html?id=${encodeURIComponent(c.v.id)}">${S(I.booked)}<span><b>${esc(tx("visit", { b: c.v.bookingId, n: T(B.assignee(c.v)) }))}</b>
+      <small>${esc(dayTxt(c.v.appointment.date))} · ${esc(minTxt(c.v.appointment.minute))} · ${c.v.payment === "paid" ? t().payPaid : t().payAfter}</small></span></a></div>`;
+    if (c.sc) { const d = c.sc.data || {}, p = d.providerId && MadaProviders.get(d.providerId); return `<div class="sec2"><div class="vcard">${S(I.booked)}<span><b>${esc(tx("radAt", { c: p ? T(p.name) : d.center || "—", d: dayTxt(d.date) }))}</b></span></div></div>`; }
+    if (c.r.status !== "open") return "";
+    if (it.type === "radiology") {
+      const ps = MadaProviders.active("imaging");
+      return `<div class="sec2"><h4>${S(I.booked)}${t().bTrad}</h4><div class="fg">
+        <div><label for="bCenter">${t().fCenter}</label>${ps.length ? `<select class="inp" id="bCenter"><option value="">${t().pickC}</option>${ps.map(p => `<option value="${esc(p.id)}">${esc(T(p.name))}</option>`).join("")}</select>`
+          : `<input class="inp" id="bCenter" maxlength="80" dir="auto"><small style="display:block;color:var(--muted);font-size:12px;margin-top:4px">${t().noProv} <a href="providers.html">${t().addProv}</a></small>`}</div>
+        <div><label for="bDate">${t().fDate}</label><input class="inp" type="date" id="bDate" min="${today()}"></div></div>
+        <div class="err" id="bErr" hidden></div><div class="df"><button type="button" class="btn btn-primary" id="bRad">${t().bSaveRad}</button></div></div>`;
+    }
+    if (!B.canBook(it)) return "";
+    return `<div class="sec2"><h4>${S(I.booked)}${t().bT}</h4><div class="fg">
+      <div><label for="bDate">${t().fDate}</label><input class="inp" type="date" id="bDate" min="${today()}"></div>
+      <div><label for="bTime">${t().fTime}</label><input class="inp" type="time" id="bTime"></div>
+      <div class="w"><label for="bWho">${t().fAssign}</label>${assignSel(it)}</div>
+      <div class="w"><label for="bNote">${t().fNote} <em style="font-style:normal;color:var(--muted);font-weight:500">${t().optional}</em></label><input class="inp" id="bNote" maxlength="200" dir="auto"></div></div>
+      <div class="err" id="bErr" hidden></div><div class="df"><button type="button" class="btn btn-primary" id="bBook">${t().bSave}</button></div></div>`;
+  }
+  function openAct(key, keep) {
+    const c = cards().find(x => x.key === key); if (!c) return;
+    openKey = key; const r = c.r, det = T(c.it.details);
+    $("dlg").innerHTML = `<button type="button" class="x" data-close aria-label="${t().close}">${S(I.x, 2)}</button>
+      <h3 id="dT">${t().dT} · ${esc(T(c.it.title))}</h3><p class="sub">${esc(T(r.patient))} · <span class="num">${esc(r.mrn || "")}</span>${r.mobile ? ` · <a class="tel" href="tel:${esc(r.mobile)}">${esc(r.mobile)}</a>` : ""}</p>
+      <div class="kv"><div><span>${t().cOrder}</span>${t()["ty_" + c.it.type] || c.it.type}</div><div><span>${t().cDoctor}</span>${esc(T(c.doctor) || "—")}</div><div><span>${t().cStatus}</span><span class="pill ${PILL[c.status]}">${t()["st_" + c.status]}</span></div>
+        ${det ? `<div style="grid-column:1/-1"><span>${t().noteBy}</span><span dir="auto">${esc(det)}</span></div>` : ""}</div>
+      ${c.status === "done" ? "" : `<div class="sec2"><h4>${S(I.call)}${t().cT}</h4>${c.cs.length ? `<ul class="clog">${c.cs.map(x => `<li><b>${esc(t()["o_" + x.outcome])}</b> <span>· ${esc(T(x.by))} · ${esc(when(x.at))}</span>${x.note ? `<div dir="auto">${esc(x.note)}</div>` : ""}</li>`).join("")}</ul>` : ""}
+        <div class="fg"><div><label for="cOut">${t().cOut}</label><select class="inp" id="cOut">${["reached", "noAnswer", "callback", "declined"].map(k => `<option value="${k}">${t()["o_" + k]}</option>`).join("")}</select></div>
+          <div><label for="cNote">${t().cNote} <em style="font-style:normal;color:var(--muted);font-weight:500">${t().optional}</em></label><input class="inp" id="cNote" maxlength="200" dir="auto"></div></div>
+        <div class="df"><button type="button" class="btn btn-ghost" id="cSave">${S(I.call, 2)}${t().cSave}</button></div></div>`}
+      ${bookForm(c)}
+      <div class="df"><a class="btn btn-ghost" href="medical-request.html?id=${encodeURIComponent(r.id)}#item-${encodeURIComponent(c.it.id)}">${t().open}</a><button type="button" class="btn btn-primary" data-close>${t().close}</button></div>`;
+    $("ov").hidden = false; if (!keep) $("dlg").querySelector(".x").focus();
+  }
+  $("dlg").addEventListener("click", e => {
+    const c = cards().find(x => x.key === openKey); if (!c) return;
+    const bad = (msg, ...els) => { els.forEach(el => el && el.classList.add("bad")); $("bErr").textContent = msg; $("bErr").hidden = false; };
+    if (e.target.closest("#cSave")) {
+      const it = M.get(c.r.id).items.find(x => x.id === c.it.id);
+      M.patchItem(c.r.id, c.it.id, { contacts: [...(it.contacts || []), { outcome: $("cOut").value, note: $("cNote").value.trim() || null, by: me.name, at: new Date().toISOString() }] });
+      render(); openAct(openKey, true); return toast(t().callSaved);
+    }
+    if (e.target.closest("#bBook")) {
+      const date = $("bDate").value, time = $("bTime").value, who = $("bWho").value;
+      if (!date || !time || !who) return bad(t().need, !date && $("bDate"), !time && $("bTime"), !who && $("bWho"));
+      if (date < today()) return bad(t().badPast, $("bDate"));
+      const [k, id] = who.split(":"), d = { date, time, note: $("bNote").value.trim(), [k === "N" ? "nurseId" : "doctorId"]: id };
+      const v = B.book(M.get(c.r.id), M.get(c.r.id).items.find(x => x.id === c.it.id), d, me.name, current);
+      render(); openAct(openKey, true); return toast(tx("booked", { b: v.bookingId, n: T(B.assignee(v)) }));
+    }
+    if (e.target.closest("#bRad")) {
+      const el = $("bCenter"), date = $("bDate").value, v = el.value.trim();
+      if (!v || !date) return bad(t().need, !v && el, !date && $("bDate"));
+      if (date < today()) return bad(t().badPast, $("bDate"));
+      const p = el.tagName === "SELECT" ? MadaProviders.get(v) : null;
+      M.advance(c.r.id, c.it.id, me.name, p ? { providerId: p.id, center: p.name.en || p.name.ar, date } : { center: v, date });
+      render(); openAct(openKey, true); return toast(t().radSaved);
+    }
+  });
+  $("dlg").addEventListener("input", e => { e.target.classList.remove("bad"); const er = $("bErr"); if (er) er.hidden = true; });
+  $("rows").addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (b) openAct(b.dataset.act); });
+  $("ov").addEventListener("click", e => { if (e.target.id === "ov" || e.target.closest("[data-close]")) { $("ov").hidden = true; openKey = null; } });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") { $("ov").hidden = true; openKey = null; } });
+  $("stats").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (b) { kind = b.dataset.k; render(); } });
+  $("q").addEventListener("input", render);
+  $("ty").addEventListener("change", render);
+  window.addEventListener("storage", e => { if (!e.key || ["mada-medical", "mada-orders"].includes(e.key)) render(); });
+  function toast(msg) { const el = $("toast"); el.textContent = msg; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 3200); }
+
+  function setLang(lang) {
+    current = lang;
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+    document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = t()[el.dataset.i18n]);
+    document.querySelectorAll("[data-i18n-ph]").forEach(el => el.placeholder = t()[el.dataset.i18nPh]);
+    document.querySelectorAll("[data-i18n-aria]").forEach(el => el.setAttribute("aria-label", t()[el.dataset.i18nAria]));
+    if (me) { $("userName").textContent = me.name[lang]; $("userRole").textContent = me.role[lang]; $("avatar").textContent = me.initials[lang]; }
+    const sv = $("ty").value; $("ty").innerHTML = [["", "tyAll"], ["lab", "ty_lab"], ["radiology", "ty_radiology"], ["nursing", "ty_nursing"], ["iv", "ty_iv"], ["doctor", "ty_doctor"]].map(([v, k]) => `<option value="${v}">${t()[k]}</option>`).join(""); $("ty").value = sv || "";
+    document.title = lang === "ar" ? "مدى كير | طلبات الطبيب" : "Mada Care | Doctor Orders";
+    try { localStorage.setItem("mada-lang", lang); } catch (e) {}
+    render();
+  }
+  $("langToggle").addEventListener("click", () => setLang(current === "en" ? "ar" : "en"));
+  const user = $("user"), userBtn = $("userBtn");
+  userBtn.addEventListener("click", e => { e.stopPropagation(); userBtn.setAttribute("aria-expanded", user.classList.toggle("open")); });
+  document.addEventListener("click", () => { user.classList.remove("open"); userBtn.setAttribute("aria-expanded", false); });
+  $("logout").addEventListener("click", e => { e.preventDefault(); MadaAuth.logout(); });
+
+  let saved = "en";
+  try { saved = localStorage.getItem("mada-lang") || "en"; } catch (e) {}
+  setLang(saved);
+  setInterval(() => { if ($("ov").hidden) render(); }, 60000);
+</script>
+</body>
+</html>
