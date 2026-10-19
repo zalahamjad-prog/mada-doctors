@@ -17,14 +17,14 @@ const DrPortal = (() => {
     { k: "account", href: "doctor-account.html", icon: '<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 14 0v1"/>' },
     { k: "logout", href: "doctor-login.html", out: true, icon: '<path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 16l-4-4 4-4M6 12h10"/>' }
   ];
-  // Nursing Portal menu (nurse-*.html). Sections not built yet show "Soon".
+  // Nursing Portal menu (nurse-*.html).
   const NURSE_MENU = [
     { k: "visits", href: "nurse-visits.html", icon: MENU[0].icon },
-    { k: "schedule", icon: MENU[1].icon },
-    { k: "patients", icon: MENU[2].icon },
+    { k: "schedule", href: "nurse-schedule.html", icon: MENU[1].icon },
+    { k: "patients", href: "nurse-patients.html", icon: MENU[2].icon },
     { k: "samples", href: "nurse-samples.html", icon: '<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/>' },
   ];
-  const NURSE_ACCOUNT = [{ k: "account", icon: ACCOUNT[0].icon }, { ...ACCOUNT[1], href: "nurse-login.html" }];
+  const NURSE_ACCOUNT = [{ k: "account", href: "nurse-account.html", icon: ACCOUNT[0].icon }, { ...ACCOUNT[1], href: "nurse-login.html" }];
   const isNurse = me => !!me && me.kind === "nurse";
   // TODO: the real Mada support number.
   const SUPPORT = "920000000";
