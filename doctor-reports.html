@@ -118,6 +118,7 @@
   .pa { width: 44px; height: 44px; border-radius: 50%; background: #e8eefc; color: #3b5bdb; display: grid; place-items: center; font-size: 14px; font-weight: 700; flex: none; }
   .who b, .dxc b, .vd b { display: block; font-size: 14.5px; color: #15304a; }
   .who small, .dxc small, .vd small { display: block; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .dxc .dxl { display: block; font-size: 13px; color: #44545a; line-height: 1.45; } .dxc .dxl + .dxl { margin-top: 4px; } .dxc .dxl.p { font-size: 14px; font-weight: 700; color: #15304a; }
   .dxc .code { font-size: 11.5px; font-weight: 700; color: #0f6b52; background: #e3f4ee; border-radius: 6px; padding: 1px 6px; direction: ltr; display: inline-block; margin-inline-end: 6px; }
   .acts { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 42px; padding: 0 14px; border-radius: 10px; border: 1px solid transparent; font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; text-decoration: none; white-space: nowrap; }
@@ -362,8 +363,9 @@
   const fmtD = s => { const d = /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(s + "T00:00") : new Date(s); return d.toLocaleDateString(loc(), { day: "numeric", month: "short", year: "numeric" }); };
   const initials = n => String(n || "").split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
   const dxOf = o => ((o.doctorVisit.steps || {}).assess || {}).primary || null;
-  // More than one primary diagnosis: the first shows, with how many more.
-  const dxMore = o => Math.max(0, (((o.doctorVisit.steps || {}).assess || {}).primaries || []).length - 1);
+  // Every diagnosis of the visit: the primary ones first (bold), then the additional ones.
+  const dxl = o => { const as = (o.doctorVisit.steps || {}).assess || {};
+    return [...(as.primaries && as.primaries.length ? as.primaries : [as.primary]).filter(Boolean).map(d => ({ d, p: true })), ...(as.additional || []).map(d => ({ d, p: false }))]; };
   const dateOf = o => (o.appointment && o.appointment.date) || o.doctorVisit.completedAt || o.createdAt;
 
   function render() {
@@ -375,7 +377,7 @@
       <div class="tools"><label class="search">${svg(IC.search, 2)}<input type="search" id="q" value="${esc(q)}" placeholder="${esc(t().searchPh)}" aria-label="${t().search}" autocomplete="off"></label></div>
       ${list.length ? `<div class="rlist">${list.map(o => { const p = nm(o.patient), dx = dxOf(o);
         return `<div class="rrow"><span class="who"><span class="pa">${esc(initials(p.en))}</span><span><b>${esc(p[current] || p.en)}</b><small class="num">${esc(tx("fileNo", { n: o.mrn || "—" }))}</small></span></span>
-          <span class="dxc">${dx ? `<b>${dx.code ? `<span class="code">${esc(dx.code)}</span>` : ""}${esc(dx[current] || dx.en)}</b>${dxMore(o) ? ` <small class="num">+${dxMore(o)}</small>` : ""}` : `<small>${t().noDx}</small>`}</span>
+          <span class="dxc">${dxl(o).length ? dxl(o).map(x => `<span class="dxl ${x.p ? "p" : ""}">${x.d.code ? `<span class="code">${esc(x.d.code)}</span>` : ""}${esc(x.d[current] || x.d.en)}</span>`).join("") : `<small>${t().noDx}</small>`}</span>
           <span class="vd"><b>${esc(fmtD(dateOf(o)))}</b><small class="num">${esc(tx("visit", { n: o.id }))}</small>${MadaReport.approved(o) ? `<span class="st-tag ok"><i></i>${t().approvedT}</span>` : `<span class="st-tag pend"><i></i>${t().pending}</span>`}</span>
           <span class="acts">${MadaReport.approved(o) ? `<button type="button" class="btn btn-out" data-view="${esc(o.id)}">${svg(IC.eye)}${t().view}</button><button type="button" class="btn btn-dark" data-dl="${esc(o.id)}">${svg(IC.dl, 2)}${t().dl}</button>`
             : `<button type="button" class="btn btn-pri" data-review="${esc(o.id)}">${svg(IC.pen, 2)}${t().review}</button>`}</span></div>`; }).join("")}</div>`
