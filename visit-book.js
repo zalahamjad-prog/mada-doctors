@@ -19,20 +19,34 @@ const MadaVisitBook = (() => {
     const l = [...(it.log || [])].reverse().find(x => x.data && x.data.visitId); return l ? MadaOrders.get(l.data.visitId) : null;
   };
   const visitDone = o => !!o && (o.status === "completed" || (o.nurseVisit && o.nurseVisit.status === "done") || (o.doctorVisit && o.doctorVisit.status === "done"));
+  // The visit service of one item: lab tests are a blood visit, physiotherapy goes with nursing.
+  const svcOf = it => it.type === "lab" ? "blood" : it.type === "doctor" ? "doctor" : it.type === "iv" ? "iv" : "nursing";
+  // Items that can share one visit: everything the nurse does (lab samples, nursing, physiotherapy, IV). A doctor visit is booked on its own.
+  const canJoin = (a, b) => (svcOf(a) === "doctor") === (svcOf(b) === "doctor") && (svcOf(a) !== "doctor" || a.id === b.id);
   // d: { date "YYYY-MM-DD", time "HH:MM", nurseId | doctorId, note }. Returns the new visit (MadaOrders order).
-  function book(r, it, d, by, lg) {
-    const src = MadaOrders.get(r.orderId) || {}, [h, m] = d.time.split(":").map(Number), x = it.order || {}, lab = it.type === "lab";
-    const kind = it.type === "iv" ? "iv" : "nursing";
-    const price = lab ? Number(x.price || (it.orderCodes || []).reduce((a, c) => a + Number((DrOrders.item(c) || {}).price || 0), 0)) : Number(x.price || 0);
-    const paid = !it.addedBy && src.doctorVisit && typeof DrOrders !== "undefined" && DrOrders.payState(src, lg || "en").status === "paid";
+  const book = (r, it, d, by, lg) => bookMany(r, [it], d, by, lg);
+  // Several services from one doctor's order on ONE visit: one provider, one time, one internal booking (DBK-) and one bill.
+  // The order keeps every service: services ["blood", "iv", ...] (nurse-visit.html shows each service's own step), items of every kind.
+  function bookMany(r, its, d, by, lg) {
+    const src = MadaOrders.get(r.orderId) || {}, [h, m] = d.time.split(":").map(Number);
+    const priceOf = it => { const x = it.order || {}; return it.type === "lab" ? Number(x.price || (it.orderCodes || []).reduce((a, c) => a + Number((DrOrders.item(c) || {}).price || 0), 0)) : Number(x.price || 0); };
+    const itemsOf = it => { const x = it.order || {}; return it.type === "lab" ? (it.tests || []).map(c => ({ kind: "test", code: c })) : x.code && it.type !== "doctor" ? [{ kind: it.type === "iv" ? "iv" : "nursing", code: x.code }] : []; };
+    const paidSrc = src.doctorVisit && typeof DrOrders !== "undefined" && DrOrders.payState(src, lg || "en").status === "paid", paid = its.every(it => !it.addedBy && paidSrc);
     const who = d.nurseId ? (nurse(d.nurseId) || people().find(p => p.id === d.nurseId)) : (doctor(d.doctorId) || people().find(p => p.id === d.doctorId)), provider = who ? who.name.en || who.name.ar : (d.nurseId || d.doctorId);
-    const o = MadaOrders.book({ service: lab ? "blood" : it.type === "doctor" ? "doctor" : it.type === "iv" ? "iv" : "nursing", mrn: r.mrn, patient: r.patient, mobile: r.mobile,
-      location: src.location, address: src.address, items: lab ? (it.tests || []).map(c => ({ kind: "test", code: c })) : x.code && it.type !== "doctor" ? [{ kind, code: x.code }] : [], total: price || null,
+    const ORDER = ["doctor", "iv", "nursing", "blood"], services = ORDER.filter(s => its.some(it => svcOf(it) === s)).reverse();
+    const items = [], seen = new Set();
+    its.forEach(it => itemsOf(it).forEach(x => { const k = x.kind + ":" + x.code; if (!seen.has(k)) { seen.add(k); items.push(x); } }));
+    const total = its.reduce((a, it) => a + priceOf(it), 0), title = its.length === 1 ? its[0].title
+      : { en: its.map(it => (it.title || {}).en || "").join(" + "), ar: its.map(it => (it.title || {}).ar || (it.title || {}).en || "").join(" + ") };
+    const o = MadaOrders.book({ service: ORDER.find(s => services.includes(s)), services, mrn: r.mrn, patient: r.patient, mobile: r.mobile,
+      location: src.location, address: src.address, items, total: total || null,
       appointment: { date: d.date, minute: h * 60 + (m || 0), nurse: d.nurseId && who ? who.name : null }, payment: paid ? "paid" : "unpaid", payWhen: paid ? null : "after",
-      booking: { nurseId: d.nurseId || null, doctorId: d.doctorId || null, by, at: new Date().toISOString() }, staff: by, title: it.title, fromMr: { id: r.id, itemId: it.id } });
+      booking: { nurseId: d.nurseId || null, doctorId: d.doctorId || null, by, at: new Date().toISOString() }, staff: by, title, fromMr: { id: r.id, itemId: its[0].id, itemIds: its.map(it => it.id) } });
     const data = { date: d.date, time: d.time, nurseId: d.nurseId || null, doctorId: d.doctorId || null, provider, note: d.note || null, visitId: o.id, bookingId: o.bookingId, payWhen: o.payWhen || null };
-    if (lab) MadaMedical.patchItem(r.id, it.id, { visit: { ...data, by, at: new Date().toISOString() } });
-    else MadaMedical.advance(r.id, it.id, by, Object.fromEntries(Object.entries(data).filter(([, v]) => v != null)));
+    its.forEach(it => {
+      if (it.type === "lab") MadaMedical.patchItem(r.id, it.id, { visit: { ...data, by, at: new Date().toISOString() } });
+      else MadaMedical.advance(r.id, it.id, by, Object.fromEntries(Object.entries(data).filter(([, v]) => v != null)));
+    });
     return o;
   }
   // A booked service is delivered when its visit is finished in the nurse's or doctor's app. Returns true when something changed.
@@ -132,5 +146,5 @@ const MadaVisitBook = (() => {
     .vb-f button{height:42px;border:0;border-radius:10px;background:#0b6b5c;color:#fff;font:inherit;font-weight:700;padding:0 18px;cursor:pointer}
     @media (max-width:640px){.vb-f{grid-template-columns:1fr}}`;
   if (typeof document !== "undefined" && !document.getElementById("vb-css")) { const st = document.createElement("style"); st.id = "vb-css"; st.textContent = PAY_CSS; document.head.appendChild(st); }
-  return { TYPES, canBook, visitOf, visitDone, assignee, book, sync, people, slots, unpaid, sendPay, payUrl, payMsg, due, collect, blocked, payPanel, bindPayPanel };
+  return { TYPES, canBook, svcOf, canJoin, visitOf, visitDone, assignee, book, bookMany, sync, people, slots, unpaid, sendPay, payUrl, payMsg, due, collect, blocked, payPanel, bindPayPanel };
 })();

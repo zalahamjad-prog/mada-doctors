@@ -6,9 +6,10 @@
 // medical:  "emergency" | "non"
 // decision: "pending" (waiting for the customer or the doctor) | "approved" | "rejected" | null (emergency referral)
 // payment:  "paid" | "unpaid" | null (nothing to pay). payWhen "after": the patient pays after the service (visits booked from Medical Requests).
-// fromMr:   { id, itemId } the medical request item (a service the doctor ordered) this visit was booked for. Such a visit is an internal
+// fromMr:   { id, itemId, itemIds } the medical request items (services the doctor ordered) this visit was booked for. Such a visit is an internal
 //           booking (DBK-), unpaid until the patient pays by the link (pay.html) or the nurse/doctor takes the payment at the visit.
 // items:    [{ kind: "test" | "pkg" | "nursing" | "iv", code }]
+// services: ["blood", "nursing", "iv"] when one visit carries several services (visit-book.js bookMany); service is then the main one.
 // status:   "booked" | "awaiting_doctor" | "referred" | "emergency_closed" | "declined" | "cancelled" | "completed" | "on_hold"
 // emergency: { checks: [CHECKS keys], notes } for emergency referrals; locked for agents.
 // closure:  { outcome, note, by, at } written by a supervisor when the emergency case is closed.
