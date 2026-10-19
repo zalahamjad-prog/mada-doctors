@@ -141,6 +141,7 @@
 
 <script src="auth.js"></script>
 <script src="orders.js"></script>
+<script src="visit-void.js"></script>
 <script src="patients.js"></script>
 <script src="labs.js"></script>
 <script src="medical.js"></script>
@@ -464,7 +465,7 @@
         const [cls, lbl] = stOf(o), mine = o.booking && o.booking.doctorId === me.doctorId && o.doctorVisit && cls === "done";
         return `<div class="pv"><div class="pv-svc"><span class="ic">${svg(svcIc[o.service] || IC.folder)}</span><span><b>${esc(t()["sv_" + o.service] || o.service || "")}</b>${o.id === from ? `<span class="pv-cur">${t().curVisit}</span>` : ""}</span></div>
           <div><small>${t().bk}</small><b class="num">${esc(o.bookingId || "—")}</b></div><div><small>${t().ord}</small><b class="num">${esc(o.id)}</b></div>
-          <div><small>${t().vdate}</small><b>${esc(fmtD(d))}</b><div style="margin-top:6px"><span class="pv-st ${cls}">${lbl}</span></div></div>
+          <div><small>${t().vdate}</small><b>${esc(fmtD(d))}</b><div style="margin-top:6px"><span class="pv-st ${cls}">${lbl}</span>${MadaVoid.tag(o, current)}</div></div>
           <div class="pv-acts">${mine ? `<a class="pb out sm" href="doctor-visit.html?id=${encodeURIComponent(o.id)}&view=1">${svg(IC.eye)}${t().viewVisit}</a><a class="pb out sm" href="doctor-reports.html?id=${encodeURIComponent(o.id)}">${svg(IC.report)}${t().medReport}</a>` : ""}</div></div>`;
       }).join("")}</div>` : empty(t().pvNone)}</div></section>`;
   }

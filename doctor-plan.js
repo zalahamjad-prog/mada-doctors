@@ -93,7 +93,7 @@ const DrPlan = (() => {
       d_days: "Days", d_weeks: "Weeks", d_months: "Months", ds_days: "days", ds_weeks: "weeks", ds_months: "months", ongoing: "Ongoing",
       t_beforeFood: "Before food", t_afterFood: "After food", t_withFood: "With food", t_morning: "Morning", t_bedtime: "Bedtime",
       prev: "Previous", draft: "Save as Draft", saveCont: "Save & Continue", draftSaved: "Treatment plan saved as draft.", saved: "Treatment plan saved.",
-      needMed: "Add at least one medication, or tick \"No medications\".", pendingMed: "Add or clear the medication you are editing first.", savedInfo: "Treatment plan saved at {t}. You can still update it."
+      needMed: "Add at least one medication, or tick \"No medications\".", pendingMed: "Add or clear the medication you are editing first.", savedInfo: "Treatment plan saved at {t}."
     },
     ar: {
       title: "الخطة العلاجية", sub: "اكتب الأدوية لهذه الزيارة.", subGoals: "حدد أهداف العلاج والخطة لهذه الزيارة.", tabGoals: "الأهداف والخطة", tabMeds: "الأدوية",
@@ -123,7 +123,7 @@ const DrPlan = (() => {
       d_days: "أيام", d_weeks: "أسابيع", d_months: "شهور", ds_days: "أيام", ds_weeks: "أسابيع", ds_months: "شهور", ongoing: "مستمر",
       t_beforeFood: "قبل الأكل", t_afterFood: "بعد الأكل", t_withFood: "مع الأكل", t_morning: "الصباح", t_bedtime: "قبل النوم",
       prev: "السابق", draft: "حفظ كمسودة", saveCont: "حفظ ومتابعة", draftSaved: "تم حفظ الخطة العلاجية كمسودة.", saved: "تم حفظ الخطة العلاجية.",
-      needMed: "أضف دواء واحد على الأقل، أو اختر \"ما فيه أدوية\".", pendingMed: "أضف الدواء اللي تعدله أو امسحه أول.", savedInfo: "تم حفظ الخطة العلاجية {t}. تقدر تعدلها."
+      needMed: "أضف دواء واحد على الأقل، أو اختر \"ما فيه أدوية\".", pendingMed: "أضف الدواء اللي تعدله أو امسحه أول.", savedInfo: "تم حفظ الخطة العلاجية {t}."
     }
   };
 

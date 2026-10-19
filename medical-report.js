@@ -35,7 +35,7 @@ const MadaReport = (() => {
       nurseBy: "Written by {n}", idfBy: "Confirmed and signed by {n} on {d}", draftTag: "Draft · not approved yet", apprBy: "Approved by {n} on {d}", stampT: "Doctor's stamp",
       none: "Not recorded", sign: "Doctor's name", signNote: "Generated from the Mada Care medical record on {d}.", page: "Mada Care · Home healthcare",
       making: "Preparing the PDF…", done: "{f} downloaded.", fail: "Could not create the file here. Use Save as PDF in the print window.",
-      rxTitle: "Medical Prescription", rxNo: "Prescription No.", rxDate: "Date", rxDx: "Diagnosis", rxMeds: "Prescribed medications", rxAl: "Allergies", rxBy: "Prescribing doctor", rxUpd: "Updated {d}", rxNote: "Issued from the Mada Care medical record on {d}.", rxQty: "Quantity", refTitle: "Medical Referral", refNo: "Referral No.", refDate: "Referral Date", clinT: "Clinical Summary", measured: "Measured on {d}", vitNone: "Vital signs not recorded.", ccNone: "Not recorded",
+      rxTitle: "Medical Prescription", rxNo: "Prescription No.", rxDate: "Date", rxDx: "Diagnosis", rxMeds: "Prescribed medications", rxAl: "Allergies", rxBy: "Prescribing doctor", rxUpd: "Updated {d}", ed: "Edited", edN: "Edited {n}×", rxNote: "Issued from the Mada Care medical record on {d}.", rxQty: "Quantity", refTitle: "Medical Referral", refNo: "Referral No.", refDate: "Referral Date", clinT: "Clinical Summary", measured: "Measured on {d}", vitNone: "Vital signs not recorded.", ccNone: "Not recorded",
       workDx: "Working diagnosis", refT: "Referral Details", rf_spec: "Specialty", rf_pri: "Priority", rf_routine: "Routine", rf_urgent: "Urgent", rf_dest: "Referred to", rf_mada: "Mada Care service", rf_ext: "External healthcare provider",
       rf_prov: "Preferred provider", rf_reason: "Reason for referral", rf_rec: "Clinical recommendation", rf_notes: "Additional notes", rf_by: "Referring doctor", refSign: "Signature", refNote: "Issued from the Mada Care medical record on {d}. Please present this form at the receiving facility."
     },
@@ -60,7 +60,7 @@ const MadaReport = (() => {
       nurseBy: "كتبتها {n}", idfBy: "أكّدها ووقّع عليها {n} بتاريخ {d}", draftTag: "مسودة · لم يُعتمد بعد", apprBy: "اعتمده {n} بتاريخ {d}", stampT: "ختم الطبيب",
       none: "غير مسجل", sign: "اسم الطبيب", signNote: "صدر من السجل الطبي لمدى كير بتاريخ {d}.", page: "مدى كير · رعاية صحية منزلية",
       making: "جاري تجهيز الملف…", done: "تم تحميل {f}.", fail: "تعذر إنشاء الملف هنا. استخدم حفظ كـ PDF من نافذة الطباعة.",
-      rxTitle: "وصفة طبية", rxNo: "رقم الوصفة", rxDate: "التاريخ", rxDx: "التشخيص", rxMeds: "الأدوية الموصوفة", rxAl: "الحساسية", rxBy: "الطبيب المعالج", rxUpd: "عُدّلت بتاريخ {d}", rxNote: "صدرت من السجل الطبي لمدى كير بتاريخ {d}.", rxQty: "الكمية", refTitle: "نموذج تحويل طبي", refNo: "رقم التحويل", refDate: "تاريخ التحويل", clinT: "الملخص السريري", measured: "وقت القياس: {d}", vitNone: "لم تُسجل العلامات الحيوية.", ccNone: "غير مسجلة",
+      rxTitle: "وصفة طبية", rxNo: "رقم الوصفة", rxDate: "التاريخ", rxDx: "التشخيص", rxMeds: "الأدوية الموصوفة", rxAl: "الحساسية", rxBy: "الطبيب المعالج", rxUpd: "عُدّلت بتاريخ {d}", ed: "معدّلة", edN: "معدّلة {n} مرات", rxNote: "صدرت من السجل الطبي لمدى كير بتاريخ {d}.", rxQty: "الكمية", refTitle: "نموذج تحويل طبي", refNo: "رقم التحويل", refDate: "تاريخ التحويل", clinT: "الملخص السريري", measured: "وقت القياس: {d}", vitNone: "لم تُسجل العلامات الحيوية.", ccNone: "غير مسجلة",
       workDx: "التشخيص المبدئي", refT: "تفاصيل التحويل", rf_spec: "التخصص", rf_pri: "الأولوية", rf_routine: "عادي", rf_urgent: "عاجل", rf_dest: "جهة التحويل", rf_mada: "خدمة من مدى كير", rf_ext: "جهة صحية خارجية",
       rf_prov: "مقدم الخدمة المفضل", rf_reason: "سبب التحويل", rf_rec: "التوصية السريرية", rf_notes: "ملاحظات إضافية", rf_by: "الطبيب المحوّل", refSign: "التوقيع", refNote: "صادر من السجل الطبي لمدى كير بتاريخ {d}. يُرجى تقديم هذا النموذج لدى الجهة المحوَّل إليها."
     }
@@ -233,7 +233,10 @@ const MadaReport = (() => {
       ["nurse", "nurse", "nurse", t.sNurse, nurseBody], ["edu", "edu", "edu", t.sEdu, eduBody], ["idf", "idform", "idf", t.sIdf, idfBody]
     ].filter(x => !hid.has(x[1]) && (x[4] != null || ((rp.edits || {})[lang] || {})[x[0]] != null));
     let n = 0;
-    const secs = SEC.map(x => card(x[2], `${++n}. ${x[3]}`, x[4], x[0])).join("")
+    // A step cancelled and entered again after saving (visit-void.js) is marked as edited, with how many times.
+    const edN = k => ((o.doctorVisit || {}).voided || []).filter(v => v.k === k).length;
+    const edTag = k => { const c = edN(k); return c ? ` <span style="display:inline-block;margin-${rtl ? "right" : "left"}:6px;padding:0 7px;border-radius:8px;background:#fdf2e3;color:#b45309;font-size:10.5px;font-weight:700;vertical-align:middle">${esc(c > 1 ? t.edN.replace("{n}", c) : t.ed)}</span>` : ""; };
+    const secs = SEC.map(x => card(x[2], `${++n}. ${x[3]}${edTag(x[1])}`, x[4], x[0])).join("")
       + (rp.custom || []).filter(c => has(c.title) || has(c.text)).map(c => card("cu", `${++n}. ${txt(c.title)}`, `<div style="font-size:12px;line-height:1.7;white-space:pre-line">${txt(c.text)}</div>`)).join("");
     return `<div class="mr-doc" dir="${rtl ? "rtl" : "ltr"}" lang="${lang}" style="width:794px;max-width:100%;margin:0 auto;background:#fff;color:${INK};font-family:${rtl ? "Tajawal, Inter" : "Inter, Tajawal"}, Arial, sans-serif;text-align:${al};box-sizing:border-box">
       <div style="background:linear-gradient(120deg, ${GD}, ${G});color:#fff;padding:18px 24px;display:flex;align-items:center;gap:14px;border-radius:0 0 18px 18px">

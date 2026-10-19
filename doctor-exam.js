@@ -50,7 +50,7 @@ const DrExam = (() => {
       r_chest: "Chest", r_abdomen: "Abdomen", r_back: "Back", r_headNeck: "Head & Neck", r_rUpper: "Right upper limb", r_lUpper: "Left upper limb", r_rLower: "Right lower limb", r_lLower: "Left lower limb",
       r_pelvis: "Pelvis", r_skinArea: "Skin / Wound", r_other: "Other",
       prev: "Previous", draft: "Save as Draft", saveCont: "Save & Continue", draftSaved: "Examination saved as draft.", saved: "Examination saved.",
-      needStatus: "Choose a result for every system in the general examination.", needRegion: "Choose the body region for each local examination.", savedInfo: "Examination saved at {t}. You can still update it.", sysErr: "Choose a result."
+      needStatus: "Choose a result for every system in the general examination.", needRegion: "Choose the body region for each local examination.", savedInfo: "Examination saved at {t}.", sysErr: "Choose a result."
     },
     ar: {
       title: "الفحص السريري", sub: "سجّل نتائج الفحص العام والموضعي.", stepOf: "الخطوة {n} من {m}",
@@ -69,7 +69,7 @@ const DrExam = (() => {
       r_chest: "الصدر", r_abdomen: "البطن", r_back: "الظهر", r_headNeck: "الرأس والرقبة", r_rUpper: "الطرف العلوي اليمين", r_lUpper: "الطرف العلوي اليسار", r_rLower: "الطرف السفلي اليمين", r_lLower: "الطرف السفلي اليسار",
       r_pelvis: "الحوض", r_skinArea: "الجلد / جرح", r_other: "أخرى",
       prev: "السابق", draft: "حفظ كمسودة", saveCont: "حفظ ومتابعة", draftSaved: "تم حفظ الفحص كمسودة.", saved: "تم حفظ الفحص.",
-      needStatus: "اختر نتيجة لكل جهاز في الفحص العام.", needRegion: "اختر منطقة الجسم لكل فحص موضعي.", savedInfo: "تم حفظ الفحص {t}. تقدر تعدله.", sysErr: "اختر نتيجة."
+      needStatus: "اختر نتيجة لكل جهاز في الفحص العام.", needRegion: "اختر منطقة الجسم لكل فحص موضعي.", savedInfo: "تم حفظ الفحص {t}.", sysErr: "اختر نتيجة."
     }
   };
 

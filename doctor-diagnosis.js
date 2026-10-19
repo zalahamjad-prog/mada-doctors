@@ -74,7 +74,7 @@ const DrDiagnosis = (() => {
       ch_msk: "Musculoskeletal system", ch_skin: "Skin", ch_nerv: "Nervous system", ch_ment: "Mental & behavioural", ch_blood: "Blood", ch_eye: "Eye", ch_ear: "Ear", ch_sym: "Symptoms & signs", ch_special: "Special purposes", ch_free: "Free text",
       already: "Already added.", isPrimary: "This is the primary diagnosis.",
       prev: "Previous", draft: "Save as Draft", saveCont: "Save & Continue", draftSaved: "Diagnosis saved as draft.", saved: "Diagnosis saved.",
-      needPrimary: "Choose the primary diagnosis.", savedInfo: "Diagnosis saved at {t}. You can still update it."
+      needPrimary: "Choose the primary diagnosis.", savedInfo: "Diagnosis saved at {t}."
     },
     ar: {
       title: "التشخيص", sub: "أدخل التشخيص السريري بترميز ICD-10-AM.", stepOf: "الخطوة {n} من {m}",
@@ -86,7 +86,7 @@ const DrDiagnosis = (() => {
       ch_msk: "العضلات والعظام", ch_skin: "الجلد", ch_nerv: "الجهاز العصبي", ch_ment: "النفسية والسلوك", ch_blood: "الدم", ch_eye: "العين", ch_ear: "الأذن", ch_sym: "أعراض وعلامات", ch_special: "رموز خاصة", ch_free: "نص حر",
       already: "مضاف من قبل.", isPrimary: "هذا هو التشخيص الرئيسي.",
       prev: "السابق", draft: "حفظ كمسودة", saveCont: "حفظ ومتابعة", draftSaved: "تم حفظ التشخيص كمسودة.", saved: "تم حفظ التشخيص.",
-      needPrimary: "اختر التشخيص الرئيسي.", savedInfo: "تم حفظ التشخيص {t}. تقدر تعدله."
+      needPrimary: "اختر التشخيص الرئيسي.", savedInfo: "تم حفظ التشخيص {t}."
     }
   };
 

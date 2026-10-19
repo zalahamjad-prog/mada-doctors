@@ -543,6 +543,7 @@
 <script src="doctor-consent.js"></script>
 <script src="nurses.js"></script>
 <script src="visit-book.js"></script>
+<script src="visit-void.js"></script>
 <script>
   const me = MadaAuth.requireAuth("doctor");
   if (me && me.doctorId) MadaOrders.seedDoctorDemo(me.doctorId); // SAMPLE DATA ONLY
@@ -840,7 +841,7 @@
     if (k === "history") return !(dv.steps && dv.steps.history) && Object.values(dv.history || {}).some(x => x && x.draft);
     return !!(DRAFT_KEY[k] && dv[DRAFT_KEY[k]]);
   }
-  const missingSteps = o => { const s = stepsOf(o); return STEPS.filter(x => x.k !== "consent" && !s[x.k]).map(x => ({ k: x.k, name: t()["s_" + x.k] })); };
+  const missingSteps = o => { const s = stepsOf(o); return STEPS.filter(x => x.k !== "consent" && (!s[x.k] || MadaVoid.pending(o.doctorVisit, x.k))).map(x => ({ k: x.k, name: t()["s_" + x.k] })); };
   function stepList(o) {
     const s = stepsOf(o);
     const n = STEPS.filter(x => s[x.k]).length, H = DrHistory.L[current];
@@ -848,7 +849,7 @@
       <div class="chk-card"><div class="hd"><b>${H.checklist}</b><span class="ic">${svg('<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>', 2.2)}</span></div>
         <div class="bar"><i style="width:${Math.round(n / STEPS.length * 100)}%"></i></div><div class="ft"><span>${H.stepsDone}</span><span class="num">${n} / ${STEPS.length}</span></div></div>
       <ol>${STEPS.map((x, i) => {
-      const done = !!s[x.k], badges = (hasDraft(o, x.k) ? `<span class="st-draft">${svg('<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/>', 2)}${t().draftB}</span>` : "") + (x.k === "orders" ? payBadge(o) : "");
+      const done = !!s[x.k] && !MadaVoid.pending(o.doctorVisit, x.k), badges = (hasDraft(o, x.k) ? `<span class="st-draft">${svg('<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/>', 2)}${t().draftB}</span>` : "") + (x.k === "orders" ? payBadge(o) : "");
       return `<li><button type="button" class="step ${done ? "done" : ""}" data-step="${x.k}" ${x.k === active ? 'aria-current="step"' : ""}>
         <span class="n">${done ? svg(IC.check, 2.6) : String(i + 1).padStart(2, "0")}</span>${badges ? `<span class="st-t">${t()["s_" + x.k]}<span class="st-bs">${badges}</span></span>` : t()["s_" + x.k]}</button></li>`;
     }).join("")}</ol></nav>`;
@@ -925,6 +926,42 @@
     return `<div class="soon-sec"><span class="sec-ic">${svg(st.icon)}</span><h1>${t()["s_" + k]}</h1><p>${t().soonS}</p></div>`;
   }
 
+  // A saved step can't be edited in place (visit-void.js): the clinical steps that stay open as forms are locked with a bar,
+  // and the Edit buttons of the other steps first ask for the reason. Cancelling keeps the old version under the step, crossed out,
+  // and opens the form again with the old entries; the step counts as not done until it is saved again.
+  const VD_LOCK = ["history", "exam", "allergy", "assess", "plan"];
+  const VD_EDIT = { arrEdit: "arrival", vitEdit: "vitals", nuEdit: "nurse", edEdit: "edu", idEdit: "idform", npEdit: null };
+  const vdNext = () => STEPS[Math.min(STEPS.findIndex(x => x.k === active) + 1, STEPS.length - 1)].k;
+  function vdWrap(o, body) {
+    const dv = o.doctorVisit || {}, k = active, hist = MadaVoid.history(dv, k, current);
+    if (VIEW || (typeof FU !== "undefined" && FU)) return body + hist;
+    if (MadaVoid.pending(dv, k)) return MadaVoid.reentryBar(current) + body + hist;
+    if (VD_LOCK.includes(k) && MadaVoid.locked(dv, k)) return MadaVoid.lockBar(dv, k, current, vdNext() !== k) + `<div class="vd-lock" inert>${body}</div>` + hist;
+    return body + hist;
+  }
+  // The Edit buttons of saved steps read "Cancel and re-enter" (after cancelling they open the form as before).
+  function vdLabel(o) {
+    if (VIEW) return;
+    Object.keys(VD_EDIT).forEach(bid => { const b = $(bid), k = VD_EDIT[bid] || active; if (!b || MadaVoid.pending(o.doctorVisit, k)) return;
+      const tn = [...b.childNodes].reverse().find(n => n.nodeType === 3 && n.textContent.trim()); if (tn) tn.textContent = MadaVoid.L[current].void; });
+  }
+  let vdPass = false;
+  document.addEventListener("click", e => {
+    if (vdPass) return;
+    if (e.target.closest("[data-vd-next]")) return goStep(vdNext());
+    const b = e.target.closest("[data-vd-void], button[id]"); if (!b) return;
+    const k = b.dataset.vdVoid || (b.id in VD_EDIT ? VD_EDIT[b.id] || active : null); if (!k) return;
+    const o = order(); if (!o || VIEW) return;
+    if (!b.dataset.vdVoid && (MadaVoid.pending(o.doctorVisit, k) || !(o.doctorVisit && o.doctorVisit.steps && o.doctorVisit.steps[k]))) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    MadaVoid.ask(current, t()["s_" + k] || "", (reason, note) => {
+      const cur = MadaOrders.get(id).doctorVisit;
+      MadaOrders.update(id, { doctorVisit: { ...cur, voided: MadaVoid.entry(cur, k, reason, note, me.name) } });
+      toast(MadaVoid.L[current].done);
+      if (b.dataset.vdVoid || !b.isConnected) return render();
+      vdPass = true; try { b.click(); } finally { vdPass = false; }
+    });
+  }, true);
   function render() {
     const o = order();
     $("pfTop").innerHTML = o ? pfTop(o) : "";
@@ -937,11 +974,13 @@
     const hx = active === "history";
     let body = active === "arrival" ? arrivalCard(o) : hx ? DrHistory.view(o, hxCtx) : active === "vitals" ? vitalsCard(o) : active === "exam" ? DrExam.view(o, exCtx) : active === "allergy" ? DrAllergy.view(o, alCtx) : active === "assess" ? DrDiagnosis.view(o, dxCtx) : active === "plan" ? DrPlan.view(o, planCtx) : active === "orders" ? DrOrders.view(o, orCtx) : active === "nurse" ? DrNurse.view(o, nuCtx) : active === "edu" ? DrEdu.view(o, edCtx) : active === "idform" ? DrIdForm.view(o, idCtx) : active === "consent" ? DrConsent.view(o, csCtx) : soonCard(active);
     if (FU && active === "orders") body = DrOrders.view(fuOrder(o), fuCtx);
+    body = vdWrap(o, body);
     const backA = FU ? `<a class="back" href="doctor-orders-list.html?id=${encodeURIComponent(FU_ID)}">${svg(IC.back, 2)}${ft().back}</a>` : VIEW && o.mrn ? `<a class="back" href="doctor-patient.html?mrn=${encodeURIComponent(o.mrn)}">${svg(IC.back, 2)}${t().backFile}</a>` : `<a class="back" href="doctor-visits.html">${svg(IC.back, 2)}${t().back}</a>`;
     $("vw").innerHTML = `${backA}${VIEW ? `<div class="ro-bar">${svg(IC.info, 2)}<span><b>${t().roT}</b> ${t().roS}</span></div>` : ""}${strip(o)}${VIEW || FU ? "" : payBar(o)}${VIEW ? "" : MadaVisitBook.payPanel(o, current)}
       ${FU ? `<div class="ro-bar fu-bar">${svg(IC.info, 2)}<span><b>${active === "orders" ? ft().barT : ft().amendT}</b> ${active === "orders" ? ft().barS : ft().amendS}</span></div>` : ""}
       <div class="vw-body">${FU ? fuList(o) : stepList(o)}<section class="card ${hx && DrHistory.isOpen() ? "hx-card" : ""}" id="stepCard">${body}</section></div>`;
     bind(o);
+    vdLabel(o);
     if (!VIEW) MadaVisitBook.bindPayPanel($("vw"), o, me.name, current, m => { toast(m); render(); });
     if (hx) DrHistory.bind($("stepCard"), o, hxCtx);
     if (active === "exam") DrExam.bind($("stepCard"), o, exCtx);
@@ -1169,7 +1208,9 @@
     rerender(top) { render(); if (top) { const c = $("stepCard"); if (c.getBoundingClientRect().top < 0) c.scrollIntoView({ block: "start" }); } },
     saveSection(k, data) {
       const o = MadaOrders.get(id), dv = o.doctorVisit || { status: "ongoing", startedAt: new Date().toISOString() };
-      MadaOrders.update(id, { doctorVisit: { ...dv, history: { ...(dv.history || {}), [k]: data } } });
+      // While a cancelled Case History is re-entered, saving a section saves the step again (visit-void.js).
+      const re = !data.draft && MadaVoid.pending(dv, "history");
+      MadaOrders.update(id, { doctorVisit: { ...dv, history: { ...(dv.history || {}), [k]: data }, ...(re ? { steps: { ...dv.steps, history: { at: new Date().toISOString(), by: me.name } } } : {}) } });
     },
     complete() {
       const o = MadaOrders.get(id), dv = o.doctorVisit;

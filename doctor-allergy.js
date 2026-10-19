@@ -57,7 +57,7 @@ const DrAllergy = (() => {
       noInfo: "No known allergies will be recorded for this patient.", unkInfo: "Allergy status will be recorded as not confirmed. Update it when you know more.",
       fromMeds: "Started from the drug allergies in Medication History.",
       prev: "Previous", draft: "Save as Draft", saveCont: "Save & Continue", draftSaved: "Allergy history saved as draft.", saved: "Allergy history saved.",
-      needStatus: "Choose whether the patient has known allergies.", needItem: "Add at least one allergy, or choose No or Unknown.", savedInfo: "Allergy history saved at {t}. You can still update it."
+      needStatus: "Choose whether the patient has known allergies.", needItem: "Add at least one allergy, or choose No or Unknown.", savedInfo: "Allergy history saved at {t}."
     },
     ar: {
       title: "تاريخ الحساسية", sub: "سجّل الحساسية المعروفة عند المريض.", stepOf: "الخطوة {n} من {m}",
@@ -74,7 +74,7 @@ const DrAllergy = (() => {
       noInfo: "بيتسجل إن المريض ما عنده حساسية معروفة.", unkInfo: "بتتسجل حالة الحساسية غير مؤكدة. حدّثها إذا عرفت أكثر.",
       fromMeds: "بدأنا من حساسية الأدوية المسجلة في التاريخ الدوائي.",
       prev: "السابق", draft: "حفظ كمسودة", saveCont: "حفظ ومتابعة", draftSaved: "تم حفظ تاريخ الحساسية كمسودة.", saved: "تم حفظ تاريخ الحساسية.",
-      needStatus: "اختر هل عند المريض حساسية معروفة.", needItem: "أضف حساسية وحدة على الأقل، أو اختر لا أو غير معروف.", savedInfo: "تم حفظ تاريخ الحساسية {t}. تقدر تعدله."
+      needStatus: "اختر هل عند المريض حساسية معروفة.", needItem: "أضف حساسية وحدة على الأقل، أو اختر لا أو غير معروف.", savedInfo: "تم حفظ تاريخ الحساسية {t}."
     }
   };
 
