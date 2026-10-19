@@ -362,18 +362,20 @@
   const fmtD = s => { const d = /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(s + "T00:00") : new Date(s); return d.toLocaleDateString(loc(), { day: "numeric", month: "short", year: "numeric" }); };
   const initials = n => String(n || "").split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
   const dxOf = o => ((o.doctorVisit.steps || {}).assess || {}).primary || null;
+  // More than one primary diagnosis: the first shows, with how many more.
+  const dxMore = o => Math.max(0, (((o.doctorVisit.steps || {}).assess || {}).primaries || []).length - 1);
   const dateOf = o => (o.appointment && o.appointment.date) || o.doctorVisit.completedAt || o.createdAt;
 
   function render() {
     if (ed) return renderEd();
     const all = mine().sort((a, b) => String(dateOf(b)).localeCompare(String(dateOf(a)))), ql = q.trim().toLowerCase();
-    const list = all.filter(o => { const dx = dxOf(o) || {}; return !ql || [nm(o.patient).en, nm(o.patient).ar, o.mrn, o.id, dx.code, dx.en, dx.ar].filter(Boolean).join(" ").toLowerCase().includes(ql); });
+    const list = all.filter(o => { const as = (o.doctorVisit.steps || {}).assess || {}, dxl = [...(as.primaries || [as.primary]), ...(as.additional || [])].filter(Boolean); return !ql || [nm(o.patient).en, nm(o.patient).ar, o.mrn, o.id, ...dxl.flatMap(dx => [dx.code, dx.en, dx.ar])].filter(Boolean).join(" ").toLowerCase().includes(ql); });
     $("vw").innerHTML = `<section class="card">
       <div class="rp-head"><span class="ic">${svg(IC.rep)}</span><div><h1>${t().title}</h1><p>${t().sub}</p></div><span class="cnt-tag">${all.length === 1 ? t().count1 : tx("countN", { n: all.length })}</span>${(n => n ? `<span class="cnt-tag pend">${esc(tx("pendN", { n }))}</span>` : "")(all.filter(o => !MadaReport.approved(o)).length)}</div>
       <div class="tools"><label class="search">${svg(IC.search, 2)}<input type="search" id="q" value="${esc(q)}" placeholder="${esc(t().searchPh)}" aria-label="${t().search}" autocomplete="off"></label></div>
       ${list.length ? `<div class="rlist">${list.map(o => { const p = nm(o.patient), dx = dxOf(o);
         return `<div class="rrow"><span class="who"><span class="pa">${esc(initials(p.en))}</span><span><b>${esc(p[current] || p.en)}</b><small class="num">${esc(tx("fileNo", { n: o.mrn || "—" }))}</small></span></span>
-          <span class="dxc">${dx ? `<b>${dx.code ? `<span class="code">${esc(dx.code)}</span>` : ""}${esc(dx[current] || dx.en)}</b>` : `<small>${t().noDx}</small>`}</span>
+          <span class="dxc">${dx ? `<b>${dx.code ? `<span class="code">${esc(dx.code)}</span>` : ""}${esc(dx[current] || dx.en)}</b>${dxMore(o) ? ` <small class="num">+${dxMore(o)}</small>` : ""}` : `<small>${t().noDx}</small>`}</span>
           <span class="vd"><b>${esc(fmtD(dateOf(o)))}</b><small class="num">${esc(tx("visit", { n: o.id }))}</small>${MadaReport.approved(o) ? `<span class="st-tag ok"><i></i>${t().approvedT}</span>` : `<span class="st-tag pend"><i></i>${t().pending}</span>`}</span>
           <span class="acts">${MadaReport.approved(o) ? `<button type="button" class="btn btn-out" data-view="${esc(o.id)}">${svg(IC.eye)}${t().view}</button><button type="button" class="btn btn-dark" data-dl="${esc(o.id)}">${svg(IC.dl, 2)}${t().dl}</button>`
             : `<button type="button" class="btn btn-pri" data-review="${esc(o.id)}">${svg(IC.pen, 2)}${t().review}</button>`}</span></div>`; }).join("")}</div>`

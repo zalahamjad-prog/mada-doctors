@@ -26,7 +26,7 @@ const MadaReport = (() => {
       rosNeg: "All other systems reviewed and negative.", rosNone: "No positive findings.", ago: "{n} {u} ago",
       vital: "Measurement", value: "Value", normal: "Normal range", low: "Low", high: "High", ok: "Normal",
       general: "General Examination", local: "Local Examination", findings: "Findings",
-      primary: "Primary diagnosis", additional: "Additional diagnoses", code: "ICD-10",
+      primary: "Primary diagnosis", primaryN: "Primary diagnoses", additional: "Additional diagnoses", code: "ICD-10",
       test: "Test", result: "Result", range: "Reference range", status: "Status", pending: "Pending", ordered: "Ordered", approvedBy: "Reviewed by {n}", inReport: "See the lab report",
       radT: "Radiology", labT: "Laboratory",
       medicine: "Medicine", dose: "Dose", route: "Route", freq: "Frequency", dur: "Duration", instr: "Instructions", noMeds: "No medications prescribed.", prn: "As needed",
@@ -51,7 +51,7 @@ const MadaReport = (() => {
       rosNeg: "باقي الأجهزة تمت مراجعتها وسليمة.", rosNone: "لا توجد نتائج إيجابية.", ago: "قبل {n} {u}",
       vital: "القياس", value: "القيمة", normal: "المعدل الطبيعي", low: "منخفض", high: "مرتفع", ok: "طبيعي",
       general: "الفحص العام", local: "الفحص الموضعي", findings: "النتائج",
-      primary: "التشخيص الرئيسي", additional: "تشخيصات إضافية", code: "ICD-10",
+      primary: "التشخيص الرئيسي", primaryN: "التشخيصات الرئيسية", additional: "تشخيصات إضافية", code: "ICD-10",
       test: "الفحص", result: "النتيجة", range: "المعدل الطبيعي", status: "الحالة", pending: "بانتظار النتيجة", ordered: "تم الطلب", approvedBy: "راجعها {n}", inReport: "في تقرير المختبر",
       radT: "الأشعة", labT: "المختبر",
       medicine: "الدواء", dose: "الجرعة", route: "الطريقة", freq: "التكرار", dur: "المدة", instr: "التعليمات", noMeds: "لم تُوصف أدوية.", prn: "عند الحاجة",
@@ -167,7 +167,9 @@ const MadaReport = (() => {
       (r.photos || []).length ? `<div style="display:flex;gap:6px;margin-top:4px">${r.photos.slice(0, 4).map(p => `<img src="${p}" style="width:80px;height:60px;object-fit:cover;border-radius:6px;border:1px solid ${LINE}" alt="">`).join("")}</div>` : ""}</div>`).join("");
 
     // 4. Diagnosis
-    const dx = d.st.assess || {}, dxName = x => x ? `${x.code ? `<span dir="ltr" style="unicode-bidi:isolate;display:inline-block;padding:0 6px;border-radius:6px;background:#e6f3ef;color:${G};font-weight:700;font-size:11px;margin-${rtl ? "left" : "right"}:6px">${esc(x.code)}</span>` : ""}${txt(x[lang] || x.en || x.ar)}` : "";
+    // Every primary diagnosis (the doctor can add more than one; older visits have one).
+    const prims = as => as ? (as.primaries && as.primaries.length ? as.primaries : as.primary ? [as.primary] : []) : [];
+    const dx = d.st.assess || {}, dxP = prims(dx), dxName = x => x ? `${x.code ? `<span dir="ltr" style="unicode-bidi:isolate;display:inline-block;padding:0 6px;border-radius:6px;background:#e6f3ef;color:${G};font-weight:700;font-size:11px;margin-${rtl ? "left" : "right"}:6px">${esc(x.code)}</span>` : ""}${txt(x[lang] || x.en || x.ar)}` : "";
 
     // 5. Investigations: labs and radiology ordered in the visit, with results when the workflow has them.
     const ordItems = ((d.st.orders || {}).items || []), labItems = d.reqs.flatMap(r => r.items.filter(i => i.type === "lab")), radItems = d.reqs.flatMap(r => r.items.filter(i => i.type === "radiology"));
@@ -225,7 +227,7 @@ const MadaReport = (() => {
     const SEC = [
       ["hx", "history", "s1", t.s1, hx.join("") || empty], ["al", "allergy", "al", t.sAl, alg || empty], ["vit", "vitals", "s2", t.s2, vrows.length ? table([t.vital, t.value, t.normal, t.status], vrows) : empty],
       ["ex", "exam", "s3", t.s3, (grows.length ? `<div style="font-size:12px;font-weight:700;color:${GD}">${t.general}</div>${table([rtl ? "الجهاز" : "System", t.status, t.findings], grows)}` : "") + (regions ? `<div style="font-size:12px;font-weight:700;color:${GD};margin-top:10px">${t.local}</div>${regions}` : "") || empty],
-      ["dx", "assess", "s4", t.s4, dx.primary ? sub(t.primary, dxName(dx.primary)) + ((dx.additional || []).length ? sub(t.additional, dx.additional.map(x => `<div>• ${dxName(x)}</div>`).join("")) : "") + (dx.notes ? sub(t.notes, txt(dx.notes)) : "") : empty],
+      ["dx", "assess", "s4", t.s4, dxP.length ? sub(dxP.length > 1 ? t.primaryN : t.primary, dxP.length > 1 ? dxP.map(x => `<div>• ${dxName(x)}</div>`).join("") : dxName(dxP[0])) + ((dx.additional || []).length ? sub(t.additional, dx.additional.map(x => `<div>• ${dxName(x)}</div>`).join("")) : "") + (dx.notes ? sub(t.notes, txt(dx.notes)) : "") : empty],
       ["inv", "orders", "s5", t.s5, inv || empty],
       ["meds", "plan", "s6", t.s6, mrows.length ? table([t.medicine, t.dose, t.route, t.freq, t.dur, t.instr], mrows) : pl.none ? `<div style="font-size:12px">${t.noMeds}</div>` : empty],
       ["plan", "plan", "s7", t.s7, (goals.length ? sub(t.goals, goals.map(g => `<div>• ${txt(g)}</div>`).join("")) : "") + (details ? sub(t.plan, details) : "") + (pl.followUp ? sub(t.followUp, txt(pl.followUp)) : "") || empty],
@@ -392,9 +394,9 @@ const MadaReport = (() => {
         <div style="display:flex;justify-content:space-between;align-items:center;gap:6px"><span style="color:${MU};font-size:10.5px">${esc(v[lang].replace(/[()]/g, ""))}</span>${flag(vState(v, vs[v.k]))}</div>
         <div style="margin-top:3px;color:${INK}"><b style="font-size:16px">${ltr(vs[v.k])}</b> <span style="color:${MU};font-size:11px">${ltr(v.unit)}</span></div></div>`).join("")}</div>
       ${vs.at ? `<div style="font-size:11px;color:${MU};margin-top:6px">${t.measured.replace("{d}", when(vs.at))}${vs.by ? ` · ${txt(nm(vs.by)[lang] || nm(vs.by).en)}` : ""}</div>` : ""}` : `<div style="font-size:12px;color:${MU}">${t.vitNone}</div>`;
-    const dx = (d.st.assess || {}).primary;
+    const dxs = (as => as ? (as.primaries && as.primaries.length ? as.primaries : as.primary ? [as.primary] : []) : [])(d.st.assess);
     const sub = (k, v) => `<div style="margin-top:6px"><div style="font-size:11.5px;font-weight:700;color:${G};margin-bottom:3px">${k}</div>${v}</div>`;
-    const clinBody = sub(t.cc, ccBody) + sub(t.s2, vBody) + (dx ? sub(t.workDx, `<div style="font-size:12.5px;color:${INK}">${dx.code ? `${ltr(dx.code)} · ` : ""}${txt(dx[lang] || dx.en || dx.ar)}</div>`) : "");
+    const clinBody = sub(t.cc, ccBody) + sub(t.s2, vBody) + (dxs.length ? sub(t.workDx, dxs.map(dx => `<div style="font-size:12.5px;color:${INK}">${dx.code ? `${ltr(dx.code)} · ` : ""}${txt(dx[lang] || dx.en || dx.ar)}</div>`).join("")) : "");
 
     // 3. Referral details, short.
     const ri = typeof DrOrders !== "undefined" && DrOrders.refInfo ? DrOrders.refInfo(ro) : { spec: null, provider: null }, urgent = ro.priority === "urgent";
@@ -450,7 +452,7 @@ const MadaReport = (() => {
     const ptBody = `<div style="display:flex;flex-wrap:wrap">${kv(t.name, txt(pt.name[lang] || pt.name.en || ""))}${kv(t.fileNo, pt.fileNo && ltr(pt.fileNo))}${kv(t.idNo, pt.idNumber && ltr(pt.idNumber))}
       ${kv(t.dob, pt.dob && esc(fmtD(pt.dob)) + (has(pt.age) ? ` <span style="color:${MU};font-weight:400">· ${esc(tx(t.years, { n: pt.age }))}</span>` : ""))}${kv(t.gender, pt.gender ? t["g_" + pt.gender] : "")}${kv(t.mobile, pt.mobile && ltr(pt.mobile))}
       ${kv(t.rxAl, alTxt, "100%")}</div>`;
-    const as = d.st.assess || {}, dxs = [as.primary, ...(as.secondary || as.additional || [])].filter(Boolean);
+    const as = d.st.assess || {}, dxs = [...(as.primaries && as.primaries.length ? as.primaries : [as.primary]), ...(as.secondary || as.additional || [])].filter(Boolean);
     const dxBody = dxs.length ? dxs.map((x, i) => `<div style="font-size:12.5px;color:${INK};padding:2px 0">${i ? "• " : ""}${x.code ? `${ltr(x.code)} · ` : ""}<b style="font-weight:${i ? 500 : 700}">${txt(x[lang] || x.en || x.ar || x.text || "")}</b></div>`).join("") : `<div style="font-size:12px;color:${MU}">${t.none}</div>`;
     const medsBody = meds.map((m, i) => {
       const name = (m.generic && (m.generic[lang] || m.generic.en)) || m.name;

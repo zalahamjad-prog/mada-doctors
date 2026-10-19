@@ -1,6 +1,7 @@
 // Diagnosis (doctor visit step after Allergy History). Saved in order.doctorVisit.steps.assess:
-//   { primary: { code, en, ar }, additional: [{ code, en, ar }], notes, at, by }   (code is "" for a free-text diagnosis)
-// "Save as Draft" keeps the same shape in doctorVisit.assessDraft. A primary diagnosis is required to continue.
+//   { primaries: [{ code, en, ar }], primary (= primaries[0], kept for older readers), additional: [{ code, en, ar }], notes, at, by }
+//   (code is "" for a free-text diagnosis). The doctor can add more than one primary diagnosis.
+// "Save as Draft" keeps the same shape in doctorVisit.assessDraft. At least one primary diagnosis is required to continue.
 const DrDiagnosis = (() => {
   // SAMPLE ICD-10-AM list of common home-care diagnoses. TODO: replace with the licensed ICD-10-AM code search
   // and check every title against the current edition before go-live.
@@ -66,25 +67,25 @@ const DrDiagnosis = (() => {
   const L = {
     en: {
       title: "Diagnosis", sub: "Enter the clinical diagnosis using ICD-10-AM coding.", stepOf: "Step {n} of {m}",
-      primary: "Primary Diagnosis", primaryS: "Select the main diagnosis for this visit.", primaryPh: "Search by ICD-10-AM code or diagnosis (e.g. J06.9, pharyngitis)",
+      primary: "Primary Diagnosis", primaryS: "Select the main diagnosis for this visit. You can add more than one.", primaryMore: "Add another primary diagnosis (ICD-10-AM or text)...", primaryPh: "Search by ICD-10-AM code or diagnosis (e.g. J06.9, pharyngitis)",
       additional: "Additional Diagnoses", additionalS: "Add other relevant diagnoses if applicable.", additionalPh: "Search and add additional diagnosis (ICD-10-AM or text)...",
       notes: "Clinical Notes", notesS: "Document the clinical reasoning and supporting findings for the diagnosis.", notesPh: "Enter clinical notes here...", optional: "(Optional)",
-      common: "Common", freeText: "Add \"{q}\" as free text", noCode: "No code", change: "Change", remove: "Remove {n}", clear: "Clear search", noMatch: "No matching ICD-10-AM code.",
+      common: "Common", freeText: "Add \"{q}\" as free text", noCode: "No code", change: "Change", removeB: "Remove", remove: "Remove {n}", clear: "Clear search", noMatch: "No matching ICD-10-AM code.",
       ch_resp: "Respiratory system", ch_circ: "Circulatory system", ch_endo: "Endocrine & metabolic", ch_dig: "Digestive system", ch_inf: "Infectious diseases", ch_gu: "Genitourinary system",
       ch_msk: "Musculoskeletal system", ch_skin: "Skin", ch_nerv: "Nervous system", ch_ment: "Mental & behavioural", ch_blood: "Blood", ch_eye: "Eye", ch_ear: "Ear", ch_sym: "Symptoms & signs", ch_special: "Special purposes", ch_free: "Free text",
-      already: "Already added.", isPrimary: "This is the primary diagnosis.",
+      already: "Already added.", isPrimary: "This is a primary diagnosis.",
       prev: "Previous", draft: "Save as Draft", saveCont: "Save & Continue", draftSaved: "Diagnosis saved as draft.", saved: "Diagnosis saved.",
       needPrimary: "Choose the primary diagnosis.", savedInfo: "Diagnosis saved at {t}."
     },
     ar: {
       title: "التشخيص", sub: "أدخل التشخيص السريري بترميز ICD-10-AM.", stepOf: "الخطوة {n} من {m}",
-      primary: "التشخيص الرئيسي", primaryS: "اختر التشخيص الأساسي لهذه الزيارة.", primaryPh: "ابحث بالرمز أو اسم التشخيص (مثال: J06.9، التهاب البلعوم)",
+      primary: "التشخيص الرئيسي", primaryS: "اختر التشخيص الأساسي لهذه الزيارة. تقدر تضيف أكثر من واحد.", primaryMore: "أضف تشخيص رئيسي ثاني (ICD-10-AM أو نص)...", primaryPh: "ابحث بالرمز أو اسم التشخيص (مثال: J06.9، التهاب البلعوم)",
       additional: "تشخيصات إضافية", additionalS: "أضف التشخيصات الثانية إذا فيه.", additionalPh: "ابحث وأضف تشخيص إضافي (ICD-10-AM أو نص)...",
       notes: "ملاحظات سريرية", notesS: "اكتب سبب التشخيص والنتائج اللي تدعمه.", notesPh: "اكتب الملاحظات السريرية هنا...", optional: "(اختياري)",
-      common: "شائع", freeText: "إضافة \"{q}\" كنص", noCode: "بدون رمز", change: "تغيير", remove: "حذف {n}", clear: "مسح البحث", noMatch: "ما فيه رمز ICD-10-AM مطابق.",
+      common: "شائع", freeText: "إضافة \"{q}\" كنص", noCode: "بدون رمز", change: "تغيير", removeB: "حذف", remove: "حذف {n}", clear: "مسح البحث", noMatch: "ما فيه رمز ICD-10-AM مطابق.",
       ch_resp: "الجهاز التنفسي", ch_circ: "الدورة الدموية", ch_endo: "الغدد والاستقلاب", ch_dig: "الجهاز الهضمي", ch_inf: "الأمراض المعدية", ch_gu: "الجهاز البولي والتناسلي",
       ch_msk: "العضلات والعظام", ch_skin: "الجلد", ch_nerv: "الجهاز العصبي", ch_ment: "النفسية والسلوك", ch_blood: "الدم", ch_eye: "العين", ch_ear: "الأذن", ch_sym: "أعراض وعلامات", ch_special: "رموز خاصة", ch_free: "نص حر",
-      already: "مضاف من قبل.", isPrimary: "هذا هو التشخيص الرئيسي.",
+      already: "مضاف من قبل.", isPrimary: "هذا تشخيص رئيسي.",
       prev: "السابق", draft: "حفظ كمسودة", saveCont: "حفظ ومتابعة", draftSaved: "تم حفظ التشخيص كمسودة.", saved: "تم حفظ التشخيص.",
       needPrimary: "اختر التشخيص الرئيسي.", savedInfo: "تم حفظ التشخيص {t}."
     }
@@ -100,7 +101,8 @@ const DrDiagnosis = (() => {
   function load(o) {
     if (draft && forId === o.id) return;
     const dv = o.doctorVisit || {}, src = dv.assessDraft || (dv.steps && dv.steps.assess);
-    draft = src ? JSON.parse(JSON.stringify({ primary: null, additional: [], notes: "", ...src })) : { primary: null, additional: [], notes: "" };
+    draft = src ? JSON.parse(JSON.stringify({ additional: [], notes: "", ...src })) : { additional: [], notes: "" };
+    draft.primaries = draft.primaries || (draft.primary ? [draft.primary] : []); delete draft.primary;
     forId = o.id;
   }
   function search(q) {
@@ -118,7 +120,7 @@ const DrDiagnosis = (() => {
   }
   const searchBox = (which, ph) => {
     const q = which === "p" ? qP : qA;
-    return `<div class="dx-sb ${openBox === which ? "open" : ""} ${which === "p" && tried && !draft.primary ? "bad" : ""}">${S(I.search)}
+    return `<div class="dx-sb ${openBox === which ? "open" : ""} ${which === "p" && tried && !draft.primaries.length ? "bad" : ""}">${S(I.search)}
       <input id="dxQ-${which}" type="search" value="${E(q)}" placeholder="${E(ph)}" autocomplete="off" role="combobox" aria-expanded="${openBox === which}" aria-controls="drop-${which}">
       ${q ? `<button type="button" class="dx-clr" data-clr="${which}" aria-label="${E(t().clear)}">${S(I.x, 2.2)}</button>` : ""}
       ${openBox === which ? dropdown(which) : ""}</div>`;
@@ -129,14 +131,15 @@ const DrDiagnosis = (() => {
     ctx = c; lang = c.lang; load(o);
     const saved = o.doctorVisit && o.doctorVisit.steps && o.doctorVisit.steps.assess;
     const when = saved && new Date(saved.at).toLocaleString(c.loc(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-    const p = draft.primary;
+    const ps = draft.primaries;
     return `<div class="dx">
       <div class="ex-top"><span class="ex-tic">${S(I.steth)}</span><div><h1>${t().title}</h1><p>${t().sub}</p></div><span class="ex-stp">${tx("stepOf", c.stepOf)}</span></div>
       ${saved ? `<div class="info ok">${S(I.check, 2.4)}<span>${tx("savedInfo", { t: E(when) })}</span></div>` : ""}
       <div class="dx-f"><label for="dxQ-p">${t().primary} <span class="req">*</span></label><small>${t().primaryS}</small>
-        ${p ? `<div class="dx-picked"><span class="dx-code" dir="ltr">${p.code ? E(p.code) : t().noCode}</span><span class="dx-t"><b>${E(nm(p))}</b><small>ICD-10-AM | ${t()["ch_" + (p.ch || "free")]}</small></span>
-          <button type="button" class="dx-chg" id="dxChange">${S(I.pen)}${t().change}</button></div>` : searchBox("p", t().primaryPh)}
-        ${tried && !p ? `<div class="hx-err">${t().needPrimary}</div>` : ""}</div>
+        ${ps.map((p, n) => `<div class="dx-picked"><span class="dx-code" dir="ltr">${p.code ? E(p.code) : t().noCode}</span><span class="dx-t"><b>${E(nm(p))}</b><small>ICD-10-AM | ${t()["ch_" + (p.ch || "free")]}</small></span>
+          <button type="button" class="dx-chg" data-rmp="${n}" aria-label="${E(tx("remove", { n: nm(p) }))}">${S(I.x, 2.2)}${t().removeB}</button></div>`).join("")}
+        <div class="${ps.length ? "dx-more" : ""}">${searchBox("p", ps.length ? t().primaryMore : t().primaryPh)}</div>
+        ${tried && !ps.length ? `<div class="hx-err">${t().needPrimary}</div>` : ""}</div>
       <div class="dx-f"><label for="dxQ-a">${t().additional} <span class="hx-opt">${t().optional}</span></label><small>${t().additionalS}</small>
         ${searchBox("a", t().additionalPh)}
         ${draft.additional.length ? `<div class="dx-chips">${draft.additional.map(chip).join("")}</div>` : ""}</div>
@@ -150,10 +153,11 @@ const DrDiagnosis = (() => {
 
   function choose(which, d) {
     if (which === "p") {
-      draft.primary = d; draft.additional = draft.additional.filter(x => !same(x, d)); qP = "";
+      if (draft.primaries.some(x => same(x, d))) { qP = ""; openBox = null; ctx.rerender(); return ctx.toast(t().already); }
+      draft.primaries.push(d); draft.additional = draft.additional.filter(x => !same(x, d)); qP = "";
     } else {
-      if (same(draft.primary, d)) return ctx.toast(t().isPrimary);
-      if (draft.additional.some(x => same(x, d))) return ctx.toast(t().already);
+      const dup = draft.primaries.some(x => same(x, d)) ? "isPrimary" : draft.additional.some(x => same(x, d)) ? "already" : null;
+      if (dup) { qA = ""; openBox = null; ctx.rerender(); return ctx.toast(t()[dup]); }
       draft.additional.push(d); qA = "";
     }
     openBox = null; ctx.rerender();
@@ -184,18 +188,20 @@ const DrDiagnosis = (() => {
     });
     bindDrop();
     all("[data-clr]", b => b.addEventListener("mousedown", e => { e.preventDefault(); if (b.dataset.clr === "p") qP = ""; else qA = ""; ctx.rerender(); keepFocus(b.dataset.clr); }));
-    if ($("#dxChange")) $("#dxChange").addEventListener("click", () => { draft.primary = null; openBox = "p"; ctx.rerender(); keepFocus("p"); });
+    all("[data-rmp]", b => b.addEventListener("click", () => { draft.primaries.splice(+b.dataset.rmp, 1); ctx.rerender(); }));
     all("[data-rm]", b => b.addEventListener("click", () => { draft.additional.splice(+b.dataset.rm, 1); ctx.rerender(); }));
     $("#dxNotes").addEventListener("input", e => { draft.notes = e.target.value; $("#dxCount").textContent = draft.notes.length; });
     $("#dxPrev").addEventListener("click", () => ctx.go(ctx.prevKey));
     $("#dxDraft").addEventListener("click", () => { ctx.saveDraft(clean()); ctx.toast(t().draftSaved); });
     $("#dxSave").addEventListener("click", () => {
       tried = true;
-      if (!draft.primary) { openBox = null; ctx.rerender(); return ctx.toast(t().needPrimary); }
+      if (!draft.primaries.length) { openBox = null; ctx.rerender(); return ctx.toast(t().needPrimary); }
       ctx.save(clean()); reset(); ctx.toast(t().saved); ctx.go(ctx.nextKey);
     });
   }
-  const clean = () => JSON.parse(JSON.stringify({ primary: draft.primary, additional: draft.additional, notes: draft.notes.trim() }));
+  const clean = () => JSON.parse(JSON.stringify({ primaries: draft.primaries, primary: draft.primaries[0] || null, additional: draft.additional, notes: draft.notes.trim() }));
+  // Every primary diagnosis of a saved step, older visits included (one primary).
+  const primaries = as => as ? (as.primaries && as.primaries.length ? as.primaries : as.primary ? [as.primary] : []) : [];
 
-  return { view, bind, reset, L };
+  return { view, bind, reset, L, primaries };
 })();

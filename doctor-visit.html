@@ -786,7 +786,7 @@
       <button type="button" class="pf-btn" id="pfOpen">${svg(IC.folder)}${t().pfOpen}</button>`;
   }
   function pfDrawer(o) {
-    const p = ptInfo(o), al = allergyNames(o), s = stepsOf(o), v = s.vitals, dx = s.assess && s.assess.primary;
+    const p = ptInfo(o), al = allergyNames(o), s = stepsOf(o), v = s.vitals, dxs = DrDiagnosis.primaries(s.assess);
     let miss = 0;
     const kv = (l, val, num) => `<div><dt>${l}</dt><dd${num ? ' class="num"' : ""}>${esc(val || "—")}</dd></div>`;
     const req = (l, val, num) => val ? kv(l, val, num) : (miss++, `<div><dt>${l}</dt><dd><span class="pf-miss">${t().pfMiss}</span></dd></div>`);
@@ -806,7 +806,7 @@
         <section class="pf-sec"><h3>${svg('<path d="M12 3 2.5 20h19z"/><path d="M12 10v4M12 17h.01"/>')}${t().pfAl}</h3>
           ${!al ? `<p class="pf-mt">${t().pfAlNr}</p>` : al.names.length ? `<div class="pf-al">${al.names.map(n => `<span>${esc(n)}</span>`).join("")}</div>` : `<p class="pf-mt">${t().pfNoAl}</p>`}</section>
         <section class="pf-sec"><h3>${svg(IC.order)}${t().pfNow}</h3><dl class="pf-kv">
-          ${kv(t().orderNo, o.id, 1)}${kv(t().pfStepsN, `${done} / ${STEPS.length}`, 1)}${kv(t().pfDx, dx ? (dx.code ? dx.code + " · " : "") + (dx[current] || dx.en) : "")}${kv(t().pfVit, vit, 1)}</dl></section>
+          ${kv(t().orderNo, o.id, 1)}${kv(t().pfStepsN, `${done} / ${STEPS.length}`, 1)}${kv(t().pfDx, dxs.map(dx => (dx.code ? dx.code + " · " : "") + (dx[current] || dx.en)).join(current === "ar" ? "، " : ", "))}${kv(t().pfVit, vit, 1)}</dl></section>
         <section class="pf-sec"><h3>${svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')}${t().pfPrev}</h3>
           ${prev.length ? `<ul class="pf-vl">${prev.map(({ x, d }) => `<li><span><b>${esc(t()["sv_" + x.service] || x.service || "")}</b><small class="num">${esc(x.id)} · ${d ? esc(fmtDate(d)) : "—"}</small></span>
             <span class="pf-st ${x.status === "completed" ? "ok" : ""}">${t()["st_" + x.status] || t().st_other}</span></li>`).join("")}</ul>` : `<p class="pf-mt">${t().pfNoPrev}</p>`}</section>

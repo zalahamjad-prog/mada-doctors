@@ -27,6 +27,7 @@
 .dx-picked { display: flex; align-items: center; gap: 16px; padding: 14px 16px; border: 1px solid #7cc4a4; background: #ecf8f3; border-radius: 12px; }
 .dx-chg { display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; color: #0f6b52; font: inherit; font-weight: 600; font-size: 14px; cursor: pointer; flex: none; }
 .dx-chg svg { width: 18px; height: 18px; }
+.dx-picked + .dx-picked { margin-top: 8px; } .dx-more { margin-top: 10px; }
 .dx-chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
 .dx-chip { display: inline-flex; align-items: center; gap: 10px; padding: 8px 10px 8px 14px; border-radius: 20px; background: #eaf2fd; color: #15304a; font-size: 13px; max-width: 100%; }
 [dir="rtl"] .dx-chip { padding: 8px 14px 8px 10px; }
