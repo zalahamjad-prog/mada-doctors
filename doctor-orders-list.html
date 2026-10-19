@@ -351,8 +351,10 @@
   // what staff entered at each step, the team's notes, escalations, the late-lab flag, closing and quality review.
   // Requests the team opened for this doctor (source "staff") show too, marked "Added by the team".
   const only = r => r || null;
-  const mine = () => M.all().filter(r => r.doctorId === docId && r.items && r.items.length);
-  const stateOf = r => r.items.some(needs) ? "need" : r.status !== "open" || r.items.every(itDone) ? "done" : "wait";
+  // Only lab tests and imaging show on this page (Amjad, V177); the other services are followed up by the operations team.
+  const LR = it => it.type === "lab" || it.type === "radiology";
+  const mine = () => M.all().filter(r => r.doctorId === docId && r.items && r.items.some(LR));
+  const stateOf = r => { const its = r.items.filter(LR); return its.some(needs) ? "need" : r.status !== "open" || its.every(itDone) ? "done" : "wait"; };
 
 
   const I18N = {
@@ -460,7 +462,7 @@
   // ---------- list ----------
   function chips(r) {
     const by = {};
-    r.items.forEach(it => { by[it.type] = by[it.type] || []; by[it.type].push(it); });
+    r.items.filter(LR).forEach(it => { by[it.type] = by[it.type] || []; by[it.type].push(it); });
     return Object.keys(by).map(ty => {
       const its = by[ty], n = ty === "lab" ? its.reduce((s, it) => s + Math.max(1, (it.orderCodes || it.tests || []).length), 0) : 0;
       const nd = its.filter(needs).length, ok = !nd && ty === "radiology" && its.every(M.isDone);
@@ -649,7 +651,7 @@
     const sent = new URLSearchParams(location.search).get("sent");
     if (sent && !detail.told) { detail.told = true; setTimeout(() => toast(tx("fu_sent", { n: sent })), 300); }
     const r = only(M.get(id));
-    if (!r || r.doctorId !== docId || !r.items.length) { $("vw").innerHTML = `<a class="back" href="doctor-orders-list.html">${svg(IC.l, 2)}${t().back}</a><section class="card"><div class="none-box"><b>${t().notFound}</b></div></section>`; return; }
+    if (!r || r.doctorId !== docId || !r.items.some(LR)) { $("vw").innerHTML = `<a class="back" href="doctor-orders-list.html">${svg(IC.l, 2)}${t().back}</a><section class="card"><div class="none-box"><b>${t().notFound}</b></div></section>`; return; }
     const o = MadaOrders.get(r.orderId), done = o && o.doctorVisit && o.doctorVisit.status === "done";
     // Opening the order marks entered lab results as seen by the doctor (shown on the dashboard's Lab Results page).
     r.items.filter(i => (i.type === "lab" && i.results || radReady(i)) && !i.docSeen).forEach(i => M.patchItem(r.id, i.id, { docSeen: { at: new Date().toISOString(), by: me.name } }));
@@ -661,7 +663,7 @@
       <section class="card"><div class="od-h"><span class="pa">${esc(initials(nm(r.patient).en))}</span><div><h1>${esc(pName(r))}</h1>
         <div class="meta"><span>${t().orderNo}: <b class="num">${esc(r.id)}</b></span><span>${esc(tx("fileNo", { n: "" }).trim())}: <b class="num">${esc(r.mrn || "—")}</b></span>${r.orderId ? `<span>${t().visitNo}: <b class="num">${esc(r.orderId)}</b></span>` : ""}<span>${t().date}: <b>${esc(fmtT(r.createdAt))}</b></span><span class="st st-${s}">${t()["st_" + s]}</span></div></div>
         <div class="od-acts">${r.mrn ? `<a class="btn btn-out" href="doctor-patient.html?mrn=${encodeURIComponent(r.mrn)}">${svg(IC.folder)}${t().openFile}</a>` : ""}${done ? `<a class="btn btn-dark" href="doctor-visit.html?id=${encodeURIComponent(r.orderId)}&view=1">${svg(IC.eye)}${t().openVisit}</a>` : ""}</div></div></section>
-      ${rqBox(r)}${sec("lab")}${sec("radiology")}${sec("other")}${addBox(r)}${teamBox(r)}
+      ${rqBox(r)}${sec("lab")}${sec("radiology")}${addBox(r)}${teamBox(r)}
       <p class="ol-note">${svg(IC.info, 2)}${t().demo}</p>`;
   }
   const qid = () => new URLSearchParams(location.search).get("id");

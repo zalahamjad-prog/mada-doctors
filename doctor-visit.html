@@ -541,6 +541,8 @@
 <script src="doctor-edu.js"></script>
 <script src="doctor-idform.js"></script>
 <script src="doctor-consent.js"></script>
+<script src="nurses.js"></script>
+<script src="visit-book.js"></script>
 <script>
   const me = MadaAuth.requireAuth("doctor");
   if (me && me.doctorId) MadaOrders.seedDoctorDemo(me.doctorId); // SAMPLE DATA ONLY
@@ -936,10 +938,11 @@
     let body = active === "arrival" ? arrivalCard(o) : hx ? DrHistory.view(o, hxCtx) : active === "vitals" ? vitalsCard(o) : active === "exam" ? DrExam.view(o, exCtx) : active === "allergy" ? DrAllergy.view(o, alCtx) : active === "assess" ? DrDiagnosis.view(o, dxCtx) : active === "plan" ? DrPlan.view(o, planCtx) : active === "orders" ? DrOrders.view(o, orCtx) : active === "nurse" ? DrNurse.view(o, nuCtx) : active === "edu" ? DrEdu.view(o, edCtx) : active === "idform" ? DrIdForm.view(o, idCtx) : active === "consent" ? DrConsent.view(o, csCtx) : soonCard(active);
     if (FU && active === "orders") body = DrOrders.view(fuOrder(o), fuCtx);
     const backA = FU ? `<a class="back" href="doctor-orders-list.html?id=${encodeURIComponent(FU_ID)}">${svg(IC.back, 2)}${ft().back}</a>` : VIEW && o.mrn ? `<a class="back" href="doctor-patient.html?mrn=${encodeURIComponent(o.mrn)}">${svg(IC.back, 2)}${t().backFile}</a>` : `<a class="back" href="doctor-visits.html">${svg(IC.back, 2)}${t().back}</a>`;
-    $("vw").innerHTML = `${backA}${VIEW ? `<div class="ro-bar">${svg(IC.info, 2)}<span><b>${t().roT}</b> ${t().roS}</span></div>` : ""}${strip(o)}${VIEW || FU ? "" : payBar(o)}
+    $("vw").innerHTML = `${backA}${VIEW ? `<div class="ro-bar">${svg(IC.info, 2)}<span><b>${t().roT}</b> ${t().roS}</span></div>` : ""}${strip(o)}${VIEW || FU ? "" : payBar(o)}${VIEW ? "" : MadaVisitBook.payPanel(o, current)}
       ${FU ? `<div class="ro-bar fu-bar">${svg(IC.info, 2)}<span><b>${active === "orders" ? ft().barT : ft().amendT}</b> ${active === "orders" ? ft().barS : ft().amendS}</span></div>` : ""}
       <div class="vw-body">${FU ? fuList(o) : stepList(o)}<section class="card ${hx && DrHistory.isOpen() ? "hx-card" : ""}" id="stepCard">${body}</section></div>`;
     bind(o);
+    if (!VIEW) MadaVisitBook.bindPayPanel($("vw"), o, me.name, current, m => { toast(m); render(); });
     if (hx) DrHistory.bind($("stepCard"), o, hxCtx);
     if (active === "exam") DrExam.bind($("stepCard"), o, exCtx);
     if (active === "allergy") DrAllergy.bind($("stepCard"), o, alCtx);
@@ -1129,6 +1132,8 @@
     get prevName() { return t()["s_" + this.prevKey]; },
     get lang() { return current; }, svg, esc, loc, toast: m => toast(m), rerender() { render(); },
     patient: o => orCtx.patient(o), payState: o => DrOrders.payState(o, current), missing: o => missingSteps(o),
+    // A visit booked from a doctor's order (DBK-) can't be completed until the patient has paid.
+    blocked: o => MadaVisitBook.blocked(o, current),
     // Signing completes the visit: the order is marked completed and goes to the Quality page.
     complete(d) {
       const now = new Date().toISOString(), dv = MadaOrders.get(id).doctorVisit;

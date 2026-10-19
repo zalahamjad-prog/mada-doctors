@@ -6,7 +6,8 @@
 // medical:  "emergency" | "non"
 // decision: "pending" (waiting for the customer or the doctor) | "approved" | "rejected" | null (emergency referral)
 // payment:  "paid" | "unpaid" | null (nothing to pay). payWhen "after": the patient pays after the service (visits booked from Medical Requests).
-// fromMr:   { id, itemId } the medical request item (a service the doctor ordered) this visit was booked for.
+// fromMr:   { id, itemId } the medical request item (a service the doctor ordered) this visit was booked for. Such a visit is an internal
+//           booking (DBK-), unpaid until the patient pays by the link (pay.html) or the nurse/doctor takes the payment at the visit.
 // items:    [{ kind: "test" | "pkg" | "nursing" | "iv", code }]
 // status:   "booked" | "awaiting_doctor" | "referred" | "emergency_closed" | "declined" | "cancelled" | "completed" | "on_hold"
 // emergency: { checks: [CHECKS keys], notes } for emergency referrals; locked for agents.
@@ -305,11 +306,12 @@ const MadaOrders = (() => {
   }
   // A visit booked by the operations team for a service the doctor ordered (Medical Requests page). It is a booking straight away
   // (booking number, shows in the nurse's or doctor's visits) and the patient pays after the service (payWhen "after").
+  // A visit booked from a doctor's order (order.fromMr) is an internal booking: its number is DBK-<n>, from the same series as BK-.
   function book(order) {
     const o = add({ decision: "approved", status: "booked", medical: "non", ...order });
     const list = all(), i = list.findIndex(x => x.id === o.id);
     const n = list.reduce((m, x) => x.drDemo ? m : Math.max(m, x.bookingId ? parseInt(x.bookingId.split("-")[1], 10) : 0), 5000) + 1;
-    list[i].bookingId = "BK-" + n; list[i].bookedAt = new Date().toISOString(); save(list);
+    list[i].bookingId = (order.fromMr ? "DBK-" : "BK-") + n; list[i].bookedAt = new Date().toISOString(); save(list);
     return list[i];
   }
   // Needs the agent: requests on hold, and doctor requests where the doctor has replied.

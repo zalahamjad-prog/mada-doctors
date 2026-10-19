@@ -78,7 +78,7 @@ const DrConsent = (() => {
         </div>${summary(o, sv)}</div></div>`;
     }
     const e = tried ? errs() : {}, bad = k => e[k] ? "bad" : "";
-    const ps = c.payState ? c.payState(o) : null, miss = c.missing ? c.missing(o) : [];
+    const ps = c.payState ? c.payState(o) : null, miss = c.missing ? c.missing(o) : [], blk = c.blocked ? c.blocked(o) : null;
     const field = (label, body, k) => `<div class="pl-f cs-f ${bad(k)}"><label>${label} <span class="req">*</span></label>${body}</div>`;
     const ck = (k, txt) => `<label class="cs-ck ${k === "served" ? "served" : ""} ${bad(k)}"><input type="checkbox" id="cs_${k}" ${st[k] ? "checked" : ""}><span>${k === "served" ? `<b>${t().servedT}</b>` : ""}${bi(txt)}</span></label>`;
     return `<div class="cs">${head(c)}
@@ -92,6 +92,7 @@ const DrConsent = (() => {
         ${ck("served", SERVED)}
       </div>${summary(o)}</div>
       ${miss.length ? `<div class="cs-miss">${S(I.list)}<div><b>${t().missT}</b><span>${miss.map(m => `<button type="button" data-gostep="${m.k}">${E(m.name)}</button>`).join("")}</span></div></div>` : ""}
+      ${blk ? `<p class="cs-pay" style="color:#dc2626">${S(I.wallet)}<span>${E(blk)}</span></p>` : ""}
       ${ps && ps.due > 0 ? `<p class="cs-pay">${S(I.wallet)}<span>${tx("payOpen", { n: E(ps.text) })}</span></p>` : ""}
       <div class="ex-foot"><button type="button" class="hx-btn out pl-prevb" id="csPrev"><span class="flip">${S(I.back)}</span><span><b>${t().prev}</b><small>${E(c.prevName || "")}</small></span></button><span class="hx-sp"></span>
         <button type="button" class="hx-btn dark" id="csGo">${S(I.done, 2)}${t().complete}</button></div>
@@ -134,6 +135,8 @@ const DrConsent = (() => {
     if ($("#csPrev")) $("#csPrev").addEventListener("click", () => ctx.go(ctx.prevKey));
     root.querySelectorAll("[data-gostep]").forEach(b => b.addEventListener("click", () => ctx.go(b.dataset.gostep)));
     if ($("#csGo")) $("#csGo").addEventListener("click", () => {
+      // The page can hold the visit open (a visit booked from a doctor's order stays open until it is paid).
+      const blk = ctx.blocked && ctx.blocked(MadaOrders.get(o.id)); if (blk) { ctx.toast(blk); window.scrollTo(0, 0); return; }
       if (ctx.missing && ctx.missing(MadaOrders.get(o.id)).length) { ctx.toast(t().missToast); const m = root.querySelector(".cs-miss"); if (m) m.scrollIntoView({ block: "center" }); return; }
       tried = true;
       const er = errs();

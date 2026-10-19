@@ -214,6 +214,9 @@
     .tips-h h3 { font-size: 20px; }
     .tips-f .btn { flex: 1; padding: 0 12px; }
   }
+  .int-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .int-tag { display: inline-block; padding: 1px 7px; border-radius: 8px; font-size: 11px; font-weight: 600; background: #efeafd; color: #6d3fd1; white-space: nowrap; }
+  .int-tag.due { background: #fdecec; color: #dc2626; } .int-tag.ok { background: #e7f6ec; color: #15803d; }
 </style>
 </head>
 <body>
@@ -430,7 +433,7 @@
         <td data-l="${esc(t().cFile)}"><span class="num">${esc(o.mrn || "—")}</span></td>
         <td data-l="${esc(t().cMobile)}"><span class="num">${esc(DrPortal.phone(o.mobile) || "—")}</span></td>
         <td data-l="${esc(t().cOrder)}"><span class="num">${esc(o.id)}</span></td>
-        <td data-l="${esc(t().cBooking)}"><span class="num">${esc(o.bookingId)}</span></td>
+        <td data-l="${esc(t().cBooking)}"><span class="num">${esc(o.bookingId)}</span>${o.fromMr ? `<span class="int-tags"><span class="int-tag">${current === "ar" ? "من طلب الطبيب" : "Doctor's order"}</span><span class="int-tag ${o.payment === "paid" ? "ok" : "due"}">${o.payment === "paid" ? (current === "ar" ? "مدفوع" : "Paid") : (current === "ar" ? "غير مدفوع" : "Unpaid")}</span></span>` : ""}</td>
         <td data-l="${esc(t()[isDone ? "cDone" : isCan ? "cCancel" : "cTime"])}" class="when">${isDone ? doneTxt(o.doctorVisit.completedAt) : isCan ? doneTxt(cancelAt(o)) + (cancelWhy(o) ? `<span class="why">${esc(cancelWhy(o))}</span>` : "") : whenTxt(o.appointment)}</td>
         <td class="c-acts"><div class="acts">
           ${isDone ? `<a class="btn btn-light" href="doctor-patient.html?mrn=${encodeURIComponent(o.mrn || "")}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">${ICON.folder}</svg>${t().viewFile}</a>
