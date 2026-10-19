@@ -201,7 +201,7 @@ const DrOrders = (() => {
       sar: "SAR", thPrice: "Price", pkgPrice: "Package price", noFee: "No fee",
       payT: "Payment", ordersTotal: "Orders total", paidT: "Paid", dueT: "Amount due", refundT: "Refund due",
       ps_open: "Payment open", ps_part: "Partly paid", ps_paid: "Paid", ps_refund: "Refund due", ps_none: "",
-      openNote: "You can carry on with the visit. The payment stays open until you collect it.", collect: "Collect {n}", refundNote: "The orders total went down after payment. Refund {n} to the patient.",
+      openNote: "You can carry on with the visit. The payment stays open until you collect it.", openNoteFu: "The new orders are added to this visit's bill. Send the payment link or collect now; otherwise the patient pays after the service.", collect: "Collect {n}", refundNote: "The orders total went down after payment. Refund {n} to the patient.",
       collectT: "Collect Payment", collectS: "Take the payment from the patient, then confirm.", methodT: "Payment method", pm_cash: "Cash", pm_card: "Card (mada terminal)",
       sendPt: "Send to Patient", sendT: "Send the Orders to the Patient", sendS: "The patient gets a link with a clear summary of the orders and can pay from it.",
       phoneT: "Patient mobile", msgT: "Message", msgLang: "Message language", viaWa: "WhatsApp", viaSms: "SMS", viaQr: "QR Code", copyMsg: "Copy Message", qrT: "Let the patient scan this code", qrS: "They point the phone camera at the code and their payment page opens.", qrDue: "Amount due", qrBack: "Back to message", qrSave: "Save image", qrLoad: "Preparing the code…", qrErr: "Couldn't load the QR code. Check the internet and try again.", ch_qr: "QR code", shareT: "Share", preview: "Preview Patient Page",
@@ -255,7 +255,7 @@ const DrOrders = (() => {
       sar: "ر.س", thPrice: "السعر", pkgPrice: "سعر الباقة", noFee: "بدون رسوم",
       payT: "الدفع", ordersTotal: "إجمالي الطلبات", paidT: "المدفوع", dueT: "المبلغ المستحق", refundT: "مبلغ مسترجع",
       ps_open: "الدفع مفتوح", ps_part: "مدفوع جزئياً", ps_paid: "مدفوع", ps_refund: "استرجاع مستحق", ps_none: "",
-      openNote: "تقدر تكمل الزيارة عادي. الدفع يبقى مفتوح لين تحصّله.", collect: "تحصيل {n}", refundNote: "إجمالي الطلبات نقص بعد الدفع. رجّع {n} للمريض.",
+      openNote: "تقدر تكمل الزيارة عادي. الدفع يبقى مفتوح لين تحصّله.", openNoteFu: "الطلبات الجديدة تنضاف لفاتورة هذي الزيارة. أرسل رابط الدفع أو حصّل الحين، وإلا يدفع المريض بعد الخدمة.", collect: "تحصيل {n}", refundNote: "إجمالي الطلبات نقص بعد الدفع. رجّع {n} للمريض.",
       collectT: "تحصيل الدفع", collectS: "استلم المبلغ من المريض وبعدين أكّد.", methodT: "طريقة الدفع", pm_cash: "كاش", pm_card: "شبكة (جهاز مدى)",
       sendPt: "إرسال للمريض", sendT: "إرسال الطلبات للمريض", sendS: "يوصل المريض رابط فيه ملخص واضح للطلبات ويقدر يدفع منه.",
       phoneT: "جوال المريض", msgT: "الرسالة", msgLang: "لغة الرسالة", viaWa: "واتساب", viaSms: "رسالة SMS", viaQr: "كود QR", copyMsg: "نسخ الرسالة", qrT: "خلّ المريض يصوّر الكود", qrS: "يوجّه كاميرا الجوال على الكود، وتفتح له صفحة الدفع حقته مباشرة.", qrDue: "المبلغ المستحق", qrBack: "رجوع للرسالة", qrSave: "حفظ الصورة", qrLoad: "جاري تجهيز الكود…", qrErr: "ما قدرنا نجهّز الكود. تأكد من الإنترنت وحاول مرة ثانية.", ch_qr: "كود QR", shareT: "مشاركة", preview: "معاينة صفحة المريض",
@@ -348,7 +348,8 @@ const DrOrders = (() => {
     const paid = entries.reduce((s2, e) => s2 + Number(e.amount || 0), 0), due = Math.round((total - paid) * 100) / 100;
     return { total, paid, due, entries, status: !total && !paid ? "none" : due > 0 ? (paid ? "part" : "open") : due < 0 ? "refund" : "paid" };
   }
-  const payNow = () => payOf(draft.items, (curO && curO.doctorVisit || {}).payment);
+  // Follow-up mode (ctx.payItems) bills the visit's earlier orders too, so a service added after payment shows as the new amount due.
+  const payNow = () => payOf(ctx && ctx.payItems ? ctx.payItems(draft.items) : draft.items, (curO && curO.doctorVisit || {}).payment);
   const payTag = ps => `<span class="or-ps ${ps.status}">${S(ps.status === "paid" ? I.check : I.clock, 2.2)}${t()["ps_" + ps.status]}</span>`;
   function paySection() {
     const ps = payNow(); if (ps.status === "none") return "";
@@ -359,7 +360,7 @@ const DrOrders = (() => {
       ${ps.entries.length ? `<ul class="or-pays">${ps.entries.map(e => `<li><span class="or-pm ${e.method}">${S(e.method === "cash" ? I.cash : I.card)}</span><span class="or-pt"><b>${money(e.amount)} · ${e.channel === "link" ? t().pm_link + (e.via ? " · " + t()["via_" + e.via] : "") : t()["pm_" + e.method]}</b>
           <small>${E(when(e.at))} · ${E((e.by && typeof e.by === "object" ? e.by[lang] : e.by) || "")}${e.ref ? ` · ${t().refNo} ${E(e.ref)}` : ""}${e.method === "cash" && e.received > e.amount ? ` · ${tx("changeT", { n: money(e.received - e.amount) })}` : ""}</small></span>
           <button type="button" class="or-ib del" data-unpay="${e.id}" aria-label="${t().undoPay}" title="${t().undoPay}">${S(I.undo)}</button></li>`).join("")}</ul>` : ""}
-      ${ps.due > 0 ? `<div class="or-pa"><p>${S(I.info)}<span>${t().openNote}</span></p><span class="or-pab"><button type="button" class="hx-btn out" id="orSend">${S(I.send)}${t().sendPt}</button><button type="button" class="hx-btn dark" id="orCollect">${S(I.card)}${tx("collect", { n: money(ps.due) })}</button></span></div>${linkLine(when)}` : ""}
+      ${ps.due > 0 ? `<div class="or-pa"><p>${S(I.info)}<span>${ctx && ctx.followUp ? t().openNoteFu : t().openNote}</span></p><span class="or-pab"><button type="button" class="hx-btn out" id="orSend">${S(I.send)}${t().sendPt}</button><button type="button" class="hx-btn dark" id="orCollect">${S(I.card)}${tx("collect", { n: money(ps.due) })}</button></span></div>${linkLine(when)}` : ""}
       ${ps.due < 0 ? `<p class="or-rf">${S(I.info)}<span>${tx("refundNote", { n: money(-ps.due) })}</span></p>` : ""}
     </section>`;
   }
@@ -436,7 +437,7 @@ const DrOrders = (() => {
 
   function hubView(o, c) {
     // Follow-up orders after the results (c.followUp, doctor-visit.html?fu=...): the same cart, sent to the operations team.
-    // No payment at the visit (the patient pays after the service), no "no orders" tick, and the previous orders above the services.
+    // The payment card counts the earlier orders too (c.payItems), so a service added after payment can be paid by the same link; no "no orders" tick, and the previous orders above the services.
     const fu = !!c.followUp, saved = !fu && o.doctorVisit && o.doctorVisit.steps && o.doctorVisit.steps.orders;
     const when = saved && new Date(saved.at).toLocaleString(c.loc(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
     return `<div class="or">
@@ -447,11 +448,11 @@ const DrOrders = (() => {
       <section class="or-cart">
         ${draft.items.length ? `<div class="or-ch"><span class="or-chi">${S(I.cart)}</span><h2>${t().cart}</h2><span class="or-cnt dark">${draft.items.length}</span></div>
           ${groups()}
-          <div class="or-tot"><span><b>${totalText()}</b><button type="button" class="or-clrl" id="orClear">${S(I.trash)}${t().clearCart}</button></span><strong>${money(payNow().total)}</strong></div>`
+          <div class="or-tot"><span><b>${totalText()}</b><button type="button" class="or-clrl" id="orClear">${S(I.trash)}${t().clearCart}</button></span><strong>${money(payOf(draft.items).total)}</strong></div>`
         : `<div class="or-empty"><span class="or-eic">${S(I.clip)}<i>${S(I.plus, 2.6)}</i></span><h2>${t().emptyT}</h2><p>${t().emptyS}</p></div>
           ${fu ? "" : `<label class="hx-ck or-none"><input type="checkbox" id="orNone" ${draft.none ? "checked" : ""}><span>${t().none}</span></label>`}`}
       </section>
-      ${fu ? "" : paySection()}
+      ${fu && !c.payItems ? "" : paySection()}
       <div class="ex-foot"><button type="button" class="hx-btn out pl-prevb" id="orPrev"><span class="flip">${S(I.back)}</span><span><b>${t().prev}</b><small>${E(c.prevName || "")}</small></span></button><span class="hx-sp"></span>
         <button type="button" class="hx-btn soft" id="orDraft">${S(I.doc)}${t().draft}</button>
         <button type="button" class="hx-btn dark" id="orSave">${fu ? E(c.fuSave) : t().saveCont}${S(I.arrow)}</button></div>
@@ -560,7 +561,7 @@ const DrOrders = (() => {
     return `<div class="or-ov" id="orOv"></div><aside class="or-drw" role="dialog" aria-modal="true" aria-labelledby="orDrT">
       <div class="or-dh"><span class="or-chi">${S(I.cart)}</span><h2 id="orDrT">${t().cart}</h2><span class="or-cnt dark">${draft.items.length}</span><button type="button" class="or-x" id="orDrX" aria-label="${t().close}">${S(I.x, 2.2)}</button></div>
       <div class="or-db">${draft.items.length ? groups() : `<div class="or-empty sm"><span class="or-eic">${S(I.clip)}</span><h2>${t().emptyT}</h2></div>`}</div>
-      <div class="or-df"><div class="or-dt"><b>${totalText()}</b><strong>${money(payNow().total)}</strong></div>${payNow().status !== "none" ? `<div class="or-dt sm">${payTag(payNow())}<span>${payNow().due > 0 ? `${t().dueT}: ${money(payNow().due)}` : ""}</span></div>` : ""}<button type="button" class="hx-btn dark" id="orDrHub">${t().backHub}${S(I.arrow)}</button>
+      <div class="or-df"><div class="or-dt"><b>${totalText()}</b><strong>${money(payOf(draft.items).total)}</strong></div>${payNow().status !== "none" ? `<div class="or-dt sm">${payTag(payNow())}<span>${payNow().due > 0 ? `${t().dueT}: ${money(payNow().due)}` : ""}</span></div>` : ""}<button type="button" class="hx-btn dark" id="orDrHub">${t().backHub}${S(I.arrow)}</button>
         ${draft.items.length ? `<button type="button" class="hx-btn out" id="orClear">${S(I.trash)}${t().clearCart}</button>` : ""}</div></aside>`;
   }
   function modalView() {
@@ -811,6 +812,7 @@ const DrOrders = (() => {
     }
     if (page === "hub") {
       if ($("#orSend")) $("#orSend").addEventListener("click", () => {
+        if (ctx.beforeLink) { try { ctx.beforeLink(clean()); } catch (er) { return ctx.toast(er.message || t().storeErr); } curO = ctx.order ? ctx.order() : curO; }
         if (!payLink() || !payLink().token) { try { ctx.payLink({ token: newToken(), createdAt: new Date().toISOString() }); } catch (er) { return ctx.toast(er.message || t().storeErr); } curO = ctx.order ? ctx.order() : curO; }
         const ml = lang; shM = { phone: curO.mobile || "", ml, msg: "", tried: false }; shM.msg = shareMsg(ml); ctx.rerender();
       });
@@ -958,7 +960,8 @@ const DrOrders = (() => {
   }
   // The visit's orders for the patient page (visit-pay.html), grouped by service, with what each one is and its price.
   function bill(o, lg) {
-    const dv = o.doctorVisit || {}, src = dv.ordersDraft || (dv.steps && dv.steps.orders) || { items: [] }, items = src.items || [], M = L[lg], x = lg === "ar" ? 1 : 0;
+    // Orders added after the visit (follow-up, dv.fuItems) and a follow-up cart sent by link before it went to the team (dv.fuCart) are billed too.
+    const dv = o.doctorVisit || {}, src = dv.ordersDraft || (dv.steps && dv.steps.orders) || { items: [] }, items = [...(src.items || []), ...(dv.fuItems || []), ...((dv.fuCart && dv.fuCart.items) || [])], M = L[lg], x = lg === "ar" ? 1 : 0;
     const groups = ORDER.filter(svc => items.some(i => i.svc === svc)).map(svc => ({ svc, name: M["s_" + svc], items: items.filter(i => i.svc === svc).map(i => {
       if (svc === "ref") { const r = refInfo(i); return { name: M.m_ref.replace("{s}", r.spec[lg]), about: i.dest === "ext" ? M.ext + (r.provider && r.provider[lg] ? " · " + r.provider[lg] : "") : M.mada, price: 0 }; }
       if (svc === "leave") return { name: leaveTxt(M, i.days), about: "", price: 0 };

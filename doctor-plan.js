@@ -6,7 +6,8 @@
 const DrPlan = (() => {
   // SAMPLE formulary. TODO: replace with the SFDA drug list / formulary search; check strengths and ATC codes before go-live.
   // { id, brand, en, ar, cls, atc, allergy: allergy ids it belongs to, forms: [[form, strengths, route]] }
-  const C = {
+  // The admin's Medications page (medications.html) can replace both lists: they are kept in "mada-drugs" as { classes, drugs }.
+  const C_BASE = {
     analgesic: ["Analgesic / Antipyretic", "مسكن وخافض حرارة"], nsaid: ["NSAID", "مضاد التهاب غير ستيرويدي"], pen: ["Antibiotic (Penicillin)", "مضاد حيوي (بنسلين)"],
     macro: ["Antibiotic (Macrolide)", "مضاد حيوي (ماكروليد)"], ceph: ["Antibiotic (Cephalosporin)", "مضاد حيوي (سيفالوسبورين)"], quin: ["Antibiotic (Quinolone)", "مضاد حيوي (كينولون)"],
     nitro: ["Antibiotic (Nitroimidazole)", "مضاد حيوي (نيتروإيميدازول)"], ppi: ["Proton pump inhibitor", "مثبط مضخة البروتون"], antihist: ["Antihistamine", "مضاد هيستامين"],
@@ -14,7 +15,7 @@ const DrPlan = (() => {
     antiem: ["Antiemetic", "مضاد غثيان"], spasm: ["Antispasmodic", "مضاد تقلصات"], steroid: ["Corticosteroid", "كورتيزون"], ors: ["Oral rehydration", "محلول تعويض السوائل"],
     topab: ["Topical antibiotic", "مضاد حيوي موضعي"]
   };
-  const DRUGS = [
+  const DRUGS_BASE = [
     { id: "paracetamol", brand: "Panadol, Adol", en: "Paracetamol", ar: "باراسيتامول", cls: "analgesic", atc: "N02BE01", forms: [["tablet", ["500 mg", "1 g"], "oral"], ["syrup", ["120 mg/5 mL", "250 mg/5 mL"], "oral"], ["supp", ["125 mg", "250 mg"], "rectal"]] },
     { id: "ibuprofen", brand: "Brufen", en: "Ibuprofen", ar: "إيبوبروفين", cls: "nsaid", atc: "M01AE01", allergy: ["ibuprofen", "aspirin"], forms: [["tablet", ["200 mg", "400 mg", "600 mg"], "oral"], ["syrup", ["100 mg/5 mL"], "oral"]] },
     { id: "diclofenac", brand: "Voltaren", en: "Diclofenac", ar: "ديكلوفيناك", cls: "nsaid", atc: "M01AB05", allergy: ["diclofenac", "aspirin", "ibuprofen"], forms: [["tablet", ["50 mg", "75 mg"], "oral"], ["gel", ["1%"], "topical"]] },
@@ -37,6 +38,11 @@ const DrPlan = (() => {
     { id: "ors", brand: "", en: "Oral rehydration salts", ar: "أملاح الإرواء الفموي", cls: "ors", atc: "A07CA", forms: [["sachet", ["1 sachet"], "oral"]] },
     { id: "fusidic", brand: "Fucidin", en: "Fusidic acid", ar: "حمض الفوسيديك", cls: "topab", atc: "D06AX01", forms: [["cream", ["2%"], "topical"]] }
   ];
+  const store = () => { const v = typeof MadaStore !== "undefined" && MadaStore.getJSON("mada-drugs", null); return v && Array.isArray(v.drugs) ? v : null; };
+  const DRUGS = () => { const v = store(); return v ? v.drugs.filter(d => d && d.id && !d.off) : DRUGS_BASE; };
+  const C = () => { const v = store(); return Object.assign({}, C_BASE, v && v.classes); };
+  const quick = () => store() ? DRUGS().filter(d => d.quick) : QUICK.map(id => DRUGS_BASE.find(d => d.id === id));
+  const CL = d => C()[d.cls] || [d.cls || "", d.cls || ""];
   const QUICK = ["paracetamol", "ibuprofen", "amoxicillin", "azithromycin", "omeprazole", "cetirizine", "salbutamol"];
   const UNIT = { tablet: "tab", capsule: "cap", syrup: "ml", susp: "ml", supp: "supp", gel: "app", cream: "app", inhaler: "puff", neb: "ml", sachet: "sachet" };
   const ROUTES = ["oral", "inhal", "topical", "rectal", "iv", "im", "sc", "subl", "eye", "ear", "nasal"];
@@ -132,7 +138,7 @@ const DrPlan = (() => {
   const tx = (k, v) => t()[k].replace(/\{(\w+)\}/g, (_, n) => v[n]);
   const S = (p, w) => ctx.svg(p, w), E = s => ctx.esc(s);
   const reset = () => { draft = null; forId = null; q = ""; page = "goals"; gq = ""; gOpen = false; gOther = false; gOt = ""; cur = null; editIx = -1; adv = false; tried = false; dTried = false; };
-  const drug = id => DRUGS.find(d => d.id === id);
+  const drug = id => DRUGS().find(d => d.id === id);
   const lbl = (pre, v) => v ? t()[pre + v] || v : "";
 
   // Recorded allergies for the safety check: ids from Allergy History, plus free names from both allergy lists.
@@ -158,7 +164,7 @@ const DrPlan = (() => {
   }
   function fromDrug(d) {
     const [form, strengths, route] = d.forms[0];
-    return { drugId: d.id, name: d.en, generic: { en: d.en, ar: d.ar }, cls: { en: C[d.cls][0], ar: C[d.cls][1] }, atc: d.atc, form, strength: strengths[0], route,
+    return { drugId: d.id, name: d.en, generic: { en: d.en, ar: d.ar }, cls: { en: CL(d)[0], ar: CL(d)[1] }, atc: d.atc, form, strength: strengths[0], route,
       doseN: "1", doseU: UNIT[form], freq: "", durN: "", durU: "days", instr: "", qty: "", timing: [], prn: false, prnFor: "" };
   }
   const blankManual = name => ({ drugId: "", name, generic: { en: name, ar: name }, cls: null, atc: "", form: "tablet", strength: "", route: "oral", doseN: "1", doseU: "tab", freq: "", durN: "", durU: "days", instr: "", qty: "", timing: [], prn: false, prnFor: "" });
@@ -169,9 +175,9 @@ const DrPlan = (() => {
   function results() {
     const s = q.trim().toLowerCase();
     if (!s) return "";
-    const list = DRUGS.filter(d => [d.en, d.ar, d.brand, C[d.cls][0], C[d.cls][1]].some(v => v && v.toLowerCase().includes(s))).slice(0, 8);
+    const list = DRUGS().filter(d => [d.en, d.ar, d.brand, CL(d)[0], CL(d)[1]].some(v => v && v.toLowerCase().includes(s))).slice(0, 8);
     return `<div class="dx-drop" role="listbox" id="medDrop">${list.map(d => `<button type="button" class="dx-opt" data-drug="${d.id}"><span class="pl-pic">${S(I.pill)}</span>
-        <span class="dx-t"><b>${E(d[lang])}${d.brand ? ` <span class="pl-brand">(${E(d.brand)})</span>` : ""}</b><small>${E(C[d.cls][lang === "ar" ? 1 : 0])} | ATC: ${d.atc}</small></span></button>`).join("")
+        <span class="dx-t"><b>${E(d[lang])}${d.brand ? ` <span class="pl-brand">(${E(d.brand)})</span>` : ""}</b><small>${E(CL(d)[lang === "ar" ? 1 : 0])} | ATC: ${d.atc}</small></span></button>`).join("")
       || `<p class="dx-none">${t().noMatch}</p>`}
       <button type="button" class="dx-opt free" id="medManual"><span class="dx-code">${S(I.plus, 2)}</span><span class="dx-t"><b>${E(tx("freeText", { q: q.trim() }))}</b></span></button></div>`;
   }
@@ -376,7 +382,7 @@ const DrPlan = (() => {
       ${saved ? `<div class="info ok">${S(I.check, 2.4)}<span>${tx("savedInfo", { t: E(when) })}</span></div>` : ""}
       ${sec(1, t().s1, t().s1s, `<div class="dx-sb ${q ? "open" : ""}">${S(I.search)}<input id="medQ" type="search" value="${E(q)}" placeholder="${E(t().searchPh)}" autocomplete="off">
           ${q ? `<button type="button" class="dx-clr" id="medClr" aria-label="${E(t().clear)}">${S(I.x, 2.2)}</button>` : ""}${results()}</div>
-        <div class="pl-quick"><b>${t().quick}</b>${QUICK.map(id => `<button type="button" class="pl-qs" data-drug="${id}">${E(drug(id)[lang])}</button>`).join("")}<button type="button" class="pl-qs other" id="medOther">${S(I.plus, 2.2)}${t().otherMed}</button></div>`)}
+        <div class="pl-quick"><b>${t().quick}</b>${quick().map(d => `<button type="button" class="pl-qs" data-drug="${E(d.id)}">${E(d[lang] || d.en)}</button>`).join("")}<button type="button" class="pl-qs other" id="medOther">${S(I.plus, 2.2)}${t().otherMed}</button></div>`)}
       ${sec(2, t().s2, t().s2s, details())}
       ${sec(3, t().s3, t().s3s, `${table()}<label class="hx-ck pl-none"><input type="checkbox" id="medNone" ${draft.none ? "checked" : ""} ${draft.meds.length ? "disabled" : ""}><span>${t().none}</span></label>`)}
       <div class="ex-foot"><button type="button" class="hx-btn out" id="plPrev"><span class="flip">${S(I.back)}</span>${t().prev}</button><span class="hx-sp"></span>
@@ -454,5 +460,5 @@ const DrPlan = (() => {
   const clean = () => JSON.parse(JSON.stringify({ goals: draft.goals, details: clip(draft.details), followUp: draft.followUp.trim(), meds: draft.meds, none: !draft.meds.length && draft.none }));
   const clip = h => textOf(h).trim() ? h : "";
 
-  return { view, bind, reset, L, GOALS };
+  return { view, bind, reset, L, GOALS, DRUGS_BASE, C_BASE, UNIT, ROUTES };
 })();

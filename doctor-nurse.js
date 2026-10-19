@@ -3,6 +3,8 @@
 // To continue: a saved note, or "No nurse note for this visit".
 // When the doctor ordered lab tests (or Home Sample Collection), the nurse also confirms the sample: doctorVisit.sample =
 //   { status: "collected" | "not", at, note, reason, by }. On completing the visit the lab follow-up item starts at "Sample collected" (doctor-visit.html sendOrders).
+// Nursing services and IV therapy ordered in the visit are confirmed one by one: doctorVisit.procs =
+//   { items: [{ uid, code, svc, done: true | false, reason }], at, by }. A procedure done at the visit goes to the follow-up team already done.
 const DrNurse = (() => {
   const MAX = 1000;
   const I = {
@@ -23,6 +25,10 @@ const DrNurse = (() => {
       unsaved: "You have unsaved changes in the note.", storeErr: "Couldn't save. Try again.",
       smT: "Sample Collection", opt: "(Optional)", smS: "The doctor ordered tests that need a sample. Confirm it was collected.", smTests: "Ordered", smYes: "Sample collected", smNo: "Not collected",
       smNote: "Sample note", smNotePh: "e.g. 2 tubes, collected from the left arm", smReason: "Why was it not collected?", smReasonPh: "e.g. Patient refused, difficult vein", smOk: "Confirm",
+      prT: "Nursing & IV Procedures", prS: "The doctor ordered these services. Confirm each one was done at the visit, or write why not.", prDone: "Done", prNot: "Not done",
+      prReason: "Why was it not done?", prReasonPh: "e.g. Patient refused, no prescription", prOk: "Confirm procedures", prSaved: "Procedures confirmation saved.", prEdit: "Change",
+      prSum: "{a} of {n} done · {t} · {n2}", needPr: "Confirm every nursing and IV procedure first.", needPrPick: "Mark every procedure as done or not done.", needPrReason: "Write why each procedure was not done.",
+      prDoneTag: "Done at the visit", prNotTag: "Not done",
       smDone: "Sample collected · {t} · {n}", smNot: "Not collected · {t} · {n}", smEdit: "Change", smSaved: "Sample confirmation saved.", needSm: "Confirm the sample collection first.",
       needSmPick: "Choose whether the sample was collected.", needReason: "Write why the sample was not collected.",
       smList: "Tests to collect", smTubes: "Tubes", smRes: "Result in {h} h", smNoH: "No result time set", smDue: "Result expected {t}",
@@ -37,17 +43,21 @@ const DrNurse = (() => {
       unsaved: "عندك تعديلات ما انحفظت في الملاحظة.", storeErr: "ما قدرنا نحفظ. حاول مرة ثانية.",
       smT: "سحب العينة", opt: "(اختياري)", smS: "الطبيب طلب فحوصات تحتاج عينة. أكّدي إنه تم سحبها.", smTests: "المطلوب", smYes: "تم سحب العينة", smNo: "ما تم السحب",
       smNote: "ملاحظة على العينة", smNotePh: "مثال: أنبوبين، من الذراع اليسار", smReason: "ليش ما تم السحب؟", smReasonPh: "مثال: المريض رفض، صعوبة في الوريد", smOk: "تأكيد",
+      prT: "الإجراءات التمريضية والمحاليل", prS: "الطبيب طلب هذي الخدمات. أكّد إن كل وحدة انعملت في الزيارة، أو اكتب السبب.", prDone: "تم", prNot: "ما تم",
+      prReason: "ليش ما انعمل؟", prReasonPh: "مثال: المريض رفض، ما فيه وصفة", prOk: "تأكيد الإجراءات", prSaved: "انحفظ تأكيد الإجراءات.", prEdit: "تغيير",
+      prSum: "{a} من {n} تم · {t} · {n2}", needPr: "أكّد كل الإجراءات التمريضية والمحاليل أول.", needPrPick: "حدد لكل إجراء: تم أو ما تم.", needPrReason: "اكتب سبب كل إجراء ما انعمل.",
+      prDoneTag: "انعمل في الزيارة", prNotTag: "ما انعمل",
       smDone: "تم سحب العينة · {t} · {n}", smNot: "ما تم السحب · {t} · {n}", smEdit: "تغيير", smSaved: "انحفظ تأكيد سحب العينة.", needSm: "أكّدي سحب العينة أول.",
       needSmPick: "اختاري هل تم سحب العينة أو لا.", needReason: "اكتبي ليش ما تم سحب العينة.",
       smList: "التحاليل المطلوب سحبها", smTubes: "الأنابيب", smRes: "النتيجة خلال {h} ساعة", smNoH: "ما فيه وقت محدد للنتيجة", smDue: "النتيجة المتوقعة {t}",
       smFast: "صيام {h} ساعة", smMorning: "عينة صباحية", sp_blood: "دم", sp_urine: "بول", sp_stool: "براز", smCount: "{n} تحاليل"
     }
   };
-  let ctx = null, lang = "en", st = null, forId = null, full = false, editing = false, tried = false, timer = null, sm = null;
+  let ctx = null, lang = "en", st = null, forId = null, full = false, editing = false, tried = false, timer = null, sm = null, pr = null;
   const t = () => L[lang];
   const tx = (k, v) => t()[k].replace(/\{(\w+)\}/g, (_, n) => v[n]);
   const S = (p, w) => ctx.svg(p, w), E = s => ctx.esc(s);
-  const reset = () => { sm = null; st = null; forId = null; full = false; editing = false; tried = false; clearTimeout(timer); };
+  const reset = () => { pr = null; sm = null; st = null; forId = null; full = false; editing = false; tried = false; clearTimeout(timer); };
   const savedOf = o => ((o.doctorVisit || {}).steps || {}).nurse;
   const nameOf = v => v && typeof v === "object" ? v[lang] || v.en : v || "";
   function load(o) {
@@ -98,6 +108,31 @@ const DrNurse = (() => {
       ${sm.status === "not" ? `<div class="pl-f"><label for="smReason">${t().smReason} <span class="req">*</span></label><input class="hx-in ${bad(!sm.reason.trim())}" id="smReason" value="${E(sm.reason)}" placeholder="${E(t().smReasonPh)}" maxlength="200" dir="auto"></div>` : ""}
       <div class="nu-acts">${sv ? `<button type="button" class="hx-btn out" id="smCancel">${S(I.x, 2.2)}${t().cancel}</button>` : ""}<button type="button" class="hx-btn nu-save" id="smOk">${S(I.check, 2.4)}${t().smOk}</button></div></div></section>`;
   }
+  // Nursing services (not Home Sample Collection, which the sample card covers) and IV therapy ordered in this visit.
+  const procOrders = o => { const dv = o.doctorVisit || {}, src = (dv.steps && dv.steps.orders) || dv.ordersDraft || {};
+    return (src.items || []).filter(x => (x.svc === "nurse" && x.code !== "NS-051") || x.svc === "iv"); };
+  // Saved confirmation covers every procedure ordered now (a procedure added later needs confirming again).
+  const procsOk = o => { const sv = (o.doctorVisit || {}).procs, need = procOrders(o); return !need.length || (!!sv && need.every(x => sv.items.some(y => y.uid === x.uid && (y.done || y.reason)))); };
+  function procCard(o, c) {
+    const need = procOrders(o); if (!need.length) return "";
+    const sv = (o.doctorVisit || {}).procs, ok = procsOk(o), nm = x => (DrOrders.titleOf(x) || {})[lang] || x.code;
+    const when = d => new Date(d).toLocaleString(c.loc(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+    const tag = x => x.svc === "iv" ? "IV" : (lang === "ar" ? "تمريض" : "Nursing");
+    if (ok && sv && !pr) {
+      const got = need.map(x => sv.items.find(y => y.uid === x.uid)), a = got.filter(y => y.done).length;
+      return `<section class="nu-card nu-sm nu-pr ${a === need.length ? "ok" : "no"}"><div class="nu-ch"><span class="nu-n0 sm done">${S(I.check, 2.6)}</span><div><b>${t().prT}</b><small>${E(tx("prSum", { a, n: need.length, t: when(sv.at), n2: nameOf(sv.by) }))}</small></div>
+        <button type="button" class="hx-btn out sm" id="prEdit">${S(I.pen)}${t().prEdit}</button></div>
+        <div class="nu-cb"><ul class="nu-tests">${need.map((x, i) => `<li><i class="nu-tube" style="background:${got[i].done ? "#15803d" : "#dc2626"}"></i><div><b>${E(nm(x))}</b><span class="nu-code">${E(tag(x))}</span>
+          <small>${got[i].done ? t().prDoneTag : E(t().prNotTag + (got[i].reason ? " · " + got[i].reason : ""))}</small></div></li>`).join("")}</ul></div></section>`;
+    }
+    if (!pr) pr = { items: need.map(x => { const y = sv && sv.items.find(z => z.uid === x.uid); return { uid: x.uid, code: x.code, svc: x.svc, done: y ? y.done : null, reason: y ? y.reason || "" : "" }; }), tried: false };
+    const bad = cond => pr.tried && cond ? "bad" : "";
+    return `<section class="nu-card nu-sm nu-pr open ${bad(pr.items.some(y => y.done == null))}"><div class="nu-ch"><span class="nu-n0 sm">${S(I.check, 2)}</span><div><b>${t().prT}</b><small>${t().prS}</small></div></div>
+      <div class="nu-cb">${need.map((x, i) => { const y = pr.items.find(z => z.uid === x.uid); return `<div class="nu-pri ${bad(y.done == null)}"><div class="nu-prh"><b>${E(nm(x))}</b><span class="nu-code">${E(tag(x))}</span></div>
+        <div class="or-pills">${[[true, "prDone", I.check], [false, "prNot", I.x]].map(([k, l, ic]) => `<button type="button" class="or-pill ${y.done === k ? "on" : ""} ${k ? "" : "no"}" data-pr="${i}" data-v="${k}" aria-pressed="${y.done === k}"><span class="or-rd">${y.done === k ? S(I.check, 3) : ""}</span>${S(ic, 2.2)}${t()[l]}</button>`).join("")}</div>
+        ${y.done === false ? `<div class="pl-f"><label for="prR${i}">${t().prReason} <span class="req">*</span></label><input class="hx-in ${bad(!y.reason.trim())}" id="prR${i}" data-prr="${i}" value="${E(y.reason)}" placeholder="${E(t().prReasonPh)}" maxlength="200" dir="auto"></div>` : ""}</div>`; }).join("")}
+        <div class="nu-acts">${sv && ok ? `<button type="button" class="hx-btn out" id="prCancel">${S(I.x, 2.2)}${t().cancel}</button>` : ""}<button type="button" class="hx-btn nu-save" id="prOk">${S(I.check, 2.4)}${t().prOk}</button></div></div></section>`;
+  }
   const dirty = o => { const sv = savedOf(o) || {}; return st.note.trim() !== (sv.note || "") || nameOf(st.nurse).trim() !== nameOf(sv.nurse || "").trim(); };
 
   function view(o, c) {
@@ -121,6 +156,7 @@ const DrNurse = (() => {
     return `<div class="nu">
       <div class="ex-top"><span class="ex-tic">${S(I.note)}</span><div><h1>${t().title}</h1><p>${t().sub}</p></div><span class="ex-stp">${tx("stepOf", c.stepOf)}</span></div>
       ${sampleCard(o, c)}
+      ${procCard(o, c)}
       ${card}
       ${sv && sv.note && !editing ? "" : `<label class="hx-ck nu-none"><input type="checkbox" id="nuNone" ${st.none ? "checked" : ""}><span>${t().none}</span></label>`}
       <div class="ex-foot"><button type="button" class="hx-btn out pl-prevb" id="nuPrev"><span class="flip">${S(I.back)}</span><span><b>${t().prev}</b><small>${E(c.prevName || "")}</small></span></button><span class="hx-sp"></span>
@@ -173,10 +209,24 @@ const DrNurse = (() => {
       try { ctx.saveSample({ status: sm.status, note: sm.status === "collected" ? sm.note.trim() : "", reason: sm.status === "not" ? sm.reason.trim() : "", at: new Date().toISOString(), by }); } catch (e) { return ctx.toast(e.message || t().storeErr); }
       sm = null; ctx.toast(t().smSaved); ctx.rerender();
     });
+    all("[data-pr]", b => b.addEventListener("click", () => { pr.items[+b.dataset.pr].done = b.dataset.v === "true"; ctx.rerender(); }));
+    all("[data-prr]", el => el.addEventListener("input", () => { pr.items[+el.dataset.prr].reason = el.value; if (el.value.trim()) el.classList.remove("bad"); }));
+    if ($("#prEdit")) $("#prEdit").addEventListener("click", () => { pr = null; const cur = MadaOrders.get(o.id), sv = cur.doctorVisit.procs;
+      pr = { items: procOrders(cur).map(x => { const y = sv.items.find(z => z.uid === x.uid) || {}; return { uid: x.uid, code: x.code, svc: x.svc, done: y.done == null ? null : y.done, reason: y.reason || "" }; }), tried: false }; ctx.rerender(); });
+    if ($("#prCancel")) $("#prCancel").addEventListener("click", () => { pr = null; ctx.rerender(); });
+    if ($("#prOk")) $("#prOk").addEventListener("click", () => {
+      pr.tried = true;
+      if (pr.items.some(y => y.done == null)) { ctx.rerender(); return ctx.toast(t().needPrPick); }
+      if (pr.items.some(y => y.done === false && !y.reason.trim())) { ctx.rerender(); return ctx.toast(t().needPrReason); }
+      const by = (o.appointment && o.appointment.nurse) || (nameOf(st.nurse).trim() ? st.nurse : "") || ctx.doctor;
+      try { ctx.saveProcs({ items: pr.items.map(y => ({ uid: y.uid, code: y.code, svc: y.svc, done: y.done, reason: y.done ? "" : y.reason.trim() })), at: new Date().toISOString(), by }); } catch (e) { return ctx.toast(e.message || t().storeErr); }
+      pr = null; ctx.toast(t().prSaved); ctx.rerender();
+    });
     $("#nuPrev").addEventListener("click", () => ctx.go(ctx.prevKey));
     $("#nuDraft").addEventListener("click", () => { try { ctx.saveDraft({ note: st.note, nurse: st.nurse }); ctx.toast(t().draftSaved); } catch (e) { ctx.toast(e.message || t().storeErr); } });
     $("#nuCont").addEventListener("click", () => {
       const cur = MadaOrders.get(o.id), sv = savedOf(cur);
+      if (!procsOk(cur) || pr) { if (pr) pr.tried = true; ctx.rerender(); const el = document.querySelector(".nu-pr"); if (el) el.scrollIntoView({ block: "center" }); return ctx.toast(t().needPr); }
       if (sampleOrders(cur).length && (!cur.doctorVisit.sample || sm)) { if (sm) sm.tried = true; ctx.rerender(); const el = document.querySelector(".nu-sm"); if (el) el.scrollIntoView({ block: "center" }); return ctx.toast(t().needSm); }
       if (st.note.trim() && (dirty(cur) || !sv || !sv.note)) { if (!doSave()) return; }
       else if (!st.note.trim()) {
@@ -186,5 +236,5 @@ const DrNurse = (() => {
       reset(); ctx.toast(t().saved); ctx.go(ctx.nextKey);
     });
   }
-  return { view, bind, reset, L };
+  return { view, bind, reset, L, procOrders, procsOk };
 })();

@@ -689,13 +689,13 @@
   const FU_ID = new URLSearchParams(location.search).get("fu"), FU = !!FU_ID && !VIEW, FU_STEPS = ["orders", "assess", "plan"];
   const fuReq = () => { const r = FU_ID && MadaMedical.get(FU_ID); return r && r.orderId === id ? r : null; };
   const FUL = {
-    en: { back: "Back to the order", barT: "Follow-up after the results", barS: "New orders go to the operations team: they call the patient, book the visit and assign a nurse or doctor. The patient pays after the service. Changes to the diagnosis or medications are kept with the earlier version.",
+    en: { back: "Back to the order", barT: "Follow-up after the results", barS: "New orders go to the operations team: they call the patient, book the visit and assign a nurse or doctor. The patient can pay now by cash, card or the payment link, or after the service. Changes to the diagnosis or medications are kept with the earlier version.",
       listT: "Follow-up", s_orders: "New orders", s_assess: "Update diagnosis", s_plan: "Update medications", upd: "Updated",
       ordT: "New orders after the results", ordS: "Add orders from any service to the cart, then send them to the operations team.", send: "Send to operations", need: "Add at least one order to the cart.",
       prevT: "Orders so far for this visit", prevNone: "No orders yet.", tagNew: "New after results", st_done: "Done", st_res: "Results in", st_wait: "In progress", st_rej: "Not approved",
       sent: "{n} orders sent to the operations team.", amendT: "You are updating the visit after it was signed.", amendS: "The earlier version is kept with the time and your name.", amendSaved: "Update saved. The team can see it.",
       note_assess: "The doctor updated the diagnosis after reading the results.", note_plan: "The doctor updated the medications after reading the results.", ty_doctor: "Doctor visit", ty_medication: "Medications", ty_plan: "Treatment plan", ty_followup: "Follow-up visit", ty_physio: "Physiotherapy" },
-    ar: { back: "رجوع للطلب", barT: "متابعة بعد النتائج", barS: "الطلبات الجديدة تروح لفريق التشغيل: يتصلون بالمريض ويحجزون الزيارة ويسندونها لممرضة أو طبيب. والدفع بعد الخدمة. وأي تعديل على التشخيص أو الأدوية تنحفظ معه النسخة السابقة.",
+    ar: { back: "رجوع للطلب", barT: "متابعة بعد النتائج", barS: "الطلبات الجديدة تروح لفريق التشغيل: يتصلون بالمريض ويحجزون الزيارة ويسندونها لممرضة أو طبيب. والمريض يقدر يدفع الحين كاش أو شبكة أو برابط الدفع، أو بعد الخدمة. وأي تعديل على التشخيص أو الأدوية تنحفظ معه النسخة السابقة.",
       listT: "المتابعة", s_orders: "طلبات جديدة", s_assess: "تعديل التشخيص", s_plan: "تعديل الأدوية", upd: "تم التعديل",
       ordT: "طلبات جديدة بعد النتائج", ordS: "أضف الطلبات من أي خدمة للسلة، وبعدين أرسلها لفريق التشغيل.", send: "إرسال للتشغيل", need: "أضف طلب واحد على الأقل للسلة.",
       prevT: "الطلبات السابقة لهذه الزيارة", prevNone: "ما فيه طلبات للحين.", tagNew: "جديد بعد النتائج", st_done: "مكتمل", st_res: "وصلت النتيجة", st_wait: "قيد التنفيذ", st_rej: "ما انعتمد",
@@ -711,7 +711,10 @@
     return `<section class="fu-prev"><h2>${ft().prevT}</h2>${items.length ? `<ul>${items.map(it => { const [k, c] = st(it); return `<li><span class="fu-ty">${esc(ft()["ty_" + it.type] || DrOrders.L[current]["s_" + ({ radiology: "rad", nursing: "nurse", referral: "ref" }[it.type] || it.type)] || it.type)}</span>
       <b dir="auto">${esc(T(it.title))}</b>${it.drAdded ? `<span class="fu-new">${ft().tagNew}</span>` : ""}<span class="fu-st" style="color:${c}">${ft()["st_" + k]}</span></li>`; }).join("")}</ul>` : `<p>${ft().prevNone}</p>`}</section>`;
   }
-  const fuOrder = o => ({ ...o, id: o.id + "~fu", doctorVisit: { ordersDraft: (fuReq() || {}).fuDraft || null, steps: {} } });
+  // The cart's own order: the follow-up draft, with the visit's payments and payment link so the doctor can send the same link again.
+  const fuOrder = o => ({ ...o, id: o.id + "~fu", doctorVisit: { ordersDraft: (fuReq() || {}).fuDraft || null, steps: {}, payment: (o.doctorVisit || {}).payment, payLink: (o.doctorVisit || {}).payLink } });
+  // Everything already billed for the visit: its orders and the orders sent after it.
+  const fuBilled = () => { const dv = MadaOrders.get(id).doctorVisit || {}; return [...(((dv.steps || {}).orders || {}).items || []), ...(dv.fuItems || [])]; };
   function fuList(o) {
     const am = (o.doctorVisit && o.doctorVisit.amendments) || [];
     return `<nav class="steps" aria-label="${esc(ft().listT)}"><div class="chk-card"><div class="hd"><b>${ft().listT}</b></div></div>
@@ -737,6 +740,9 @@
     else rid = MadaMedical.add({ orderId: r.orderId, bookingId: r.bookingId || null, mrn: r.mrn, patient: r.patient, mobile: r.mobile, service: r.service, doctorId: r.doctorId, source: "doctor", byDoctor: me.name,
       items: items.map(it => ({ ...it, addedBy: me.name })) }).id;
     MadaMedical.update(r.id, { fuDraft: null });
+    // Billed on the visit from now on: the payment card and the patient's payment link show them with the amount due.
+    const dv = MadaOrders.get(id).doctorVisit || {};
+    putVisit({ fuItems: [...(dv.fuItems || []), ...all.map(x => ({ ...x, fuAt: at, fuReq: rid }))], fuCart: undefined });
     return { rid, n: items.length };
   }
   // Diagnosis or medications changed after the visit: keep the earlier version and tell the team.
@@ -1058,7 +1064,12 @@
     saveDraft(d) { MadaMedical.update(FU_ID, { fuDraft: { ...d, at: new Date().toISOString() } }); },
     save(d) { const s = fuSend(d); fuCtx.sent = s; },
     go() { const s = fuCtx.sent; if (s) location.href = `doctor-orders-list.html?id=${encodeURIComponent(s.rid)}&sent=${s.n}`; else location.href = `doctor-orders-list.html?id=${encodeURIComponent(FU_ID)}`; },
-    get doctor() { return me.name; }, patient(o) { return orCtx.patient(o); }, payLink() { return null; }, addPayment() {}, removePayment() {}
+    get doctor() { return me.name; }, patient(o) { return orCtx.patient(o); },
+    // Payment after the visit: the cart is added to what the visit already billed; the same payment link (visit-pay.html) shows the new amount due.
+    payItems(cart) { return [...fuBilled(), ...cart]; },
+    beforeLink(d) { MadaMedical.update(FU_ID, { fuDraft: { ...d, at: new Date().toISOString() } }); putVisit({ fuCart: { items: d.items, at: new Date().toISOString() } }); },
+    payLink(p) { orCtx.payLink(p); }, addPayment(e) { orCtx.addPayment(e); }, removePayment(pid) { orCtx.removePayment(pid); },
+    order: () => fuOrder(MadaOrders.get(id))
   };
   const orCtx = {
     ...stepNav("orders"),
@@ -1100,6 +1111,8 @@
     },
     // Sample collection confirmed by the nurse (doctorVisit.sample).
     saveSample(d) { putVisit({ sample: d }); },
+    // Nursing and IV procedures confirmed one by one (doctorVisit.procs).
+    saveProcs(d) { putVisit({ procs: d }); },
     get doctor() { return me.name; },
     go: goStep
   };
@@ -1137,7 +1150,12 @@
     }
     all.filter(x => SEND_TYPE[x.svc]).forEach(x => {
       const det = x.svc === "ref" ? [x.reason, x.notes].filter(Boolean).join(" · ") : x.svc === "leave" ? [x.start, x.reason].filter(Boolean).join(" · ") : (x.note || "");
-      items.push({ type: SEND_TYPE[x.svc], title: DrOrders.titleOf(x), details: { en: det, ar: det }, orderCodes: x.code ? [x.code] : [], order: x });
+      // A nursing or IV procedure confirmed done in the Nurse Note step goes to the team already done; one not done carries the reason.
+      const pc = ["nurse", "iv"].includes(x.svc) && ((o.doctorVisit.procs || {}).items || []).find(y => y.uid === x.uid), pv = o.doctorVisit.procs;
+      const det2 = pc && !pc.done && pc.reason ? [det, "Not done at the visit: " + pc.reason].filter(Boolean).join(" · ") : det;
+      items.push({ type: SEND_TYPE[x.svc], title: DrOrders.titleOf(x), details: { en: det2, ar: pc && !pc.done && pc.reason ? [det, "لم يُنفَّذ في الزيارة: " + pc.reason].filter(Boolean).join(" · ") : det }, orderCodes: x.code ? [x.code] : [], order: x,
+        ...(pc && pc.done ? { step: MadaMedical.STEPS[SEND_TYPE[x.svc]].length - 1, log: [{ step: 0, at: (o.doctorVisit.steps.orders || {}).at || new Date().toISOString(), by: me.name },
+          { step: MadaMedical.STEPS[SEND_TYPE[x.svc]].length - 1, at: pv.at, by: pv.by, data: { note: current === "ar" ? "تم في زيارة الطبيب" : "Done at the doctor visit" } }] } : {}) });
     });
     if (!items.length) return;
     MadaMedical.add({ orderId: o.id, bookingId: o.bookingId || null, mrn: o.mrn, patient: o.patient, mobile: o.mobile, service: o.service,

@@ -5,8 +5,8 @@
 const DrDiagnosis = (() => {
   // SAMPLE ICD-10-AM list of common home-care diagnoses. TODO: replace with the licensed ICD-10-AM code search
   // and check every title against the current edition before go-live.
-  // [code, chapter, en, ar, common]
-  const ICD = [
+  // [code, chapter, en, ar, common]. The admin's Diagnoses page (diagnoses.html) can replace it: its list is kept in "mada-icd".
+  const ICD_BASE = [
     ["J06.9", "resp", "Acute upper respiratory infection, unspecified", "التهاب حاد في الجهاز التنفسي العلوي، غير محدد", 1],
     ["J06.8", "resp", "Other acute upper respiratory infections", "التهابات حادة أخرى في الجهاز التنفسي العلوي"],
     ["J06.0", "resp", "Acute laryngopharyngitis", "التهاب حاد في الحنجرة والبلعوم"],
@@ -58,6 +58,7 @@ const DrDiagnosis = (() => {
     ["R42", "sym", "Dizziness and giddiness", "دوخة ودوار"],
     ["R53", "sym", "Malaise and fatigue", "توعك وإرهاق"]
   ].map(([code, ch, en, ar, common]) => ({ code, ch, en, ar, common: !!common }));
+  const ICD = () => { const v = typeof MadaStore !== "undefined" && MadaStore.getJSON("mada-icd", null); return Array.isArray(v) ? v.filter(x => x && x.code && !x.off) : ICD_BASE; };
   const I = {
     steth: '<path d="M6 3v6a4 4 0 0 0 8 0V3"/><path d="M10 13v2a5 5 0 0 0 10 0v-2"/><circle cx="20" cy="11" r="2"/>',
     search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>', x: '<path d="M6 6l12 12M18 6 6 18"/>', plus: '<path d="M12 5v14M5 12h14"/>',
@@ -107,8 +108,8 @@ const DrDiagnosis = (() => {
   }
   function search(q) {
     const s = q.trim().toLowerCase();
-    if (!s) return ICD.filter(x => x.common);
-    const hits = ICD.filter(x => x.code.toLowerCase().startsWith(s) || x.en.toLowerCase().includes(s) || x.ar.includes(q.trim()));
+    if (!s) return ICD().filter(x => x.common);
+    const hits = ICD().filter(x => x.code.toLowerCase().startsWith(s) || x.en.toLowerCase().includes(s) || x.ar.includes(q.trim()));
     return hits.sort((a, b) => b.common - a.common).slice(0, 8);
   }
   function dropdown(which) {
@@ -168,7 +169,7 @@ const DrDiagnosis = (() => {
     const $ = s => root.querySelector(s), all = (s, f) => root.querySelectorAll(s).forEach(f);
     const keepFocus = which => { const i = document.getElementById("dxQ-" + which); if (i) { i.focus(); const n = i.value.length; i.setSelectionRange(n, n); } };
     const bindDrop = () => {
-      all("[data-pick]", b => b.onmousedown = e => { e.preventDefault(); const x = ICD.find(y => y.code === b.dataset.code); choose(b.dataset.pick, { code: x.code, ch: x.ch, en: x.en, ar: x.ar }); });
+      all("[data-pick]", b => b.onmousedown = e => { e.preventDefault(); const x = ICD().find(y => y.code === b.dataset.code); choose(b.dataset.pick, { code: x.code, ch: x.ch, en: x.en, ar: x.ar }); });
       all("[data-free]", b => b.onmousedown = e => { e.preventDefault(); const w = b.dataset.free, v = (w === "p" ? qP : qA).trim(); choose(w, { code: "", ch: "free", en: v, ar: v }); });
     };
     ["p", "a"].forEach(w => {
@@ -203,5 +204,5 @@ const DrDiagnosis = (() => {
   // Every primary diagnosis of a saved step, older visits included (one primary).
   const primaries = as => as ? (as.primaries && as.primaries.length ? as.primaries : as.primary ? [as.primary] : []) : [];
 
-  return { view, bind, reset, L, primaries };
+  return { view, bind, reset, L, primaries, ICD_BASE };
 })();

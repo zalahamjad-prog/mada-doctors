@@ -78,3 +78,10 @@
 .nu-tubes { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0 0 12px; font-size: 12px; color: #6b7a80; }
 .nu-tb { display: inline-flex; align-items: center; gap: 5px; color: #15304a; background: #f5f8f9; border: 1px solid #e3eaec; border-radius: 999px; padding: 3px 9px; }
 @media (max-width: 560px) { .nu-tests li { flex-wrap: wrap; } .nu-due { width: 100%; padding-inline-start: 22px; white-space: normal; } }
+/* Nursing & IV procedures confirmed one by one */
+.nu-pri { border: 1px solid #e3e8ea; border-radius: 12px; padding: 12px; margin-bottom: 10px; background: #fff; }
+.nu-pri.bad { border-color: #e5484d; }
+.nu-prh { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.nu-prh b { font-size: 14px; color: #15304a; flex: 1; min-width: 0; }
+.nu-pri .or-pills { margin-bottom: 0; }
+.nu-pri .pl-f { margin-top: 10px; }

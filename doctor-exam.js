@@ -15,7 +15,7 @@ const DrExam = (() => {
     neuro: '<path d="M12 4c-3-2-8 0-8 5 0 3 1 4 1 6s2 5 5 5h2zM12 4c3-2 8 0 8 5 0 3-1 4-1 6s-2 5-5 5h-2z"/><path d="M12 4v16"/>',
     skin: '<path d="M3 15h18M3 19h18"/><path d="M6 15c0-2 1-3 3-3s3 1 3 3"/><circle cx="16" cy="9" r="1.5"/>',
     plus: '<path d="M12 5v14M5 12h14"/>', trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>', up: '<path d="m6 15 6-6 6 6"/>',
-    cam: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>', x: '<path d="M6 6l12 12M18 6 6 18"/>',
+    cam: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>', up: '<path d="M12 16V4M7 9l5-5 5 5M5 20h14"/>', flip: '<path d="M4 9a8 8 0 0 1 14-3l2 2M20 15a8 8 0 0 1-14 3l-2-2M20 4v4h-4M4 20v-4h4"/>', x: '<path d="M6 6l12 12M18 6 6 18"/>',
     back: '<path d="M19 12H5M11 6l-6 6 6 6"/>', arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>', doc: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
     check: '<path d="m5 12 5 5 9-10"/>', info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>'
   };
@@ -30,7 +30,7 @@ const DrExam = (() => {
   ];
   const REGIONS = ["chest", "abdomen", "back", "headNeck", "rUpper", "lUpper", "rLower", "lLower", "pelvis", "skinArea", "other"];
   const GROUPS = [["insp", ["sym", "deformity", "scars", "redness", "swelling", "other"]], ["palp", ["tender", "mass", "crepitus", "warm", "other"]], ["ausc", ["normal", "wheeze", "crackles", "dimBreath", "other"]]];
-  const MAX_PHOTOS = 4;
+  const MAX_PHOTOS = 6;
 
   const L = {
     en: {
@@ -46,7 +46,7 @@ const DrExam = (() => {
       f_alertN: "Alert", f_gcs: "GCS ↓", f_focal: "Focal deficit", f_rash: "Rash", f_wound: "Wound", f_swelling: "Swelling", f_bruising: "Bruising",
       f_sym: "Symmetrical", f_deformity: "Deformity", f_scars: "Scars", f_redness: "Redness", f_crepitus: "Crepitus", f_warm: "Temperature ↑", f_normal: "Normal", f_dimBreath: "Diminished breath sounds",
       notesPh: "Add notes...", g_insp: "Inspection", g_palp: "Palpation", g_ausc: "Auscultation", extra: "Additional Findings", extraPh: "Add additional findings...",
-      photo: "Capture Photo", optional: "(Optional)", upload: "Click to upload photo", uploadS: "Supports JPG, PNG (Max 5 MB)", photoErr: "Use a JPG or PNG up to 5 MB.", photoMax: "Up to {n} photos per region.", removePhoto: "Remove photo",
+      photo: "Capture Photo", optional: "(Optional)", upload: "Upload photos", uploadS: "JPG or PNG, up to 5 MB each. You can pick several.", camOpen: "Open camera", camOpenS: "Take several photos in a row", camTitle: "Camera · Region {n}", snap: "Take photo", camDone: "Done", camSwitch: "Switch camera", camCount: "{n} of {m} photos", camErr: "The camera isn't available. Allow camera access in the browser, or upload photos instead.", camFull: "This region has the maximum of {n} photos.", photoErr: "Use a JPG or PNG up to 5 MB.", photoMax: "Up to {n} photos per region.", removePhoto: "Remove photo",
       r_chest: "Chest", r_abdomen: "Abdomen", r_back: "Back", r_headNeck: "Head & Neck", r_rUpper: "Right upper limb", r_lUpper: "Left upper limb", r_rLower: "Right lower limb", r_lLower: "Left lower limb",
       r_pelvis: "Pelvis", r_skinArea: "Skin / Wound", r_other: "Other",
       prev: "Previous", draft: "Save as Draft", saveCont: "Save & Continue", draftSaved: "Examination saved as draft.", saved: "Examination saved.",
@@ -65,7 +65,7 @@ const DrExam = (() => {
       f_alertN: "واعي", f_gcs: "انخفاض GCS", f_focal: "عجز عصبي موضعي", f_rash: "طفح", f_wound: "جرح", f_swelling: "تورم", f_bruising: "كدمات",
       f_sym: "متماثل", f_deformity: "تشوه", f_scars: "ندبات", f_redness: "احمرار", f_crepitus: "طقطقة", f_warm: "حرارة ↑", f_normal: "طبيعي", f_dimBreath: "ضعف أصوات التنفس",
       notesPh: "أضف ملاحظات...", g_insp: "المعاينة", g_palp: "الجس", g_ausc: "التسمع", extra: "نتائج إضافية", extraPh: "أضف نتائج إضافية...",
-      photo: "التقاط صورة", optional: "(اختياري)", upload: "اضغط لرفع صورة", uploadS: "JPG أو PNG (حد أقصى 5 ميجا)", photoErr: "استخدم صورة JPG أو PNG لا تتعدى 5 ميجا.", photoMax: "حد أقصى {n} صور لكل منطقة.", removePhoto: "حذف الصورة",
+      photo: "التقاط صورة", optional: "(اختياري)", upload: "رفع صور", uploadS: "JPG أو PNG، حد أقصى 5 ميجا لكل صورة. تقدر تختار أكثر من صورة.", camOpen: "فتح الكاميرا", camOpenS: "صوّر أكثر من صورة ورا بعض", camTitle: "الكاميرا · المنطقة {n}", snap: "التقاط صورة", camDone: "تم", camSwitch: "تبديل الكاميرا", camCount: "{n} من {m} صور", camErr: "الكاميرا غير متاحة. اسمح للمتصفح باستخدام الكاميرا، أو ارفع الصور بدلها.", camFull: "وصلت هذه المنطقة للحد الأقصى {n} صور.", photoErr: "استخدم صورة JPG أو PNG لا تتعدى 5 ميجا.", photoMax: "حد أقصى {n} صور لكل منطقة.", removePhoto: "حذف الصورة",
       r_chest: "الصدر", r_abdomen: "البطن", r_back: "الظهر", r_headNeck: "الرأس والرقبة", r_rUpper: "الطرف العلوي اليمين", r_lUpper: "الطرف العلوي اليسار", r_rLower: "الطرف السفلي اليمين", r_lLower: "الطرف السفلي اليسار",
       r_pelvis: "الحوض", r_skinArea: "الجلد / جرح", r_other: "أخرى",
       prev: "السابق", draft: "حفظ كمسودة", saveCont: "حفظ ومتابعة", draftSaved: "تم حفظ الفحص كمسودة.", saved: "تم حفظ الفحص.",
@@ -113,7 +113,8 @@ const DrExam = (() => {
         <div class="ex-g2">${GROUPS.map(grp).join("")}
           <div class="ex-grp"><b>${t().extra}</b><textarea class="ex-ta" data-rx="${i}" rows="3" maxlength="500" placeholder="${E(t().extraPh)}">${E(r.extra)}</textarea></div></div>
         <div class="ex-ph"><b>${t().photo} <span class="hx-opt">${t().optional}</span></b>
-          <div class="ex-phr">${r.photos.length < MAX_PHOTOS ? `<label class="ex-up">${S(I.cam)}<span><b>${t().upload}</b><small>${t().uploadS}</small></span><input type="file" accept="image/jpeg,image/png" data-up="${i}" hidden></label>` : ""}
+          <div class="ex-phr">${r.photos.length < MAX_PHOTOS ? `<button type="button" class="ex-up cam" data-cam="${i}">${S(I.cam)}<span><b>${t().camOpen}</b><small>${t().camOpenS}</small></span></button>
+              <label class="ex-up">${S(I.up)}<span><b>${t().upload}</b><small>${t().uploadS}</small></span><input type="file" accept="image/jpeg,image/png" multiple data-up="${i}" hidden></label>` : ""}
             ${r.photos.map((p, n) => `<span class="ex-th"><img src="${p}" alt=""><button type="button" data-rmph="${i}" data-n="${n}" aria-label="${E(t().removePhoto)}">${S(I.x, 2.6)}</button></span>`).join("")}</div></div>
       </div>`}
     </div>`;
@@ -157,6 +158,57 @@ const DrExam = (() => {
       img.src = url;
     });
   }
+  // Live camera for one region: each "Take photo" adds a shot to the region until Done or the limit.
+  // Phones without camera access in the browser fall back to the system camera (input capture).
+  function camera(i, redraw) {
+    const r = draft.regions[i];
+    if (r.photos.length >= MAX_PHOTOS) return ctx.toast(tx("camFull", { n: MAX_PHOTOS }));
+    const fallback = () => {
+      const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*"; inp.setAttribute("capture", "environment");
+      inp.addEventListener("change", async () => { const f = inp.files[0]; if (!f) return; try { r.photos.push(await shrink(f)); redraw(); } catch (e) { ctx.toast(t().photoErr); } });
+      inp.click();
+    };
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return fallback();
+    let stream = null, facing = "environment";
+    const m = document.createElement("div"); m.className = "ex-cam";
+    m.innerHTML = `<div class="ex-cam-box" role="dialog" aria-modal="true">
+      <div class="ex-cam-hd"><b>${E(tx("camTitle", { n: i + 1 }))}</b><span class="ex-cam-n"></span><button type="button" class="ex-cam-x" aria-label="${E(t().camDone)}">${S(I.x, 2.4)}</button></div>
+      <div class="ex-cam-v"><video playsinline autoplay muted></video><div class="ex-cam-flash"></div></div>
+      <div class="ex-cam-strip"></div>
+      <div class="ex-cam-ft"><button type="button" class="hx-btn out ex-cam-sw">${S(I.flip)}${t().camSwitch}</button>
+        <button type="button" class="ex-cam-snap" aria-label="${E(t().snap)}"><span></span></button>
+        <button type="button" class="hx-btn dark ex-cam-ok">${t().camDone}</button></div></div>`;
+    document.body.appendChild(m);
+    const v = m.querySelector("video"), snap = m.querySelector(".ex-cam-snap");
+    const paint = () => {
+      m.querySelector(".ex-cam-n").textContent = tx("camCount", { n: r.photos.length, m: MAX_PHOTOS });
+      m.querySelector(".ex-cam-strip").innerHTML = r.photos.map(p => `<img src="${p}" alt="">`).join("");
+      snap.disabled = r.photos.length >= MAX_PHOTOS;
+    };
+    const stop = () => { if (stream) stream.getTracks().forEach(tr => tr.stop()); stream = null; };
+    const start = () => { stop(); return navigator.mediaDevices.getUserMedia({ video: { facingMode: facing, width: { ideal: 1280 } }, audio: false })
+      .then(s => { stream = s; v.srcObject = s; })
+      .catch(() => { close(); ctx.toast(t().camErr); fallback(); }); };
+    const close = () => { stop(); m.remove(); document.removeEventListener("keydown", esc); redraw(); };
+    const esc = e => { if (e.key === "Escape") close(); };
+    document.addEventListener("keydown", esc);
+    snap.addEventListener("click", () => {
+      if (!v.videoWidth || r.photos.length >= MAX_PHOTOS) return;
+      const k = Math.min(1, 800 / Math.max(v.videoWidth, v.videoHeight)), c = document.createElement("canvas");
+      c.width = Math.round(v.videoWidth * k); c.height = Math.round(v.videoHeight * k);
+      c.getContext("2d").drawImage(v, 0, 0, c.width, c.height);
+      r.photos.push(c.toDataURL("image/jpeg", 0.7));
+      const fl = m.querySelector(".ex-cam-flash"); fl.classList.remove("on"); void fl.offsetWidth; fl.classList.add("on");
+      paint();
+      if (r.photos.length >= MAX_PHOTOS) ctx.toast(tx("camFull", { n: MAX_PHOTOS }));
+    });
+    m.querySelector(".ex-cam-sw").addEventListener("click", () => { facing = facing === "environment" ? "user" : "environment"; start(); });
+    m.querySelector(".ex-cam-ok").addEventListener("click", close);
+    m.querySelector(".ex-cam-x").addEventListener("click", close);
+    m.addEventListener("click", e => { if (e.target === m) close(); });
+    paint(); start();
+  }
+
   function clean() {
     const d = clone(draft);
     d.regions = d.regions.filter(r => r.region || regionUsed(r));
@@ -190,12 +242,17 @@ const DrExam = (() => {
     root.querySelectorAll("[data-rn]").forEach(el => el.addEventListener("input", () => { draft.regions[+el.dataset.rn][el.dataset.g].notes = el.value; }));
     root.querySelectorAll("[data-rx]").forEach(el => el.addEventListener("input", () => { draft.regions[+el.dataset.rx].extra = el.value; }));
     root.querySelectorAll("[data-up]").forEach(el => el.addEventListener("change", async () => {
-      const f = el.files[0], r = draft.regions[+el.dataset.up]; el.value = "";
-      if (!f) return;
-      if (!/^image\/(jpeg|png)$/.test(f.type) || f.size > 5 * 1024 * 1024) return ctx.toast(t().photoErr);
-      if (r.photos.length >= MAX_PHOTOS) return ctx.toast(tx("photoMax", { n: MAX_PHOTOS }));
-      try { r.photos.push(await shrink(f)); redraw(); } catch (e) { ctx.toast(t().photoErr); }
+      const files = [...el.files], r = draft.regions[+el.dataset.up]; el.value = "";
+      let bad = false, over = false;
+      for (const f of files) {
+        if (!/^image\/(jpeg|png)$/.test(f.type) || f.size > 5 * 1024 * 1024) { bad = true; continue; }
+        if (r.photos.length >= MAX_PHOTOS) { over = true; break; }
+        try { r.photos.push(await shrink(f)); } catch (e) { bad = true; }
+      }
+      redraw();
+      if (over) ctx.toast(tx("photoMax", { n: MAX_PHOTOS })); else if (bad) ctx.toast(t().photoErr);
     }));
+    root.querySelectorAll("[data-cam]").forEach(b => b.addEventListener("click", () => camera(+b.dataset.cam, redraw)));
     root.querySelectorAll("[data-rmph]").forEach(b => b.addEventListener("click", () => { draft.regions[+b.dataset.rmph].photos.splice(+b.dataset.n, 1); redraw(); }));
     root.querySelector("#exPrev").addEventListener("click", () => ctx.go(ctx.prevKey));
     root.querySelector("#exDraft").addEventListener("click", () => {
