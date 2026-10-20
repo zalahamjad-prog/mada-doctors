@@ -26,6 +26,14 @@ const DrPortal = (() => {
   ];
   const NURSE_ACCOUNT = [{ k: "account", href: "nurse-account.html", icon: ACCOUNT[0].icon }, { ...ACCOUNT[1], href: "nurse-login.html" }];
   const isNurse = me => !!me && me.kind === "nurse";
+  // Physiotherapist Portal menu (physio-*.html). Schedule, patients and account come next.
+  const PHYSIO_MENU = [
+    { k: "visits", href: "physio-visits.html", icon: MENU[0].icon },
+    { k: "schedule", icon: MENU[1].icon },
+    { k: "patients", icon: MENU[2].icon }
+  ];
+  const PHYSIO_ACCOUNT = [{ k: "account", icon: ACCOUNT[0].icon }, { ...ACCOUNT[1], href: "physio-login.html" }];
+  const isPhysio = me => !!me && me.kind === "physio";
   // TODO: the real Mada support number.
   const SUPPORT = "920000000";
   const L = {
@@ -47,7 +55,7 @@ const DrPortal = (() => {
     const link = m => m.href
       ? `<a href="${m.href}" ${m.k === active ? 'aria-current="page"' : ""}${m.out ? ' class="dp-out" data-dp-logout' : ""}>${svg(m.icon)}${t[m.k]}${openN(m) ? `<span class="dp-cnt">${openN(m)}</span>` : ""}</a>`
       : `<a href="#" class="soon" aria-disabled="true" data-soon>${svg(m.icon)}${t[m.k]}<span class="soon-tag">${t.soon}</span></a>`;
-    const menu = isNurse(me) ? NURSE_MENU : MENU, acct = isNurse(me) ? NURSE_ACCOUNT : ACCOUNT;
+    const menu = isPhysio(me) ? PHYSIO_MENU : isNurse(me) ? NURSE_MENU : MENU, acct = isPhysio(me) ? PHYSIO_ACCOUNT : isNurse(me) ? NURSE_ACCOUNT : ACCOUNT;
     document.getElementById("menu").innerHTML = menu.filter(m => m.href).map(link).join("")
       + `<span class="dp-sep" aria-hidden="true"></span>` + menu.filter(m => !m.href).map(link).join("")
       + `<span class="dp-lbl">${t.accountT}</span>` + acct.map(link).join("");
@@ -74,15 +82,18 @@ const DrPortal = (() => {
   const read = (k, d) => { try { return MadaStore.getJSON(k, d) || d; } catch (e) { return d; } };
   const seenKey = id => "mada-dr-seen-" + id;
   // A nurse's bookings are the ones with booking.nurseId; her visit progress is order.nurseVisit.
-  let bookNurse = false;
+  // A physiotherapist's bookings also use booking.nurseId (the visit's provider); progress is order.physioVisit.
+  let bookNurse = false, bookPhysio = false;
   function bookings(id) {
-    return read("mada-orders", []).filter(o => o.bookingId && o.booking && o.appointment && o.status !== "cancelled" && (bookNurse
+    return read("mada-orders", []).filter(o => o.bookingId && o.booking && o.appointment && o.status !== "cancelled" && (bookPhysio
+      ? o.booking.nurseId === id && !(o.physioVisit && o.physioVisit.status === "done")
+      : bookNurse
       ? o.booking.nurseId === id && !(o.nurseVisit && o.nurseVisit.status === "done")
       : o.booking.doctorId === id && !(o.doctorVisit && o.doctorVisit.status === "done")));
   }
   function notes(me) {
-    const id = me.doctorId || me.nurseId || me.staffId, out = [];
-    bookNurse = isNurse(me);
+    const id = me.doctorId || me.nurseId || me.physioId || me.staffId, out = [];
+    bookNurse = isNurse(me); bookPhysio = isPhysio(me);
     let seen = read(seenKey(id), null);
     if (!seen) {
       // SAMPLE DATA ONLY: on the first visit the two latest demo bookings show as new.
@@ -90,9 +101,9 @@ const DrPortal = (() => {
       seen = MadaStore.SAMPLES ? bk.slice(2).map(o => o.id) : [];
       if (bk.length) try { MadaStore.setJSON(seenKey(id), seen); } catch (e) {}
     }
-    if (typeof MadaAlerts !== "undefined" && !bookNurse) MadaAlerts.open(id).forEach(a => out.push({ kind: "crit", a, at: a.at, unread: !a.rec.seenAt }));
+    if (typeof MadaAlerts !== "undefined" && !bookNurse && !bookPhysio) MadaAlerts.open(id).forEach(a => out.push({ kind: "crit", a, at: a.at, unread: !a.rec.seenAt }));
     bookings(id).forEach(o => out.push({ kind: "book", o, at: [o.booking.at, o.bookedAt, o.createdAt].filter(Boolean).sort().pop(), unread: !seen.includes(o.id) }));
-    if (!bookNurse) read("mada-medical", []).filter(r => r.doctorId === id && r.status === "open").forEach(r => r.items.forEach(it => {
+    if (!bookNurse && !bookPhysio) read("mada-medical", []).filter(r => r.doctorId === id && r.status === "open").forEach(r => r.items.forEach(it => {
       if (RES_STEP[it.type] === it.step && (it.type !== "lab" || it.v2)) out.push({ kind: "res", r, it, at: (it.log[it.log.length - 1] || {}).at || r.createdAt, unread: true });
     }));
     // Nurse: lab results that are due, or entered and not sent (lab-samples.js). They stay until she sends them.
@@ -101,7 +112,7 @@ const DrPortal = (() => {
     return out.sort((a, b) => (b.kind === "crit") - (a.kind === "crit") || String(b.at).localeCompare(String(a.at)));
   }
   function markSeen(me) {
-    const id = me.doctorId || me.nurseId || me.staffId; bookNurse = isNurse(me);
+    const id = me.doctorId || me.nurseId || me.physioId || me.staffId; bookNurse = isNurse(me); bookPhysio = isPhysio(me);
     try { MadaStore.setJSON(seenKey(id), [...new Set([...read(seenKey(id), []), ...bookings(id).map(o => o.id)])]); } catch (e) {}
   }
   let bellLang = "en", bellMe = null;
@@ -156,7 +167,7 @@ const DrPortal = (() => {
       : x.kind === "smp"
       ? `<a href="nurse-samples.html?k=${encodeURIComponent(x.c.key)}" class="un"><span class="ic ${x.c.status === "due" ? "res" : "book"}">${svg(IC_RES)}</span><span><b>${x.c.status === "due" ? t.nDue : t.nReady}</b>${esc(nm(x.c.o.patient))}<small>${esc((x.c.status === "due" ? x.c.tests.filter(y => y.due) : x.c.tests).map(y => nm(y.name)).join(bellLang === "ar" ? "، " : ", "))}</small></span><i class="dot"></i></a>`
       : x.kind === "book"
-      ? `<a href="${bookNurse ? "nurse-visits.html" : "doctor-visits.html"}" class="${x.unread ? "un" : ""}"><span class="ic book">${svg(IC_BOOK)}</span><span><b>${t.nBook}</b>${esc(nm(x.o.patient))}<small>${esc(when(x.o))}</small></span>${x.unread ? '<i class="dot"></i>' : ""}</a>`
+      ? `<a href="${bookPhysio ? "physio-visits.html" : bookNurse ? "nurse-visits.html" : "doctor-visits.html"}" class="${x.unread ? "un" : ""}"><span class="ic book">${svg(IC_BOOK)}</span><span><b>${t.nBook}</b>${esc(nm(x.o.patient))}<small>${esc(when(x.o))}</small></span>${x.unread ? '<i class="dot"></i>' : ""}</a>`
       : `<a href="doctor-orders-list.html?id=${encodeURIComponent(x.r.id)}" class="un"><span class="ic res">${svg(IC_RES)}</span><span><b>${t["nRes_" + x.it.type]}</b>${esc(nm(x.r.patient))}<small>${esc(nm(x.it.title))}</small></span><i class="dot"></i></a>`;
     const shown = items.filter(x => x.unread).slice(0, 8);
     pn.innerHTML = `<h3>${t.nT}</h3>${shown.length ? `<div class="ls">${shown.map(row).join("")}</div>` : `<p class="none">${t.nNone}</p>`}`;

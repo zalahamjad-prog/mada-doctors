@@ -271,8 +271,8 @@ const MadaAuth = (() => {
     doctor: { en: "Doctor", ar: "طبيب" }, nurse: { en: "Nurse", ar: "ممرضة" }, physio: { en: "Physiotherapist", ar: "أخصائي علاج طبيعي" }, lab: { en: "Laboratory", ar: "مختبر" }, driver: { en: "Driver", ar: "سائق" }, quality: { en: "Quality", ar: "جودة" }
   };
   // Roles with their own portal (login page and home); every other role uses the operating system (index.html).
-  // Physiotherapists (kind "physio") get their own portal next; until then they can't sign in (login returns "wrong-portal").
-  const PORTAL = { doctor: { login: "doctor-login.html", home: "doctor-visits.html" }, nurse: { login: "nurse-login.html", home: "nurse-visits.html" } };
+  const PORTAL = { doctor: { login: "doctor-login.html", home: "doctor-visits.html" }, nurse: { login: "nurse-login.html", home: "nurse-visits.html" },
+    physio: { login: "physio-login.html", home: "physio-visits.html" } };
   function staffUsers() {
     return MadaStore.getJSON("mada-staff", []).filter(s => s.status === "active").map(s => {
       const first = n => String(n || "").trim().split(/\s+/).filter(w => !/^(dr|د)\.?$/i.test(w))[0] || "";
@@ -281,7 +281,7 @@ const MadaAuth = (() => {
         name: s.name, firstName: { en: first(s.name.en), ar: first(s.name.ar) },
         role: ROLE_LABEL[s.role] || { en: s.role, ar: s.role },
         initials: { en: s.name.en.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase(), ar: first(s.name.ar).charAt(0) },
-        kind: PORTAL[s.role] || s.role === "physio" ? s.role : "agent", supervisor: s.role === "supervisor", home: PORTAL[s.role] ? PORTAL[s.role].home : "dashboard.html",
+        kind: PORTAL[s.role] ? s.role : "agent", supervisor: s.role === "supervisor", home: PORTAL[s.role] ? PORTAL[s.role].home : "dashboard.html",
         specialty: s.specialty ? { en: s.specialty, ar: s.specialty } : null, doctorId: s.role === "doctor" ? s.id : null, nurseId: s.role === "nurse" ? s.id : null, physioId: s.role === "physio" ? s.id : null,
         profile: { name: s.name, mobile: s.mobile, email: s.email, idType: s.idType, idNumber: s.idNumber, gender: s.gender, license: s.license, empNo: s.id }
       };
@@ -317,7 +317,7 @@ const MadaAuth = (() => {
     return users().find(x => x.username === name) || null;
   }
 
-  // kind: "agent", "doctor" or "nurse"; a user of the other kind is sent to their own home page.
+  // kind: "agent", "doctor", "nurse" or "physio"; a user of the other kind is sent to their own home page.
   function requireAuth(kind) {
     const u = currentUser();
     if (!u) window.location.replace(PORTAL[kind] ? PORTAL[kind].login : "index.html");
