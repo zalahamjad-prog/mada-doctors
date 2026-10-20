@@ -26,6 +26,16 @@ const MadaNurses = (() => {
     WD.forEach((k, i) => { const d = days[k]; if (d && d.from && d.to) { const a = hrs(d.from); let b = hrs(d.to); if (b <= a) b += 24; shifts[i] = [a, b]; } });
     NURSES.push({ id: s.id, staff: true, name: s.name, shifts });
   });
+  // Physiotherapists (Staff role physio) are kept in the same list with role "physio", so their names show wherever a booking's provider
+  // (booking.nurseId) is looked up. Slots only use one pool at a time: use("physio") on New Request for a physiotherapy visit, "nurse" otherwise.
+  MadaStore.getJSON("mada-staff", []).filter(s => s.role === "physio" && s.status === "active").forEach(s => {
+    const days = (s.schedule && s.schedule.days) || {}, shifts = {};
+    WD.forEach((k, i) => { const d = days[k]; if (d && d.from && d.to) { const a = hrs(d.from); let b = hrs(d.to); if (b <= a) b += 24; shifts[i] = [a, b]; } });
+    NURSES.push({ id: s.id, staff: true, role: "physio", name: s.name, shifts });
+  });
+  NURSES.forEach(n => { n.role = n.role || "nurse"; });
+  let POOL = "nurse";
+  const use = role => { POOL = role === "physio" ? "physio" : "nurse"; };
 
   const pad = n => String(n).padStart(2, "0");
   const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -58,7 +68,7 @@ const MadaNurses = (() => {
     const out = [];
     for (let m = DAY_START; m + VISIT_MINUTES <= DAY_END; m += STEP_MINUTES) {
       if (isToday && m <= nowMin) continue;
-      const working = NURSES.filter(n => onShift(n, weekday, m));
+      const working = NURSES.filter(n => n.role === POOL && onShift(n, weekday, m));
       const free = working.filter(n => !isBooked(n.id, date, m));
       out.push({
         minute: m,
@@ -83,5 +93,5 @@ const MadaNurses = (() => {
     return null;
   }
 
-  return { NURSES, slotsFor, hasAvailability, earliest, ymd, parse, VISIT_MINUTES };
+  return { NURSES, use, slotsFor, hasAvailability, earliest, ymd, parse, VISIT_MINUTES };
 })();
