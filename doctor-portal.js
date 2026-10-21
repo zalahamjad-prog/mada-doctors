@@ -29,6 +29,7 @@ const DrPortal = (() => {
   // Physiotherapist Portal menu (physio-*.html). Schedule, patients and account come next.
   const PHYSIO_MENU = [
     { k: "visits", href: "physio-visits.html", icon: MENU[0].icon },
+    { k: "reports", href: "physio-reports.html", icon: MENU.find(m => m.k === "reports").icon },
     { k: "schedule", icon: MENU[1].icon },
     { k: "patients", icon: MENU[2].icon }
   ];

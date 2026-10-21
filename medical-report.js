@@ -498,5 +498,6 @@ const MadaReport = (() => {
   const ready = o => !!(o && o.doctorVisit && o.doctorVisit.status === "done");
   // A finished visit's report is shown and downloaded once the doctor approved it.
   const approved = o => ready(o) && ((o.doctorVisit.report || {}).status === "approved");
-  return { html, download, referral, downloadReferral, referralFile, prescription, downloadRx, rxFile, hasRx, ready, approved, fileName, clean, stepHas, STEP_KEYS, STEP_SECS, L: R };
+  // save (any report page to a branded PDF) and LOGO are also used by the physiotherapy report (physio-report.js).
+  return { save, LOGO, html, download, referral, downloadReferral, referralFile, prescription, downloadRx, rxFile, hasRx, ready, approved, fileName, clean, stepHas, STEP_KEYS, STEP_SECS, L: R };
 })();
