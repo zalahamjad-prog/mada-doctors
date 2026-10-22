@@ -26,15 +26,15 @@ const DrPortal = (() => {
   ];
   const NURSE_ACCOUNT = [{ k: "account", href: "nurse-account.html", icon: ACCOUNT[0].icon }, { ...ACCOUNT[1], href: "nurse-login.html" }];
   const isNurse = me => !!me && me.kind === "nurse";
-  // Physiotherapist Portal menu (physio-*.html). Schedule, patients and account come next.
+  // Physiotherapist Portal menu (physio-*.html).
   const PHYSIO_MENU = [
     { k: "visits", href: "physio-visits.html", icon: MENU[0].icon },
     { k: "assigned", href: "physio-assigned.html", icon: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20v-1a6.5 6.5 0 0 1 13 0v1"/><path d="M17 8h5M19.5 5.5 22 8l-2.5 2.5"/>' },
-    { k: "reports", href: "physio-reports.html", icon: MENU.find(m => m.k === "reports").icon },
-    { k: "schedule", icon: MENU[1].icon },
-    { k: "patients", icon: MENU[2].icon }
+    { k: "schedule", href: "physio-schedule.html", icon: MENU[1].icon },
+    { k: "patients", href: "physio-patients.html", icon: MENU[2].icon },
+    { k: "reports", href: "physio-reports.html", icon: MENU.find(m => m.k === "reports").icon }
   ];
-  const PHYSIO_ACCOUNT = [{ k: "account", icon: ACCOUNT[0].icon }, { ...ACCOUNT[1], href: "physio-login.html" }];
+  const PHYSIO_ACCOUNT = [{ k: "account", href: "physio-account.html", icon: ACCOUNT[0].icon }, { ...ACCOUNT[1], href: "physio-login.html" }];
   const isPhysio = me => !!me && me.kind === "physio";
   // TODO: the real Mada support number.
   const SUPPORT = "920000000";
