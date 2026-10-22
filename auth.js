@@ -236,7 +236,7 @@ const MadaAuth = (() => {
       firstName: { en: "Sarah", ar: "سارة" },
       role: { en: "Administrator", ar: "مديرة النظام" },
       initials: { en: "SA", ar: "س" },
-      kind: "agent", home: "dashboard.html"
+      kind: "agent", roleKey: "admin", home: "dashboard.html"
     },
     {
       username: "supervisor",
@@ -245,7 +245,7 @@ const MadaAuth = (() => {
       firstName: { en: "Hanan", ar: "حنان" },
       role: { en: "Supervisor", ar: "مشرفة" },
       initials: { en: "HS", ar: "ح" },
-      kind: "agent", supervisor: true, home: "dashboard.html"
+      kind: "agent", supervisor: true, roleKey: "supervisor", home: "dashboard.html"
     },
     {
       username: "doctor",
@@ -270,7 +270,8 @@ const MadaAuth = (() => {
   // The first time, they must choose a new password (the login page shows the change-password screen).
   // TODO: role-based pages and menus; until then a doctor opens the doctor portal and every other role the main system.
   const ROLE_LABEL = {
-    admin: { en: "Administrator", ar: "مدير النظام" }, supervisor: { en: "Supervisor", ar: "مشرف" }, agent: { en: "Call Center Agent", ar: "موظف كول سنتر" },
+    gm: { en: "General Manager", ar: "مدير عام" }, admin: { en: "Administrator", ar: "مدير النظام" }, ops: { en: "Operations Manager", ar: "مدير تشغيل" },
+    supervisor: { en: "Sales & Call Center Supervisor", ar: "مشرف مبيعات وكول سنتر" }, agent: { en: "Call Center Agent", ar: "موظف كول سنتر" },
     doctor: { en: "Doctor", ar: "طبيب" }, nurse: { en: "Nurse", ar: "ممرضة" }, physio: { en: "Physiotherapist", ar: "أخصائي علاج طبيعي" }, lab: { en: "Laboratory", ar: "مختبر" }, driver: { en: "Driver", ar: "سائق" }, quality: { en: "Quality", ar: "جودة" }
   };
   // Roles with their own portal (login page and home); every other role uses the operating system (index.html).
@@ -280,11 +281,11 @@ const MadaAuth = (() => {
     return MadaStore.getJSON("mada-staff", []).filter(s => s.status === "active").map(s => {
       const first = n => String(n || "").trim().split(/\s+/).filter(w => !/^(dr|د)\.?$/i.test(w))[0] || "";
       return {
-        username: s.id, password: s.password, staffId: s.id, photo: s.photo || null, mustChangePassword: !!s.mustChangePassword,
+        username: s.id, password: s.password, staffId: s.id, roleKey: s.role, photo: s.photo || null, mustChangePassword: !!s.mustChangePassword,
         name: s.name, firstName: { en: first(s.name.en), ar: first(s.name.ar) },
         role: ROLE_LABEL[s.role] || { en: s.role, ar: s.role },
         initials: { en: s.name.en.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase(), ar: first(s.name.ar).charAt(0) },
-        kind: PORTAL[s.role] ? s.role : "agent", supervisor: s.role === "supervisor", home: PORTAL[s.role] ? PORTAL[s.role].home : "dashboard.html",
+        kind: PORTAL[s.role] ? s.role : "agent", supervisor: ["supervisor", "gm", "admin", "ops"].includes(s.role), home: PORTAL[s.role] ? PORTAL[s.role].home : "dashboard.html",
         specialty: s.specialty ? { en: s.specialty, ar: s.specialty } : null, doctorId: s.role === "doctor" ? s.id : null, nurseId: s.role === "nurse" ? s.id : null, physioId: s.role === "physio" ? s.id : null,
         profile: { name: s.name, mobile: s.mobile, email: s.email, idType: s.idType, idNumber: s.idNumber, gender: s.gender, license: s.license, empNo: s.id }
       };
@@ -328,7 +329,8 @@ const MadaAuth = (() => {
     else if (kind && u.kind !== kind) window.location.replace(u.home);
     return u;
   }
-  const home = () => (currentUser() || {}).home || "index.html";
+  // Operating-system staff start on the first page their permissions allow (MadaPerms below).
+  const home = () => { const u = currentUser(); if (!u) return "index.html"; return u.kind === "agent" && typeof MadaPerms !== "undefined" ? MadaPerms.homeOf(u) : u.home; };
 
   // First login: replace the temporary password. TODO: the backend checks and stores the password.
   function changePassword(newPassword) {
@@ -365,4 +367,57 @@ const MadaAuth = (() => {
   }
 
   return { login, portalOf, currentUser, requireAuth, changePassword, updatePassword, logout, home };
+})();
+
+// Permissions of the operating system (dashboard pages), per staff member.
+// Each role starts with a set of sections (DEFAULTS); the Staff profile's Permissions tab can change them for one person
+// (staff.perms: [section] | null = the role's set). admin-nav.js hides the menu links and blocks the pages a person can't open.
+// FRONT-END ONLY: anyone can change what the browser shows. The real check must be on the backend (Supabase Auth + row rules)
+// before real patient data goes in.
+const MadaPerms = (() => {
+  const SECTIONS = [
+    { k: "dashboard", pages: ["dashboard.html"] },
+    { k: "newRequest", pages: ["new-request.html"] },
+    { k: "requests", pages: ["requests.html", "request-details.html"] },
+    { k: "bookings", pages: ["bookings.html", "booking-schedule.html"] },
+    { k: "patients", pages: ["patients.html", "patient.html"] },
+    { k: "medical", pages: ["medical-requests.html", "medical-request.html", "followup-orders.html"] },
+    { k: "results", pages: ["lab-results.html", "lab-test.html", "xray-results.html"] },
+    { k: "physio", pages: ["physio-requests.html"] },
+    { k: "invoices", pages: ["invoices.html"] },
+    { k: "coupons", pages: ["coupons.html"] },
+    { k: "services", pages: ["services.html", "services-lab.html", "services-nurse.html", "services-physio.html", "services-iv.html", "services-rad.html"] },
+    { k: "providers", pages: ["providers.html", "coverage.html"] },
+    { k: "clinical", pages: ["diagnoses.html", "medications.html"] },
+    { k: "quality", pages: ["quality.html"] },
+    { k: "staff", pages: ["staff.html", "staff-add.html", "staff-profile.html", "doctor-stamps.html"] },
+    { k: "policies", pages: ["policies.html"] }
+  ];
+  const ALL = SECTIONS.map(x => x.k);
+  const DEFAULTS = {
+    gm: ALL, admin: ALL,
+    ops: ALL.filter(k => !["staff", "policies"].includes(k)),
+    supervisor: ["dashboard", "newRequest", "requests", "bookings", "patients", "medical", "physio", "invoices", "coupons"],
+    agent: ["dashboard", "newRequest", "requests", "bookings", "patients"],
+    quality: ["dashboard", "requests", "patients", "results", "quality"],
+    lab: ["dashboard", "medical", "results"],
+    driver: ["dashboard", "bookings"]
+  };
+  const sectionOf = page => (SECTIONS.find(x => x.pages.includes(page)) || {}).k || null;
+  const staffRec = id => id ? MadaStore.getJSON("mada-staff", []).find(x => x.id === id) || null : null;
+  // The sections this user may open.
+  function of(u) {
+    if (!u) return [];
+    const rec = staffRec(u.staffId), role = (rec && rec.role) || u.roleKey || "agent";
+    if (rec && Array.isArray(rec.perms)) return rec.perms.filter(k => ALL.includes(k));
+    return (DEFAULTS[role] || DEFAULTS.agent).slice();
+  }
+  const canSection = (u, k) => of(u).includes(k);
+  // A page that is not in any section (e.g. a new page) stays open.
+  const canPage = (u, page) => { const k = sectionOf(page); return !k || canSection(u, k); };
+  function homeOf(u) {
+    const list = of(u), first = SECTIONS.find(x => list.includes(x.k));
+    return !list.includes("dashboard") && first ? first.pages[0] : "dashboard.html";
+  }
+  return { SECTIONS, ALL, DEFAULTS, sectionOf, of, canSection, canPage, homeOf };
 })();
