@@ -317,7 +317,8 @@ const MadaOrders = (() => {
     list[i] = { ...list[i], ...patch, updatedAt: new Date().toISOString() };
     fixProvider(list[i]);
     // Paying turns the request into a booking (shown on the Bookings page, no longer on Requests).
-    if (patch.payment === "paid" && !list[i].bookingId) {
+    // Confirming a visit paid after the service (payWhen "after") also makes it a booking, so it reaches the provider's visits.
+    if ((patch.payment === "paid" || patch.payWhen === "after") && !list[i].bookingId) {
       const n = list.reduce((m, o) => o.drDemo ? m : Math.max(m, o.bookingId ? parseInt(o.bookingId.split("-")[1], 10) : 0), 5000) + 1;
       list[i].bookingId = "BK-" + n; list[i].bookedAt = list[i].updatedAt;
     }
