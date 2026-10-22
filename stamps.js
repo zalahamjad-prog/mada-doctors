@@ -1,6 +1,7 @@
 // Mada Care doctor stamps (MadaStore "mada-doctor-stamps"): one stamp image per doctor, added on doctor-stamps.html (admin).
 // The medical report shows the stamp of the visit's doctor as soon as it is saved here.
-// stamp: { data (PNG or JPEG data URL, at most 600 px wide), name (original file name), at, by }
+// stamp: { data (PNG or JPEG data URL), name (original file name, or "generated"), at, by }
+//   Made by the system on doctor-stamps.html: also generated: true, fields { nameEn, nameAr, specEn, specAr, facility, emp, reg } and approvedBy.
 // Replace with the real staff API; the backend should keep the stamp with the doctor's record.
 const MadaStamps = (() => {
   const KEY = "mada-doctor-stamps";
