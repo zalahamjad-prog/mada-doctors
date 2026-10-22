@@ -183,10 +183,27 @@ const MadaOrders = (() => {
     mk(48, "0561112233", "blood", "stepLab", ["CBC", "HBA1C"], "noReply", "");
     mk(9, "0547778899", "nursing", "stepNurse", ["NS-1002"], "waitingInfo", "Waiting for a photo of the wound");
   }
+  // The visit's provider (nurse or physiotherapist) is booking.nurseId; their portal lists only those visits. A request booked on
+  // New Request kept just the provider's name in appointment.nurse, so it never reached the portal unless the booking was saved
+  // again on Request Details. Fill booking.nurseId from appointment.nurseId, or from the name (Staff list, sample nurses).
+  function fixProvider(o, staff) {
+    const a = o && o.appointment;
+    if (!a || (o.booking && o.booking.nurseId) || !(a.nurseId || a.nurse)) return false;
+    let id = a.nurseId;
+    if (!id) {
+      const en = typeof a.nurse === "string" ? a.nurse : a.nurse.en, ar = typeof a.nurse === "string" ? a.nurse : a.nurse.ar;
+      const pool = (typeof MadaNurses !== "undefined" ? MadaNurses.NURSES : []).concat((staff || MadaStore.getJSON("mada-staff", [])).filter(s => s.role === "nurse" || s.role === "physio"));
+      id = (pool.find(n => n.name && ((en && n.name.en === en) || (ar && n.name.ar === ar))) || {}).id;
+    }
+    if (!id) return false;
+    o.booking = { ...(o.booking || {}), nurseId: id, by: (o.booking && o.booking.by) || o.staff || "—", at: (o.booking && o.booking.at) || o.bookedAt || o.createdAt };
+    return true;
+  }
   function all() {
     let list = MadaStore.getJSON(KEY, null), dirty = false;
+    if (list) { let staff = null; list.forEach(o => { if (o.appointment && !(o.booking && o.booking.nurseId) && (o.appointment.nurseId || o.appointment.nurse)) { staff = staff || MadaStore.getJSON("mada-staff", []); if (fixProvider(o, staff)) dirty = true; } }); }
     // Real data: no sample requests or sample updates.
-    if (!MadaStore.SAMPLES) return list || [];
+    if (!MadaStore.SAMPLES) { if (dirty) save(list); return list || []; }
     if (!list) { list = samples(); dirty = true; }
     if (!MadaStore.get("mada-orders-held-v1")) { heldSamples(list); MadaStore.set("mada-orders-held-v1", "1"); dirty = true; }
     // Sample payment links (one still running, one expired) for orders saved before this feature.
@@ -290,6 +307,7 @@ const MadaOrders = (() => {
     const list = all();
     const n = list.reduce((m, o) => o.drDemo ? m : Math.max(m, parseInt(o.id.split("-")[1], 10) || 0), 1000) + 1;
     const item = { decision: "pending", payment: null, ...order, id: "ORD-" + n, createdAt: new Date().toISOString() };
+    fixProvider(item);
     list.push(item); save(list);
     return item;
   }
@@ -297,6 +315,7 @@ const MadaOrders = (() => {
     const list = all(), i = list.findIndex(o => o.id === id);
     if (i < 0) return null;
     list[i] = { ...list[i], ...patch, updatedAt: new Date().toISOString() };
+    fixProvider(list[i]);
     // Paying turns the request into a booking (shown on the Bookings page, no longer on Requests).
     if (patch.payment === "paid" && !list[i].bookingId) {
       const n = list.reduce((m, o) => o.drDemo ? m : Math.max(m, o.bookingId ? parseInt(o.bookingId.split("-")[1], 10) : 0), 5000) + 1;
