@@ -377,6 +377,7 @@ const MadaAuth = (() => {
 const MadaPerms = (() => {
   const SECTIONS = [
     { k: "dashboard", pages: ["dashboard.html"] },
+    { k: "sales", pages: ["sales.html"] },
     { k: "newRequest", pages: ["new-request.html"] },
     { k: "requests", pages: ["requests.html", "request-details.html"] },
     { k: "bookings", pages: ["bookings.html", "booking-schedule.html"] },
@@ -397,8 +398,8 @@ const MadaPerms = (() => {
   const DEFAULTS = {
     gm: ALL, admin: ALL,
     ops: ALL.filter(k => !["staff", "policies"].includes(k)),
-    supervisor: ["dashboard", "newRequest", "requests", "bookings", "patients", "medical", "physio", "invoices", "coupons"],
-    agent: ["dashboard", "newRequest", "requests", "bookings", "patients"],
+    supervisor: ["dashboard", "sales", "newRequest", "requests", "bookings", "patients", "medical", "physio", "invoices", "coupons"],
+    agent: ["dashboard", "sales", "newRequest", "requests", "bookings", "patients"],
     quality: ["dashboard", "requests", "patients", "results", "quality"],
     lab: ["dashboard", "medical", "results"],
     driver: ["dashboard", "bookings"]
@@ -406,9 +407,10 @@ const MadaPerms = (() => {
   const sectionOf = page => (SECTIONS.find(x => x.pages.includes(page)) || {}).k || null;
   const staffRec = id => id ? MadaStore.getJSON("mada-staff", []).find(x => x.id === id) || null : null;
   // The sections this user may open.
+  const roleOf = u => { const rec = staffRec(u.staffId); return (rec && rec.role) || u.roleKey || "agent"; };
   function of(u) {
     if (!u) return [];
-    const rec = staffRec(u.staffId), role = (rec && rec.role) || u.roleKey || "agent";
+    const rec = staffRec(u.staffId), role = roleOf(u);
     if (rec && Array.isArray(rec.perms)) return rec.perms.filter(k => ALL.includes(k));
     return (DEFAULTS[role] || DEFAULTS.agent).slice();
   }
@@ -417,6 +419,8 @@ const MadaPerms = (() => {
   const canPage = (u, page) => { const k = sectionOf(page); return !k || canSection(u, k); };
   function homeOf(u) {
     const list = of(u), first = SECTIONS.find(x => list.includes(x.k));
+    // Sales & call center staff start on their sales numbers.
+    if (["supervisor", "agent"].includes(roleOf(u)) && list.includes("sales")) return "sales.html";
     return !list.includes("dashboard") && first ? first.pages[0] : "dashboard.html";
   }
   return { SECTIONS, ALL, DEFAULTS, sectionOf, of, canSection, canPage, homeOf };
