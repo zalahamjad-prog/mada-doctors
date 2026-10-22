@@ -95,11 +95,14 @@ const MadaStore = (() => {
 
     // Remember which records the page last saw, so a save only removes records the page knew about
     // (a record another device added in the meantime is kept).
+    const lastRaw = {};
     function read(k, v) {
-      if (!on || !LIST[k] || v == null) return;
+      if (!on || !LIST[k] || v == null || lastRaw[k] === v) return;
+      lastRaw[k] = v;
       try { const a = JSON.parse(v); if (Array.isArray(a)) lastRead[k] = new Set(a.map(x => idOf(k, x)).filter(Boolean)); } catch (e) {}
     }
     function write(k, value) {
+      delete lastRaw[k];
       const ops = [];
       let arr = null;
       if (LIST[k] && value != null) { try { arr = JSON.parse(value); } catch (e) {} }

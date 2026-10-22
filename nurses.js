@@ -41,14 +41,25 @@ const MadaNurses = (() => {
   const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const parse = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
 
+  // Busy times per provider and day ("id|date" -> [[minute, mins]]), built once per change of the orders or internal bookings.
+  // The calendar asks for every provider, time and day, so reading the whole orders list each time froze the page.
+  let rawO = null, rawI = null, idx = null;
+  function busyIndex() {
+    const a = MadaStore.get("mada-orders"), b = MadaStore.get("mada-internal-bookings");
+    if (idx && a === rawO && b === rawI) return idx;
+    rawO = a; rawI = b; idx = new Map();
+    const add = (id, date, m, mins) => { if (!id || !date || m == null) return; const k = id + "|" + date; (idx.get(k) || idx.set(k, []).get(k)).push([m, mins]); };
+    let os = [], bs = []; try { os = JSON.parse(a || "[]") || []; } catch (e) {} try { bs = JSON.parse(b || "[]") || []; } catch (e) {}
+    os.forEach(o => { if (o.bookingId && o.status !== "cancelled" && o.booking && o.appointment) add(o.booking.nurseId, o.appointment.date, o.appointment.minute); });
+    bs.forEach(x => { if (x.status !== "cancelled") add(x.nurseId, x.date, x.minute, x.mins); });
+    return idx;
+  }
   // Deterministic sample bookings so the same date always looks the same.
   function isBooked(nurseId, date, minute) {
     // Real data: the nurse is busy when a paid booking or an internal booking (booking-schedule.html) overlaps this hour.
     if (!MadaStore.SAMPLES) {
-      const hit = (m, mins) => minute < m + (mins || VISIT_MINUTES) && m < minute + VISIT_MINUTES;
-      return MadaStore.getJSON("mada-orders", []).some(o => o.bookingId && o.status !== "cancelled" && o.booking && o.booking.nurseId === nurseId
-          && o.appointment && o.appointment.date === date && hit(o.appointment.minute))
-        || MadaStore.getJSON("mada-internal-bookings", []).some(b => b.status !== "cancelled" && b.nurseId === nurseId && b.date === date && hit(b.minute, b.mins));
+      const hit = ([m, mins]) => minute < m + (mins || VISIT_MINUTES) && m < minute + VISIT_MINUTES;
+      return (busyIndex().get(nurseId + "|" + date) || []).some(hit);
     }
     let h = 7;
     for (const c of nurseId + date + minute) h = (h * 31 + c.charCodeAt(0)) % 1000003;
