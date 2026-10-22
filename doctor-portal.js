@@ -29,6 +29,7 @@ const DrPortal = (() => {
   // Physiotherapist Portal menu (physio-*.html). Schedule, patients and account come next.
   const PHYSIO_MENU = [
     { k: "visits", href: "physio-visits.html", icon: MENU[0].icon },
+    { k: "assigned", href: "physio-assigned.html", icon: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20v-1a6.5 6.5 0 0 1 13 0v1"/><path d="M17 8h5M19.5 5.5 22 8l-2.5 2.5"/>' },
     { k: "reports", href: "physio-reports.html", icon: MENU.find(m => m.k === "reports").icon },
     { k: "schedule", icon: MENU[1].icon },
     { k: "patients", icon: MENU[2].icon }
@@ -38,9 +39,9 @@ const DrPortal = (() => {
   // TODO: the real Mada support number.
   const SUPPORT = "920000000";
   const L = {
-    en: { home: "Home", visits: "My Visits", schedule: "My Schedule", patients: "Patients", orders: "Orders", alerts: "Critical Results", consults: "Consultations", reports: "Reports", samples: "Samples", soon: "Soon", account: "Profile", logout: "Log out", accountT: "Account", support: "Support",
+    en: { home: "Home", visits: "My Visits", schedule: "My Schedule", patients: "Patients", orders: "Orders", alerts: "Critical Results", consults: "Consultations", reports: "Reports", samples: "Samples", assigned: "Assigned Requests", soon: "Soon", account: "Profile", logout: "Log out", accountT: "Account", support: "Support",
       nT: "Notifications", nNone: "No new notifications.", nBook: "New booking", nRes_lab: "Lab results ready", nRes_radiology: "Radiology results ready", nDue: "Lab result due: enter it", nReady: "Results entered, not sent yet", nCrit: "Critical result", nHigh: "High result", today: "Today", tomorrow: "Tomorrow" },
-    ar: { home: "الرئيسية", visits: "زياراتي", schedule: "جدولي", patients: "المرضى", orders: "الأوردرات", alerts: "النتائج الحرجة", consults: "الاستشارات", reports: "التقارير", samples: "العينات", soon: "قريباً", account: "الملف الشخصي", logout: "تسجيل الخروج", accountT: "الحساب", support: "الدعم",
+    ar: { home: "الرئيسية", visits: "زياراتي", schedule: "جدولي", patients: "المرضى", orders: "الأوردرات", alerts: "النتائج الحرجة", consults: "الاستشارات", reports: "التقارير", samples: "العينات", assigned: "الطلبات المسندة", soon: "قريباً", account: "الملف الشخصي", logout: "تسجيل الخروج", accountT: "الحساب", support: "الدعم",
       nT: "الإشعارات", nNone: "ما فيه إشعارات جديدة.", nBook: "حجز جديد", nRes_lab: "نتائج التحاليل جاهزة", nRes_radiology: "نتيجة الأشعة جاهزة", nDue: "حان وقت نتيجة التحليل: أدخلها", nReady: "النتائج مدخلة وما انرسلت", nCrit: "نتيجة حرجة", nHigh: "نتيجة مرتفعة", today: "اليوم", tomorrow: "بكرة" }
   };
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -52,7 +53,8 @@ const DrPortal = (() => {
     // Critical Results shows how many alerts are still open (alerts.js).
     // Samples shows the results that are due or not sent yet (lab-samples.js).
     const openN = m => m.k === "alerts" && me && typeof MadaAlerts !== "undefined" ? MadaAlerts.open(me.doctorId || me.staffId).length
-      : m.k === "samples" && me && typeof MadaSamples !== "undefined" ? MadaSamples.todo(me.nurseId).length : 0;
+      : m.k === "samples" && me && typeof MadaSamples !== "undefined" ? MadaSamples.todo(me.nurseId).length
+      : m.k === "assigned" && me && typeof MadaOrders !== "undefined" ? MadaOrders.all().filter(o => o.status === "pt_assigned" && o.ptAssign && o.ptAssign.to === me.physioId).length : 0;
     const link = m => m.href
       ? `<a href="${m.href}" ${m.k === active ? 'aria-current="page"' : ""}${m.out ? ' class="dp-out" data-dp-logout' : ""}>${svg(m.icon)}${t[m.k]}${openN(m) ? `<span class="dp-cnt">${openN(m)}</span>` : ""}</a>`
       : `<a href="#" class="soon" aria-disabled="true" data-soon>${svg(m.icon)}${t[m.k]}<span class="soon-tag">${t.soon}</span></a>`;
