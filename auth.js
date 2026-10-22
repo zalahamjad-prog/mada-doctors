@@ -377,6 +377,7 @@ const MadaAuth = (() => {
 const MadaPerms = (() => {
   const SECTIONS = [
     { k: "dashboard", pages: ["dashboard.html"] },
+    { k: "ops", pages: ["ops.html"] },
     { k: "sales", pages: ["sales.html"] },
     { k: "newRequest", pages: ["new-request.html"] },
     { k: "requests", pages: ["requests.html", "request-details.html"] },
@@ -397,7 +398,7 @@ const MadaPerms = (() => {
   const ALL = SECTIONS.map(x => x.k);
   const DEFAULTS = {
     gm: ALL, admin: ALL,
-    ops: ALL.filter(k => !["staff", "policies"].includes(k)),
+    ops: ALL,
     supervisor: ["dashboard", "sales", "newRequest", "requests", "bookings", "patients", "medical", "physio", "invoices", "coupons"],
     agent: ["dashboard", "sales", "newRequest", "requests", "bookings", "patients"],
     quality: ["dashboard", "requests", "patients", "results", "quality"],
@@ -420,6 +421,8 @@ const MadaPerms = (() => {
   function homeOf(u) {
     const list = of(u), first = SECTIONS.find(x => list.includes(x.k));
     // Sales & call center staff start on their sales numbers.
+    // The operations manager starts in the Operations Room.
+    if (roleOf(u) === "ops" && list.includes("ops")) return "ops.html";
     if (["supervisor", "agent"].includes(roleOf(u)) && list.includes("sales")) return "sales.html";
     return !list.includes("dashboard") && first ? first.pages[0] : "dashboard.html";
   }
