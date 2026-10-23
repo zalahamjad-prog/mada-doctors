@@ -7,10 +7,12 @@
   const L = {
     en: { btn: "Improve text", busy: "Improving…", title: "Suggested text", use: "Use this text", keep: "Keep mine", check: "Worth checking",
       same: "No corrections needed.", review: "Review the text before saving. The assistant only fixes the writing; it does not add or check medical content.",
-      empty: "Write something first.", err: "The assistant is not available right now.", offline: "No connection. Try again." },
+      empty: "Write something first.", err: "The assistant is not available right now.", offline: "No connection. Try again.",
+      mic: "Dictate", stop: "Stop", listening: "Listening… speak now", micDenied: "Allow the microphone for this site in the browser settings.", micErr: "Dictation stopped. Try again.", switchTo: "Switch dictation language" },
     ar: { btn: "حسّن النص", busy: "جارٍ التحسين…", title: "النص المقترح", use: "استخدام هذا النص", keep: "إبقاء نصّي", check: "نقاط للمراجعة",
       same: "النص لا يحتاج تصحيحًا.", review: "يُرجى مراجعة النص قبل الحفظ. المساعد يصحّح الكتابة فقط ولا يضيف أو يراجع المحتوى الطبي.",
-      empty: "اكتب النص أولًا.", err: "المساعد غير متاح الآن.", offline: "لا يوجد اتصال. حاول مرة أخرى." }
+      empty: "اكتب النص أولًا.", err: "المساعد غير متاح الآن.", offline: "لا يوجد اتصال. حاول مرة أخرى.",
+      mic: "إملاء صوتي", stop: "إيقاف", listening: "جارٍ الاستماع… تكلّم الآن", micDenied: "اسمح للمتصفح باستخدام المايك من إعدادات الموقع.", micErr: "توقف الإملاء. حاول مرة أخرى.", switchTo: "تغيير لغة الإملاء" }
   };
   const lang = () => (document.documentElement.lang === "en" ? "en" : "ar");
   const t = () => L[lang()];
@@ -36,9 +38,47 @@
 .ai-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .ai-acts button{border-radius:999px;padding:6px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #0f6f7a}
 .ai-use{background:#0f6f7a;color:#fff}.ai-keep{background:#fff;color:#0f6f7a}
-.ai-msg{margin-top:6px;font-size:12px;color:#8a3b2e;text-align:end}`;
+.ai-msg{margin-top:6px;font-size:12px;color:#8a3b2e;text-align:end}
+.ai-row{gap:8px;flex-wrap:wrap;align-items:center}
+.ai-mic.on{background:#fdecea;border-color:#f3b8b1;color:#b3261e}
+.ai-mic.on svg{animation:aiPulse 1s ease-in-out infinite}
+@keyframes aiPulse{50%{opacity:.35}}
+.ai-ml{border:1px solid #cfe3e6;background:#fff;color:#0f6f7a;border-radius:999px;padding:5px 9px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.ai-live{flex-basis:100%;text-align:end;font-size:12px;color:#5f7378;min-height:1em}`;
   document.head.appendChild(css);
   const ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2 2.2.8-2.2.8L19 21l-.8-2.2-2.2-.8 2.2-.8z"/></svg>';
+
+  const MIC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+
+  // Voice dictation through the browser's own speech recognition (Chrome, Edge, Safari). The words go into the field;
+  // the practitioner checks them (and can press Improve text) before the page's Save. The language (Arabic or English) is
+  // remembered on this device only.
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let rec = null, recTa = null;
+  const micLang = () => { try { return localStorage.getItem("ai-mic-lang") || lang(); } catch (e) { return lang(); } };
+  function stopMic() { if (rec) { try { rec.stop(); } catch (e) {} } }
+  function dictate(ta, row) {
+    if (rec) { const same = recTa === ta; stopMic(); if (same) return; }
+    if (ta.readOnly || ta.disabled) return;
+    row.querySelectorAll(".ai-msg").forEach(m => m.remove());
+    const btn = row.querySelector(".ai-mic"), live = row.querySelector(".ai-live");
+    const msg = s => { const m = document.createElement("div"); m.className = "ai-msg"; m.textContent = s; row.appendChild(m); };
+    const r = new SR(); rec = r; recTa = ta;
+    r.lang = micLang() === "en" ? "en-US" : "ar-SA"; r.continuous = true; r.interimResults = true;
+    r.onresult = e => {
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const said = e.results[i][0].transcript.trim(); if (!said) continue;
+        if (e.results[i].isFinal) { const cur = ta.value.replace(/\s+$/, ""); setValue(ta, (cur ? cur + " " : "") + said); }
+        else interim += said + " ";
+      }
+      live.textContent = interim.trim() || t().listening;
+    };
+    r.onerror = e => { if (e.error === "not-allowed" || e.error === "service-not-allowed") msg(t().micDenied); else if (e.error !== "no-speech" && e.error !== "aborted") msg(t().micErr); };
+    r.onend = () => { if (rec === r) { rec = null; recTa = null; } btn.classList.remove("on"); btn.lastChild.textContent = t().mic; live.textContent = ""; live.hidden = true; };
+    btn.classList.add("on"); btn.lastChild.textContent = t().stop; live.hidden = false; live.textContent = t().listening;
+    try { r.start(); } catch (e) { r.onend(); msg(t().micErr); }
+  }
 
   // The label of the field, sent so the assistant knows what kind of note it is (never the patient's name).
   function labelOf(ta) {
@@ -56,7 +96,8 @@
     const old = row.nextElementSibling; if (old && old.classList.contains("ai-box")) old.remove();
     row.querySelectorAll(".ai-msg").forEach(m => m.remove());
     if (ta.readOnly || ta.disabled) return;
-    const text = ta.value.trim(), btn = row.querySelector(".ai-btn");
+    stopMic();
+    const text = ta.value.trim(), btn = row.querySelector(".ai-fix");
     const msg = s => { const m = document.createElement("div"); m.className = "ai-msg"; m.textContent = s; row.appendChild(m); };
     if (!text) return msg(t().empty);
     btn.disabled = true; btn.lastChild.textContent = t().busy;
@@ -79,8 +120,14 @@
       if (ta.dataset.ai || ta.readOnly || ta.disabled || ta.closest(".pay-box, [data-noai]") || ta.id === "payMsg") return;
       ta.dataset.ai = "1";
       const row = document.createElement("div"); row.className = "ai-row";
-      row.innerHTML = `<button type="button" class="ai-btn">${ICON}<span>${t().btn}</span></button>`;
-      row.querySelector(".ai-btn").onclick = () => improve(ta, row);
+      row.innerHTML = (SR ? `<button type="button" class="ai-ml" title="${t().switchTo}">${micLang() === "en" ? "EN" : "ع"}</button><button type="button" class="ai-btn ai-mic">${MIC}<span>${t().mic}</span></button>` : "")
+        + `<button type="button" class="ai-btn ai-fix">${ICON}<span>${t().btn}</span></button>` + (SR ? `<div class="ai-live" hidden></div>` : "");
+      row.querySelector(".ai-fix").onclick = () => improve(ta, row);
+      if (SR) {
+        row.querySelector(".ai-mic").onclick = () => dictate(ta, row);
+        row.querySelector(".ai-ml").onclick = e => { const v = micLang() === "en" ? "ar" : "en"; try { localStorage.setItem("ai-mic-lang", v); } catch (x) {}
+          document.querySelectorAll(".ai-ml").forEach(b => b.textContent = v === "en" ? "EN" : "ع"); if (rec) stopMic(); };
+      }
       ta.after(row);
     });
   }
