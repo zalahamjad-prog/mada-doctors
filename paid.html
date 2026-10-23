@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="assets/mada-logo.png">
+<title>مدى كير | الدفع</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --primary: #0b6b5c; --primary-deep: #063f36; --primary-soft: #e6f3ef; --ink: #10232b; --muted: #6b7a80; --border: #e3e8ea; --page: #f2f5f4;
+    --red: #dc2626; --red-soft: #fdecec; --green: #15803d; --green-soft: #e7f6ec; --orange: #d97706; --orange-soft: #fef3e2; --font: "Tajawal", "Inter", system-ui, sans-serif; }
+  [dir="ltr"] { --font: "Inter", "Tajawal", system-ui, sans-serif; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--page); color: var(--ink); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+  [hidden] { display: none !important; }
+  .app { max-width: 480px; margin: 0 auto; min-height: 100vh; }
+  .hero { padding: 18px 18px 64px; color: #fff; background: radial-gradient(120% 90% at 100% 0%, #13806e 0%, var(--primary) 45%, var(--primary-deep) 100%); }
+  .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; }
+  .brand img { height: 30px; width: auto; filter: brightness(0) invert(1); }
+  main { margin-top: -46px; padding: 0 14px 24px; }
+  .card { background: #fff; border-radius: 16px; border: 1px solid var(--border); padding: 28px 18px; text-align: center; box-shadow: 0 2px 10px rgba(16,35,43,.04); }
+  .big { width: 64px; height: 64px; margin: 0 auto 14px; border-radius: 50%; display: grid; place-items: center; }
+  .big svg { width: 32px; height: 32px; }
+  .ok { background: var(--green-soft); color: var(--green); } .bad { background: var(--red-soft); color: var(--red); } .warn { background: var(--orange-soft); color: var(--orange); }
+  h2 { font-size: 18px; font-weight: 800; }
+  p { margin-top: 6px; font-size: 13.5px; color: var(--muted); line-height: 1.6; }
+  .btn { margin-top: 18px; width: 100%; height: 50px; border: 0; border-radius: 14px; background: var(--primary); color: #fff; font: inherit; font-size: 15.5px; font-weight: 700; cursor: pointer; }
+  .spin { width: 46px; height: 46px; margin: 6px auto 14px; border-radius: 50%; border: 4px solid var(--primary-soft); border-top-color: var(--primary); animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="hero"><div class="brand"><img src="assets/mada-logo.png" alt="" width="301" height="320"><span id="brand">مدى كير</span></div></header>
+  <main><section class="card" id="box"><div class="spin"></div><h2 id="wait"></h2></section></main>
+</div>
+<script src="auth.js"></script>
+<script>
+// Moyasar sends the customer here after paying (pay-config.js, pay.html, visit-pay.html), adding ?id=<payment>&status=&message=.
+// The mada-pay function checks the payment with Moyasar and marks the request paid; then the customer goes back to the
+// payment page, which shows the receipt. k: "order" (o = request id) or "visit" (t = visit link token).
+(() => {
+  const qs = new URLSearchParams(location.search), lang = qs.get("l") === "en" ? "en" : "ar";
+  const L = {
+    ar: { brand: "مدى كير", wait: "جاري تأكيد الدفع…", failT: "ما تمّ الدفع", failS: "لم يتم خصم أي مبلغ. تقدر تحاول مرة ثانية أو تختار بطاقة ثانية.",
+      again: "رجوع لصفحة الدفع", issueT: "وصلنا دفعك وبنراجعه", issueS: "المبلغ ما يطابق قيمة الطلب. فريق مدى كير بيتواصل معك قريباً لإكمال الحجز أو إرجاع المبلغ.",
+      netT: "وصلنا دفعك", netS: "ما قدرنا نأكد الحجز على الصفحة الحين. بيوصلك التأكيد برسالة، وإذا ما وصلك تواصل معنا.", ok: "تم الدفع، جاري فتح التأكيد…" },
+    en: { brand: "Mada Care", wait: "Confirming your payment…", failT: "Payment not completed", failS: "No amount was charged. You can try again or use another card.",
+      again: "Back to the payment page", issueT: "We received your payment and are reviewing it", issueS: "The amount does not match the request. The Mada Care team will contact you soon to complete the booking or refund you.",
+      netT: "We received your payment", netS: "We could not confirm the booking on this page right now. You will get the confirmation by message; if not, contact us.", ok: "Paid, opening your confirmation…" }
+  }[lang];
+  document.documentElement.lang = lang; document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+  document.getElementById("brand").textContent = L.brand; document.getElementById("wait").textContent = L.wait;
+  const kind = qs.get("k") === "visit" ? "visit" : "order", o = qs.get("o") || "", t = qs.get("t") || "";
+  const backUrl = kind === "visit" ? `visit-pay.html?t=${encodeURIComponent(t)}${lang === "en" ? "&l=en" : ""}` : `pay.html?id=${encodeURIComponent(o)}`;
+  const ICO = { ok: '<path d="M5 12.5l4.5 4.5L19 7.5"/>', bad: '<path d="M6 6l12 12M18 6L6 18"/>', warn: '<path d="M12 8v5M12 16.5v.5"/><circle cx="12" cy="12" r="9"/>' };
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  const show = (k, h, p, btn) => { document.getElementById("box").innerHTML = `<div class="big ${k}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${ICO[k]}</svg></div><h2>${esc(h)}</h2>${p ? `<p>${esc(p)}</p>` : ""}${btn ? `<button type="button" class="btn" id="back">${esc(L.again)}</button>` : ""}`;
+    const b = document.getElementById("back"); if (b) b.addEventListener("click", () => location.replace(backUrl)); };
+  const pid = qs.get("id") || "", status = qs.get("status") || "";
+  if (!pid || (status && status !== "paid")) { show("bad", L.failT, qs.get("message") ? `${L.failS} (${qs.get("message")})` : L.failS, true); return; }
+
+  async function check(n) {
+    let r = null, j = null;
+    try { r = await fetch(MADA_CLOUD.url + "/functions/v1/mada-pay", { method: "POST", headers: { apikey: MADA_CLOUD.key, "Content-Type": "application/json" }, body: JSON.stringify({ paymentId: pid }) }); j = await r.json(); } catch (e) {}
+    if (j && j.paid) { document.getElementById("wait").textContent = L.ok; return location.replace(backUrl); }
+    if (j && j.issue === "amount") return show("warn", L.issueT, L.issueS, false);
+    if (j && j.status && j.status !== "paid") return show("bad", L.failT, j.message ? `${L.failS} (${j.message})` : L.failS, true);
+    if (n < 3) return setTimeout(() => check(n + 1), 2000 * (n + 1));
+    show("warn", L.netT, L.netS, true);
+  }
+  check(0);
+})();
+</script>
+</body>
+</html>
