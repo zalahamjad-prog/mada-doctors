@@ -4,7 +4,7 @@
 // Keep it false until the steps in notes/supabase-auth-steps.md are done in Supabase.
 // ai: true = shows the "Improve text" writing assistant to clinical staff (notes/supabase-functions/mada-ai). Needs auth: true,
 // the ANTHROPIC_API_KEY secret in Supabase and the legal review of patient data first.
-const MADA_CLOUD = { url: "https://mfkiivwcxmqykpobunpn.supabase.co", key: "sb_publishable_jExWWxO-hv5PcALjkBn6RA_vZuico0F", auth: true, ai: false };
+const MADA_CLOUD = { url: "https://mfkiivwcxmqykpobunpn.supabase.co", key: "sb_publishable_jExWWxO-hv5PcALjkBn6RA_vZuico0F", auth: true, ai: true };
 
 // Mada Care storage. Every page reads and writes through MadaStore.
 // Locally it uses localStorage, and also mirrors values into window.name because some previews block
