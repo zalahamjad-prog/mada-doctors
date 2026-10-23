@@ -86,6 +86,8 @@
 <main id="main"></main>
 <div class="toast" id="toast" hidden></div>
 <div class="ov" id="busy" hidden><div><div class="spin"></div><span id="busyT"></span></div></div>
+<!-- Patient link: without a staff login, only the record of this link is read and saved (notes/supabase-auth.sql). -->
+<script>var MADA_LINK = { t: new URLSearchParams(location.search).get("t") || "" };</script>
 <script src="auth.js"></script>
 <script src="orders.js"></script>
 <script src="doctor-orders.js"></script>

@@ -1,6 +1,8 @@
 // Shared database (Supabase): the Project URL and the "anon public" key from Supabase > Project Settings > API.
 // Empty = this browser only (as before). Never put the service_role key here: these files are public.
-const MADA_CLOUD = { url: "https://mfkiivwcxmqykpobunpn.supabase.co", key: "sb_publishable_jExWWxO-hv5PcALjkBn6RA_vZuico0F" };
+// auth: true = staff log in through Supabase Auth and only logged-in staff can read the data (notes/supabase-auth.sql).
+// Keep it false until the steps in notes/supabase-auth-steps.md are done in Supabase.
+const MADA_CLOUD = { url: "https://mfkiivwcxmqykpobunpn.supabase.co", key: "sb_publishable_jExWWxO-hv5PcALjkBn6RA_vZuico0F", auth: false };
 
 // Mada Care storage. Every page reads and writes through MadaStore.
 // Locally it uses localStorage, and also mirrors values into window.name because some previews block
@@ -39,6 +41,53 @@ const MadaStore = (() => {
     const api = String(C.url || "").replace(/\/+$/, "") + "/rest/v1/mada_data";
     // A legacy "anon" key (a JWT) also goes in Authorization; a new "publishable" key (sb_publishable_...) goes in apikey only.
     const hdr = { apikey: C.key, "Content-Type": "application/json", ...(String(C.key).split(".").length === 3 ? { Authorization: "Bearer " + C.key } : {}) };
+    // ---------- Logins (Supabase Auth, MADA_CLOUD.auth) ----------
+    // The session (access and refresh token) is kept on this device only (mada-cloud-auth). Every read and save then goes
+    // with the staff member's token, so the database rules know who is asking.
+    // A patient link page (MADA_LINK set before auth.js: { t: token } or { pay: request id }) opened without a staff login
+    // reads and saves only its own record, through the link functions in notes/supabase-auth.sql.
+    const AUTH = on && !!C.auth, base = String(C.url || "").replace(/\/+$/, ""), SKEY = "mada-cloud-auth";
+    const LINK = AUTH && typeof MADA_LINK !== "undefined" && MADA_LINK && (MADA_LINK.t || MADA_LINK.pay) ? MADA_LINK : null;
+    const sessGet = () => { try { return JSON.parse(lget(SKEY) || "null"); } catch (e) { return null; } };
+    const sessSet = v => lset(SKEY, v ? JSON.stringify(v) : null);
+    function xsync(method, url, body, extra) {
+      const x = new XMLHttpRequest(); x.open(method, url, false);
+      Object.entries({ apikey: C.key, "Content-Type": "application/json", ...(extra || {}) }).forEach(([h, v]) => x.setRequestHeader(h, v));
+      try { x.send(body == null ? null : JSON.stringify(body)); } catch (e) { return { ok: false, status: 0, json: null, offline: true }; }
+      let j = null; try { j = JSON.parse(x.responseText || "null"); } catch (e) {}
+      return { ok: x.status >= 200 && x.status < 300, status: x.status, json: j };
+    }
+    const keep = j => { const v = { access_token: j.access_token, refresh_token: j.refresh_token, expires_at: j.expires_at || Math.floor(Date.now() / 1000) + (j.expires_in || 3600),
+      user: { id: j.user && j.user.id, app_metadata: (j.user && j.user.app_metadata) || {} } }; sessSet(v); return v; };
+    // The current access token, renewed when it is about to run out. null = not logged in.
+    function token() {
+      const v = sessGet(); if (!AUTH || !v) return null;
+      if (v.expires_at * 1000 - Date.now() > 60000) return v.access_token;
+      const r = xsync("POST", base + "/auth/v1/token?grant_type=refresh_token", { refresh_token: v.refresh_token });
+      if (r.ok && r.json) return keep(r.json).access_token;
+      if (r.status >= 400 && r.status < 500) { sessSet(null); return null; }
+      return v.access_token; // offline: keep trying with the old one
+    }
+    const H = () => { if (!AUTH) return hdr; const tk = token(); return tk ? { apikey: C.key, "Content-Type": "application/json", Authorization: "Bearer " + tk } : hdr; };
+    const auth = {
+      on: AUTH,
+      session: sessGet,
+      // Log in. Returns { ok, error, offline }.
+      signIn(email, password) {
+        const r = xsync("POST", base + "/auth/v1/token?grant_type=password", { email, password });
+        if (r.ok && r.json && r.json.access_token) { keep(r.json); return { ok: true }; }
+        return { ok: false, offline: !!r.offline || r.status >= 500, error: r.json && (r.json.error_description || r.json.msg || r.json.error) };
+      },
+      signOut() { const tk = sessGet() && sessGet().access_token; if (tk) xsync("POST", base + "/auth/v1/logout", {}, { Authorization: "Bearer " + tk }); sessSet(null); },
+      setPassword(password) { const tk = token(); if (!tk) return false; return xsync("PUT", base + "/auth/v1/user", { password }, { Authorization: "Bearer " + tk }).ok; },
+      // Calls a Supabase Edge Function as the logged-in staff member (e.g. mada-admin for staff logins).
+      fn(name, body) { const tk = token(); if (!tk) return { ok: false, status: 401, json: { error: "Not logged in" } }; return xsync("POST", base + "/functions/v1/" + name, body, { Authorization: "Bearer " + tk }); },
+      // After logging in: read the shared data again, now with the staff member's token.
+      reload() { rows.clear(); boot(); },
+      // After logging out: remove this device's copies of the shared data (they stay in Supabase), unless saves are still waiting.
+      forget() { if (queue.length) return false; let ks = []; try { for (let i = 0; i < localStorage.length; i++) ks.push(localStorage.key(i)); } catch (e) {}
+        try { ks = ks.concat(Object.keys(bag())); } catch (e) {} [...new Set(ks)].filter(k => k && shared(k)).forEach(k => lset(k, null)); rows.clear(); return true; }
+    };
     // Kept on this device only: the login, language and menu choices, and the demo bookkeeping.
     const LOCAL = /^mada-(session|lang|pay-lang|admin-nav|bk-cols|dr-tips-off-.+|orders-.+-v\d+|dr-demo-.+|lab-demo-.+|dr-orders-demo-.+|dr-report-demo-.+|dr-family-demo|cloud-.+)$/;
     // Lists kept one row per record: key -> the record's id field.
@@ -69,12 +118,13 @@ const MadaStore = (() => {
     // device's unsent saves on top.
     function boot() {
       if (!on) return;
-      const got = [];
+      if (AUTH && !token()) { if (LINK) bootLink(); else status.ready = true; return; }
+      const got = [], hb = H();
       try {
         for (let from = 0; ; from += 1000) {
           const x = new XMLHttpRequest();
           x.open("GET", api + "?select=k,rid,v,pos&order=k.asc,pos.asc", false);
-          Object.entries(hdr).forEach(([h, v]) => x.setRequestHeader(h, v));
+          Object.entries(hb).forEach(([h, v]) => x.setRequestHeader(h, v));
           x.setRequestHeader("Range-Unit", "items"); x.setRequestHeader("Range", from + "-" + (from + 999));
           x.send();
           if (x.status < 200 || x.status >= 300) throw new Error("HTTP " + x.status + " " + x.responseText.slice(0, 200));
@@ -90,6 +140,18 @@ const MadaStore = (() => {
       try { local = local.concat(Object.keys(bag())); } catch (e) {}
       [...new Set(local)].filter(k => k && shared(k) && !remote.has(k)).forEach(k => lset(k, null));
       remote.forEach(k => { const v = valueOf(k); if (lget(k) !== v) lset(k, v); });
+      status.ready = true;
+    }
+    // A patient link without a staff login: only the rows of this link.
+    function bootLink() {
+      const r = LINK.t ? xsync("POST", base + "/rest/v1/rpc/mada_link_get", { t: String(LINK.t) }) : xsync("POST", base + "/rest/v1/rpc/mada_pay_get", { id: String(LINK.pay) });
+      if (!r.ok || !Array.isArray(r.json)) { status.offline = true; status.error = "HTTP " + r.status; return; }
+      r.json.forEach(x => rows.set(rk(x.k, x.rid), { k: x.k, rid: x.rid, v: x.v, pos: Number(x.pos) || 0 }));
+      // Copies left on this device by another link are removed, so the page only sees this link's records.
+      const mine = new Set(r.json.map(x => x.k));
+      if (!queue.length) { let ks = []; try { for (let i = 0; i < localStorage.length; i++) ks.push(localStorage.key(i)); } catch (e) {} try { ks = ks.concat(Object.keys(bag())); } catch (e) {}
+        [...new Set(ks)].filter(k => k && shared(k) && !mine.has(k)).forEach(k => lset(k, null)); }
+      mine.forEach(k => { const v = valueOf(k); if (lget(k) !== v) lset(k, v); });
       status.ready = true;
     }
 
@@ -136,6 +198,8 @@ const MadaStore = (() => {
       try {
         while (queue.length) {
           const op = queue[0], q = "?k=eq." + encodeURIComponent(op.k) + "&rid=eq." + encodeURIComponent(op.rid);
+          if (AUTH && !token()) { if (!LINK) break; await linkSave(op); queue.shift(); saveQueue(); continue; }
+          const hdr = H();
           // A new record is only added, never written over: if another device already used the same number, it gets the next free one.
           const res = op.del ? await fetch(api + q, { method: "DELETE", headers: hdr, keepalive: true })
             : await fetch(api, { method: "POST", headers: { ...hdr, Prefer: (op.isNew ? "" : "resolution=merge-duplicates,") + "return=minimal" }, keepalive: op.v.length < 60000,
@@ -148,11 +212,23 @@ const MadaStore = (() => {
       finally { busy = false; }
     }
 
+    // A patient link saves its own record through the link functions; anything else it cannot save is dropped.
+    async function linkSave(op) {
+      const call = (fn, body) => fetch(base + "/rest/v1/rpc/" + fn, { method: "POST", headers: hdr, body: JSON.stringify(body) });
+      if (op.del) return;
+      if (LINK.t && ["mada-orders", "mada-medical", "mada-patients"].includes(op.k)) { const res = await call("mada_link_put", { t: String(LINK.t), key: op.k, id: op.rid, val: op.v }); if (!res.ok) throw new Error("HTTP " + res.status); return; }
+      if (LINK.pay && op.k === "mada-orders" && op.rid === String(LINK.pay)) {
+        const res = await call("mada_pay_put", { id: op.rid, val: op.v }); if (!res.ok) throw new Error("HTTP " + res.status);
+        const nv = await res.json(); if (typeof nv === "string" && nv !== op.v) apply({ k: op.k, rid: op.rid, v: nv, pos: op.pos || 0 }); return;
+      }
+      if (LINK.pay && op.k === "mada-order-img-" + LINK.pay) { const res = await call("mada_pay_img", { id: String(LINK.pay), val: op.v }); if (!res.ok) throw new Error("HTTP " + res.status); }
+    }
+
     // Two devices created a record with the same number at the same moment: keep theirs, give ours the next free number
     // (same prefix and width, e.g. ORD-1001 -> ORD-1002) and tell the page.
     async function renumber(op) {
       try {
-        const res = await fetch(api + "?select=k,rid,v,pos&k=eq." + encodeURIComponent(op.k), { headers: hdr });
+        const res = await fetch(api + "?select=k,rid,v,pos&k=eq." + encodeURIComponent(op.k), { headers: H() });
         if (res.ok) (await res.json()).forEach(r => rows.set(rk(r.k, r.rid), { k: r.k, rid: r.rid, v: r.v, pos: Number(r.pos) || 0 }));
       } catch (e) {}
       const m = String(op.rid).match(/^(.*?)(\d+)$/), used = new Set([...rows.values()].filter(r => r.k === op.k).map(r => r.rid));
@@ -183,12 +259,13 @@ const MadaStore = (() => {
     // Live updates (Supabase Realtime, supabase-js from the CDN). When the tab comes back to the front, everything is
     // read again in case an update was missed.
     function live() {
-      if (!on) return;
+      if (!on || (AUTH && !token())) return;
       const sc = document.createElement("script");
       sc.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js";
       sc.onload = () => {
         try {
           const sb = window.supabase.createClient(C.url, C.key, { auth: { persistSession: false } });
+          if (AUTH) { const set = () => { const tk = token(); if (tk) sb.realtime.setAuth(tk); }; set(); setInterval(set, 5 * 60000); }
           sb.channel("mada-data").on("postgres_changes", { event: "*", schema: "public", table: "mada_data" }, p => {
             if (p.eventType === "DELETE") { const o = p.old || {}; if (o.k != null) apply({ k: o.k, rid: o.rid || "", del: true }); }
             else { const n = p.new || {}; if (queue.some(q => q.k === n.k && q.rid === n.rid)) return; apply({ k: n.k, rid: n.rid, v: n.v, pos: Number(n.pos) || 0 }); }
@@ -203,7 +280,8 @@ const MadaStore = (() => {
       try {
         const got = [];
         for (let from = 0; ; from += 1000) {
-          const res = await fetch(api + "?select=k,rid,v,pos&order=k.asc,pos.asc", { headers: { ...hdr, "Range-Unit": "items", Range: from + "-" + (from + 999) } });
+          if (AUTH && !token()) return;
+          const res = await fetch(api + "?select=k,rid,v,pos&order=k.asc,pos.asc", { headers: { ...H(), "Range-Unit": "items", Range: from + "-" + (from + 999) } });
           if (!res.ok) return;
           const page = await res.json(); got.push(...page); if (page.length < 1000) break;
         }
@@ -213,14 +291,14 @@ const MadaStore = (() => {
         touched.forEach(k => { const v = valueOf(k); if (lget(k) !== v) { lset(k, v); try { window.dispatchEvent(new StorageEvent("storage", { key: k, newValue: v })); } catch (e) {} } });
       } catch (e) {}
     }
-    return { on, shared, read, write, boot, live, flush, status };
+    return { on, shared, read, write, boot, live, flush, status, auth };
   })();
   // Sample data switch. false = the system starts clean for real data: no sample requests, bookings, patients, visits,
   // staff, nurses, drivers or demo doctor account are created, and the demo buttons ("Demo: ...") are hidden.
   // Set to true only to bring the demo back (it is created again on the next page load).
   const SAMPLES = false;
   cloud.boot(); cloud.live(); cloud.flush();
-  return { get, set, getJSON, setJSON, SAMPLES, cloud: cloud.status };
+  return { get, set, getJSON, setJSON, SAMPLES, cloud: cloud.status, auth: cloud.auth };
 })();
 
 
@@ -294,7 +372,11 @@ const MadaAuth = (() => {
   // Passwords the built-in demo accounts changed on My Account > Security (MadaStore "mada-pw"). Demo only.
   const pwOverrides = () => MadaStore.getJSON("mada-pw", {});
   // The demo doctor account (doctor / D01) only exists with the sample data; real doctors log in with their employee ID.
-  const users = () => { const o = pwOverrides(); return USERS.filter(u => MadaStore.SAMPLES || u.username !== "doctor").map(u => o[u.username] ? { ...u, password: o[u.username] } : u).concat(staffUsers()); };
+  const AUTH = !!(MadaStore.auth && MadaStore.auth.on);
+  // With Supabase Auth the password is checked by Supabase, never here: only the built-in admin account (its Supabase login
+  // has staff_id ADMIN) and the staff records are used, for names and roles.
+  const authUsers = () => USERS.filter(u => u.username === "admin").map(u => ({ ...u, password: null })).concat(staffUsers().map(u => ({ ...u, password: null })));
+  const users = () => { if (AUTH) return authUsers(); const o = pwOverrides(); return USERS.filter(u => MadaStore.SAMPLES || u.username !== "doctor").map(u => o[u.username] ? { ...u, password: o[u.username] } : u).concat(staffUsers()); };
 
   // "emp-1", "EMP001" and "EMP-001" all mean EMP-001.
   function normalize(id) {
@@ -304,7 +386,11 @@ const MadaAuth = (() => {
   // Entry points: the operating system (index.html), the Doctor Portal (doctor-login.html) and the Nursing Portal (nurse-login.html).
   // Live, each gets its own address (e.g. doctor.madacare.sa). Returns true, false (wrong details) or "wrong-portal".
   const loginPage = u => u && PORTAL[u.kind] ? PORTAL[u.kind].login : "index.html";
+  // Supabase login of an employee ID (staff log in with the ID; the login email is made from it, see notes/supabase-functions/mada-admin).
+  const emailOf = id => String(id).trim().toLowerCase().replace(/[^a-z0-9-]/g, "") + "@staff.invalid";
+  let lastKind = null;
   function login(username, password, portal) {
+    if (AUTH) return cloudLogin(username, password, portal);
     const name = normalize(username).toLowerCase();
     const u = users().find(x => x.username.toLowerCase() === name && x.password === password);
     if (!u) return false;
@@ -313,10 +399,26 @@ const MadaAuth = (() => {
     return true;
   }
 
+  // Returns true, false (wrong details or Supabase not reachable) or "wrong-portal".
+  function cloudLogin(username, password, portal) {
+    const id = normalize(username), r = MadaStore.auth.signIn(emailOf(id), password);
+    if (!r.ok) return false;
+    const meta = (MadaStore.auth.session() || { user: {} }).user.app_metadata || {};
+    if (!meta.role) { MadaStore.auth.signOut(); return false; }
+    MadaStore.auth.reload();
+    const sid = String(meta.staff_id || "").toUpperCase(), u = users().find(x => sid === "ADMIN" ? x.username === "admin" : String(x.username).toUpperCase() === sid);
+    lastKind = PORTAL[meta.role] ? meta.role : "agent";
+    if (!u) { MadaStore.auth.signOut(); return false; }
+    if ((portal || "agent") !== u.kind) { MadaStore.auth.signOut(); return "wrong-portal"; }
+    save(u.username);
+    return true;
+  }
+
   // The login page of the account with this ID (any password), so a login page can point to the right portal.
-  const portalOf = username => { const n = normalize(username).toLowerCase(), u = users().find(x => x.username.toLowerCase() === n); return u ? loginPage(u) : null; };
+  const portalOf = username => { if (AUTH) return lastKind ? (PORTAL[lastKind] ? PORTAL[lastKind].login : "index.html") : null; const n = normalize(username).toLowerCase(), u = users().find(x => x.username.toLowerCase() === n); return u ? loginPage(u) : null; };
 
   function currentUser() {
+    if (AUTH && !MadaStore.auth.session()) return null;
     const name = read();
     return users().find(x => x.username === name) || null;
   }
@@ -338,6 +440,12 @@ const MadaAuth = (() => {
     if (!u || !u.staffId) return false;
     const list = MadaStore.getJSON("mada-staff", []), s = list.find(x => x.id === u.staffId);
     if (!s) return false;
+    if (AUTH) {
+      if (!MadaStore.auth.setPassword(newPassword)) return false;
+      delete s.password; s.mustChangePassword = false; s.passwordChangedAt = new Date().toISOString();
+      MadaStore.setJSON("mada-staff", list);
+      return true;
+    }
     s.password = newPassword; s.mustChangePassword = false; s.passwordChangedAt = new Date().toISOString();
     MadaStore.setJSON("mada-staff", list);
     return true;
@@ -348,6 +456,13 @@ const MadaAuth = (() => {
   function updatePassword(currentPw, newPw) {
     const u = currentUser();
     if (!u) return false;
+    if (AUTH) {
+      const id = u.username === "admin" ? "admin" : u.staffId;
+      if (!MadaStore.auth.signIn(emailOf(id), currentPw).ok) return "bad-current";
+      if (!MadaStore.auth.setPassword(newPw)) return false;
+      if (u.staffId) { const list = MadaStore.getJSON("mada-staff", []), s = list.find(x => x.id === u.staffId); if (s) { delete s.password; s.passwordChangedAt = new Date().toISOString(); MadaStore.setJSON("mada-staff", list); } }
+      return true;
+    }
     if (u.password !== currentPw) return "bad-current";
     if (u.staffId) {
       const list = MadaStore.getJSON("mada-staff", []), s = list.find(x => x.id === u.staffId);
@@ -363,6 +478,7 @@ const MadaAuth = (() => {
   function logout() {
     const page = loginPage(currentUser());
     save(null);
+    if (AUTH) { MadaStore.auth.signOut(); MadaStore.auth.forget(); }
     window.location.replace(page);
   }
 
