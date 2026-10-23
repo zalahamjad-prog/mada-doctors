@@ -2,7 +2,9 @@
 // Empty = this browser only (as before). Never put the service_role key here: these files are public.
 // auth: true = staff log in through Supabase Auth and only logged-in staff can read the data (notes/supabase-auth.sql).
 // Keep it false until the steps in notes/supabase-auth-steps.md are done in Supabase.
-const MADA_CLOUD = { url: "https://mfkiivwcxmqykpobunpn.supabase.co", key: "sb_publishable_jExWWxO-hv5PcALjkBn6RA_vZuico0F", auth: false };
+// ai: true = shows the "Improve text" writing assistant to clinical staff (notes/supabase-functions/mada-ai). Needs auth: true,
+// the ANTHROPIC_API_KEY secret in Supabase and the legal review of patient data first.
+const MADA_CLOUD = { url: "https://mfkiivwcxmqykpobunpn.supabase.co", key: "sb_publishable_jExWWxO-hv5PcALjkBn6RA_vZuico0F", auth: false, ai: false };
 
 // Mada Care storage. Every page reads and writes through MadaStore.
 // Locally it uses localStorage, and also mirrors values into window.name because some previews block
@@ -82,6 +84,10 @@ const MadaStore = (() => {
       setPassword(password) { const tk = token(); if (!tk) return false; return xsync("PUT", base + "/auth/v1/user", { password }, { Authorization: "Bearer " + tk }).ok; },
       // Calls a Supabase Edge Function as the logged-in staff member (e.g. mada-admin for staff logins).
       fn(name, body) { const tk = token(); if (!tk) return { ok: false, status: 401, json: { error: "Not logged in" } }; return xsync("POST", base + "/functions/v1/" + name, body, { Authorization: "Bearer " + tk }); },
+      // The same, without freezing the page (for slow functions such as the writing assistant). Resolves to { ok, status, json }.
+      async call(name, body) { const tk = token(); if (!tk) return { ok: false, status: 401, json: { error: "Not logged in" } };
+        try { const r = await fetch(base + "/functions/v1/" + name, { method: "POST", headers: { apikey: C.key, "Content-Type": "application/json", Authorization: "Bearer " + tk }, body: JSON.stringify(body) });
+          let json = null; try { json = await r.json(); } catch (e) {} return { ok: r.ok, status: r.status, json }; } catch (e) { return { ok: false, status: 0, offline: true, json: null }; } },
       // After logging in: read the shared data again, now with the staff member's token.
       reload() { rows.clear(); boot(); },
       // After logging out: remove this device's copies of the shared data (they stay in Supabase), unless saves are still waiting.
