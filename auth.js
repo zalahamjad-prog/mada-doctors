@@ -4,7 +4,9 @@
 // Keep it false until the steps in notes/supabase-auth-steps.md are done in Supabase.
 // ai: true = shows the "Improve text" writing assistant to clinical staff (notes/supabase-functions/mada-ai). Needs auth: true,
 // the ANTHROPIC_API_KEY secret in Supabase and the legal review of patient data first.
-const MADA_CLOUD = { url: "https://mfkiivwcxmqykpobunpn.supabase.co", key: "sb_publishable_jExWWxO-hv5PcALjkBn6RA_vZuico0F", auth: true, ai: true };
+// passkey: the roles that confirm their login with Face ID / fingerprint after the password (notes/supabase-passkey.sql and
+// notes/supabase-functions/mada-passkey). Needs auth: true. [] = password only.
+const MADA_CLOUD = { url: "https://mfkiivwcxmqykpobunpn.supabase.co", key: "sb_publishable_jExWWxO-hv5PcALjkBn6RA_vZuico0F", auth: true, ai: true, passkey: ["doctor"] };
 
 // Mada Care storage. Every page reads and writes through MadaStore.
 // Locally it uses localStorage, and also mirrors values into window.name because some previews block
@@ -80,13 +82,29 @@ const MadaStore = (() => {
         if (r.ok && r.json && r.json.access_token) { keep(r.json); return { ok: true }; }
         return { ok: false, offline: !!r.offline || r.status >= 500, error: r.json && (r.json.error_description || r.json.msg || r.json.error) };
       },
-      signOut() { const tk = sessGet() && sessGet().access_token; if (tk) xsync("POST", base + "/auth/v1/logout", {}, { Authorization: "Bearer " + tk }); sessSet(null); },
+      // Checks a password without replacing this device's login (the passkey step stays done); the extra session is closed.
+      checkPassword(email, password) {
+        const r = xsync("POST", base + "/auth/v1/token?grant_type=password", { email, password });
+        if (!(r.ok && r.json && r.json.access_token)) return false;
+        xsync("POST", base + "/auth/v1/logout?scope=local", {}, { Authorization: "Bearer " + r.json.access_token });
+        return true;
+      },
+      signOut() { const tk = sessGet() && sessGet().access_token; if (tk) xsync("POST", base + "/auth/v1/logout", {}, { Authorization: "Bearer " + tk }); sessSet(null); lset("mada-cloud-mfa", null); },
+      // The login session id (from the token) and whether this session passed the passkey step on this device.
+      sessionId() { const v = sessGet(); if (!v || !v.access_token) return null;
+        try { const p = v.access_token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"); return JSON.parse(decodeURIComponent(escape(atob(p + "===".slice((p.length + 3) % 4))))).session_id || null; } catch (e) { return null; } },
+      mfaOk() { const id = this.sessionId(); return !!id && lget("mada-cloud-mfa") === id; },
+      setMfa() { lset("mada-cloud-mfa", this.sessionId()); },
       setPassword(password) { const tk = token(); if (!tk) return false; return xsync("PUT", base + "/auth/v1/user", { password }, { Authorization: "Bearer " + tk }).ok; },
       // Calls a Supabase Edge Function as the logged-in staff member (e.g. mada-admin for staff logins).
       fn(name, body) { const tk = token(); if (!tk) return { ok: false, status: 401, json: { error: "Not logged in" } }; return xsync("POST", base + "/functions/v1/" + name, body, { Authorization: "Bearer " + tk }); },
       // The same, without freezing the page (for slow functions such as the writing assistant). Resolves to { ok, status, json }.
       async call(name, body) { const tk = token(); if (!tk) return { ok: false, status: 401, json: { error: "Not logged in" } };
         try { const r = await fetch(base + "/functions/v1/" + name, { method: "POST", headers: { apikey: C.key, "Content-Type": "application/json", Authorization: "Bearer " + tk }, body: JSON.stringify(body) });
+          let json = null; try { json = await r.json(); } catch (e) {} return { ok: r.ok, status: r.status, json }; } catch (e) { return { ok: false, status: 0, offline: true, json: null }; } },
+      // Calls a database function (Supabase RPC) as the logged-in staff member, without freezing the page. Resolves to { ok, status, json }.
+      async rpc(name, body) { const tk = token(); if (!tk) return { ok: false, status: 401, json: null };
+        try { const r = await fetch(base + "/rest/v1/rpc/" + name, { method: "POST", headers: { apikey: C.key, "Content-Type": "application/json", Authorization: "Bearer " + tk }, body: JSON.stringify(body || {}) });
           let json = null; try { json = await r.json(); } catch (e) {} return { ok: r.ok, status: r.status, json }; } catch (e) { return { ok: false, status: 0, offline: true, json: null }; } },
       // After logging in: read the shared data again, now with the staff member's token.
       reload() { rows.clear(); boot(); },
@@ -379,6 +397,7 @@ const MadaAuth = (() => {
   const pwOverrides = () => MadaStore.getJSON("mada-pw", {});
   // The demo doctor account (doctor / D01) only exists with the sample data; real doctors log in with their employee ID.
   const AUTH = !!(MadaStore.auth && MadaStore.auth.on);
+  const PASSKEY = AUTH && typeof MADA_CLOUD !== "undefined" && Array.isArray(MADA_CLOUD.passkey) ? MADA_CLOUD.passkey : [];
   // With Supabase Auth the password is checked by Supabase, never here: only the built-in admin account (its Supabase login
   // has staff_id ADMIN) and the staff records are used, for names and roles.
   const authUsers = () => USERS.filter(u => u.username === "admin").map(u => ({ ...u, password: null })).concat(staffUsers().map(u => ({ ...u, password: null })));
@@ -405,15 +424,26 @@ const MadaAuth = (() => {
     return true;
   }
 
-  // Returns true, false (wrong details or Supabase not reachable) or "wrong-portal".
+  // Returns true, false (wrong details or Supabase not reachable), "wrong-portal" or "passkey" (the password is right;
+  // the login page now runs the Face ID / fingerprint step, MadaAuth.passkey, then finishLogin).
   function cloudLogin(username, password, portal) {
     const id = normalize(username), r = MadaStore.auth.signIn(emailOf(id), password);
     if (!r.ok) return false;
     const meta = (MadaStore.auth.session() || { user: {} }).user.app_metadata || {};
     if (!meta.role) { MadaStore.auth.signOut(); return false; }
+    lastKind = PORTAL[meta.role] ? meta.role : "agent";
+    if (PASSKEY.includes(meta.role) && !MadaStore.auth.mfaOk()) {
+      if ((portal || "agent") !== lastKind) { MadaStore.auth.signOut(); return "wrong-portal"; }
+      return "passkey";
+    }
+    return finishLogin(portal);
+  }
+  // After the password (and the passkey step when the role has one): read the shared data and open the account.
+  function finishLogin(portal) {
+    const meta = ((MadaStore.auth.session() || { user: {} }).user || {}).app_metadata || {};
+    if (!meta.role || (PASSKEY.includes(meta.role) && !MadaStore.auth.mfaOk())) return false;
     MadaStore.auth.reload();
     const sid = String(meta.staff_id || "").toUpperCase(), u = users().find(x => sid === "ADMIN" ? x.username === "admin" : String(x.username).toUpperCase() === sid);
-    lastKind = PORTAL[meta.role] ? meta.role : "agent";
     if (!u) { MadaStore.auth.signOut(); return false; }
     if ((portal || "agent") !== u.kind) { MadaStore.auth.signOut(); return "wrong-portal"; }
     save(u.username);
@@ -425,8 +455,9 @@ const MadaAuth = (() => {
 
   function currentUser() {
     if (AUTH && !MadaStore.auth.session()) return null;
-    const name = read();
-    return users().find(x => x.username === name) || null;
+    const name = read(), u = users().find(x => x.username === name) || null;
+    // A role with the passkey step is only logged in once this session passed it.
+    return u && AUTH && PASSKEY.includes(u.roleKey) && !MadaStore.auth.mfaOk() ? null : u;
   }
 
   // kind: "agent", "doctor", "nurse" or "physio"; a user of the other kind is sent to their own home page.
@@ -464,7 +495,7 @@ const MadaAuth = (() => {
     if (!u) return false;
     if (AUTH) {
       const id = u.username === "admin" ? "admin" : u.staffId;
-      if (!MadaStore.auth.signIn(emailOf(id), currentPw).ok) return "bad-current";
+      if (!MadaStore.auth.checkPassword(emailOf(id), currentPw)) return "bad-current";
       if (!MadaStore.auth.setPassword(newPw)) return false;
       if (u.staffId) { const list = MadaStore.getJSON("mada-staff", []), s = list.find(x => x.id === u.staffId); if (s) { delete s.password; s.passwordChangedAt = new Date().toISOString(); MadaStore.setJSON("mada-staff", list); } }
       return true;
@@ -488,7 +519,60 @@ const MadaAuth = (() => {
     window.location.replace(page);
   }
 
-  return { login, portalOf, currentUser, requireAuth, changePassword, updatePassword, logout, home };
+  // ---------- Face ID / fingerprint (passkeys) ----------
+  // The device checks the face or finger itself and signs a one-time challenge; Mada Care only keeps the passkey's public key
+  // (Edge Function mada-passkey). Each call resolves to { ok, ... } or { ok: false, reason: "cancel" | "unsupported" | "error", error }.
+  const b64u = {
+    dec: s => Uint8Array.from(atob(String(s).replace(/-/g, "+").replace(/_/g, "/") + "===".slice((String(s).length + 3) % 4)), c => c.charCodeAt(0)),
+    enc: b => { const a = new Uint8Array(b); let t = ""; for (let i = 0; i < a.length; i++) t += String.fromCharCode(a[i]); return btoa(t).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+  };
+  const pkFn = async (action, extra) => { const r = await MadaStore.auth.call("mada-passkey", { action, ...(extra || {}) });
+    return r.ok && r.json && r.json.ok ? r.json : { ok: false, reason: "error", status: r.status, error: (r.json && r.json.error) || (r.offline ? "offline" : "HTTP " + r.status), has: r.json && r.json.has }; };
+  const pkFail = e => ({ ok: false, reason: e && (e.name === "NotAllowedError" || e.name === "AbortError") ? "cancel" : e && e.name === "InvalidStateError" ? "exists" : "error", error: String((e && e.message) || e) });
+  const deviceName = () => { const ua = navigator.userAgent;
+    return /iPhone/.test(ua) ? "iPhone" : /iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) ? "iPad" : /Android/.test(ua) ? "Android" : /Macintosh/.test(ua) ? "Mac" : /Windows/.test(ua) ? "Windows" : "Device"; };
+  const passkey = {
+    needed: role => AUTH && PASSKEY.includes(role),
+    supported: () => typeof window !== "undefined" && !!window.PublicKeyCredential && !!(navigator.credentials && navigator.credentials.create),
+    status: () => pkFn("status"),
+    // Set up a passkey on this device (the first one right after the password, or another device from My Account).
+    async enrol() {
+      if (!passkey.supported()) return { ok: false, reason: "unsupported" };
+      const o = await pkFn("reg-options"); if (!o.ok) return o;
+      const op = o.options;
+      let c; try {
+        c = await navigator.credentials.create({ publicKey: { ...op, challenge: b64u.dec(op.challenge), user: { ...op.user, id: b64u.dec(op.user.id) },
+          excludeCredentials: (op.excludeCredentials || []).map(x => ({ ...x, id: b64u.dec(x.id) })) } });
+      } catch (e) { return pkFail(e); }
+      const response = { id: c.id, rawId: b64u.enc(c.rawId), type: c.type, authenticatorAttachment: c.authenticatorAttachment || undefined,
+        clientExtensionResults: c.getClientExtensionResults ? c.getClientExtensionResults() : {},
+        response: { clientDataJSON: b64u.enc(c.response.clientDataJSON), attestationObject: b64u.enc(c.response.attestationObject),
+          transports: c.response.getTransports ? c.response.getTransports() : undefined } };
+      const v = await pkFn("reg-verify", { response, device: deviceName() });
+      if (v.ok) MadaStore.auth.setMfa();
+      return v;
+    },
+    // The login step: confirm with a passkey already set up.
+    async verify() {
+      if (!passkey.supported()) return { ok: false, reason: "unsupported" };
+      const o = await pkFn("auth-options"); if (!o.ok) return o;
+      const op = o.options;
+      let c; try {
+        c = await navigator.credentials.get({ publicKey: { ...op, challenge: b64u.dec(op.challenge), allowCredentials: (op.allowCredentials || []).map(x => ({ ...x, id: b64u.dec(x.id) })) } });
+      } catch (e) { return pkFail(e); }
+      const response = { id: c.id, rawId: b64u.enc(c.rawId), type: c.type, authenticatorAttachment: c.authenticatorAttachment || undefined,
+        clientExtensionResults: c.getClientExtensionResults ? c.getClientExtensionResults() : {},
+        response: { clientDataJSON: b64u.enc(c.response.clientDataJSON), authenticatorData: b64u.enc(c.response.authenticatorData),
+          signature: b64u.enc(c.response.signature), userHandle: c.response.userHandle ? b64u.enc(c.response.userHandle) : undefined } };
+      const v = await pkFn("auth-verify", { response });
+      if (v.ok) MadaStore.auth.setMfa();
+      return v;
+    },
+    list: () => pkFn("list"),
+    remove: id => pkFn("remove", { id })
+  };
+
+  return { login, finishLogin, passkey, portalOf, currentUser, requireAuth, changePassword, updatePassword, logout, home };
 })();
 
 // Permissions of the operating system (dashboard pages), per staff member.
@@ -500,7 +584,7 @@ const MadaPerms = (() => {
   const SECTIONS = [
     { k: "dashboard", pages: ["dashboard.html"] },
     { k: "ops", pages: ["ops.html"] },
-    { k: "sales", pages: ["sales.html"] },
+    { k: "sales", pages: ["sales.html", "my-day.html"] },
     { k: "newRequest", pages: ["new-request.html"] },
     { k: "requests", pages: ["requests.html", "request-details.html"] },
     { k: "bookings", pages: ["bookings.html", "booking-schedule.html"] },
@@ -543,10 +627,11 @@ const MadaPerms = (() => {
   const canPage = (u, page) => { const k = sectionOf(page); return !k || canSection(u, k); };
   function homeOf(u) {
     const list = of(u), first = SECTIONS.find(x => list.includes(x.k));
-    // Sales & call center staff start on their sales numbers.
+    // Call center agents start on My Day (who to call now); the supervisor on the team's sales numbers.
     // The operations manager starts in the Operations Room.
     if (roleOf(u) === "ops" && list.includes("ops")) return "ops.html";
-    if (["supervisor", "agent"].includes(roleOf(u)) && list.includes("sales")) return "sales.html";
+    if (roleOf(u) === "agent" && list.includes("sales")) return "my-day.html";
+    if (roleOf(u) === "supervisor" && list.includes("sales")) return "sales.html";
     return !list.includes("dashboard") && first ? first.pages[0] : "dashboard.html";
   }
   return { SECTIONS, ALL, DEFAULTS, sectionOf, of, canSection, canPage, homeOf };

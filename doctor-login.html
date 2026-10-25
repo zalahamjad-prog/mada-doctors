@@ -76,6 +76,18 @@
   .to-ops { display: block; margin-top: 8px; font-size: 12.5px; }
   .to-ops a { color: #6b7a80; font-weight: 500; }
 
+  /* ---------- Face ID / fingerprint step ---------- */
+  .pk { text-align: center; }
+  .pk-icon { width: 84px; height: 84px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; margin: 4px auto 18px; }
+  .pk-icon svg { width: 42px; height: 42px; }
+  .pk .sub { margin-bottom: 18px; line-height: 1.6; }
+  .pk-info { display: flex; gap: 10px; text-align: start; padding: 12px 14px; border-radius: 10px; background: #eef7f4; color: #1d4a40; font-size: 13px; line-height: 1.55; margin-bottom: 20px; }
+  .pk-info svg { width: 18px; height: 18px; color: var(--teal); margin-top: 2px; flex: none; }
+  .pk-hint { font-size: 12.5px; color: var(--muted); line-height: 1.55; margin-top: 14px; }
+  .pk-back { display: block; margin: 12px auto 0; background: none; border: 0; cursor: pointer; font: inherit; font-size: 13px; color: var(--muted); padding: 6px 10px; }
+  .pk-back:hover { color: var(--ink); }
+  .btn-login[disabled] { opacity: .65; cursor: progress; }
+
   /* ---------- First-login password change ---------- */
   .cp-overlay { position: fixed; inset: 0; z-index: 50; background: linear-gradient(160deg, #f3faf8 0%, #ffffff 45%, #fff4ea 100%); display: grid; place-items: center; padding: 16px; overflow-y: auto; }
   .cp-overlay[hidden] { display: none; }
@@ -184,6 +196,18 @@
       <div class="form-error" id="formError" role="alert"></div>
       <button class="btn-login" type="submit"><span data-i18n="signIn">Sign In</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
     </form>
+
+    <!-- After the password: Face ID / fingerprint (passkey). pk.dataset.mode = "verify" | "enrol". -->
+    <div class="card pk" id="pk" hidden>
+      <span class="pk-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M9 9.5v1M15 9.5v1M12 9.5v3.5h-1M9.5 15.5c1.4 1.2 3.6 1.2 5 0"/></svg></span>
+      <h2 id="pkTitle"></h2>
+      <p class="sub" id="pkSub"></p>
+      <div class="pk-info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.4 8.4-8 9.5C7.4 20.4 4 17 4 12V6z"/><path d="m8.5 12 2.5 2.5 4.5-4.5"/></svg><span data-i18n="pkPrivacy">Your face or fingerprint stays on your device. Mada Care never receives it.</span></div>
+      <div class="form-error" id="pkError" role="alert"></div>
+      <button class="btn-login" type="button" id="pkGo"><span id="pkGoT"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      <p class="pk-hint" id="pkHint"></p>
+      <button type="button" class="pk-back" id="pkBack" data-i18n="pkBack">Back to sign in</button>
+    </div>
   </div>
 
   <div class="script" aria-hidden="true"><span data-i18n="script1">Healthcare</span><br><span data-i18n="script2">for Brighter</span><br><span data-i18n="script3">Tomorrows</span>
@@ -248,7 +272,14 @@
       cpErrSame: "Choose a password different from the temporary one.", cpErrMatch: "The passwords don't match.",
       cpSave: "Update Password", cpLogout: "Log out",
       doneT: "Password Updated Successfully", doneS: "Your password has been changed. You can now access the portal with your new password.", doneGo: "Continue to Portal",
-      tipsT: "Keep your account secure", tip1: "Do not share your password", tip2: "Use a strong and unique password", tip3: "Contact IT support if you face any issues"
+      tipsT: "Keep your account secure", tip1: "Do not share your password", tip2: "Use a strong and unique password", tip3: "Contact IT support if you face any issues",
+      pkVerifyT: "Confirm it's you", pkVerifyS: "Use Face ID or your fingerprint to finish signing in.", pkVerifyGo: "Continue with Face ID / Fingerprint",
+      pkVerifyHint: "On a new computer, choose to use your phone and scan the code with the phone you set up.",
+      pkEnrolT: "Set up Face ID / Fingerprint", pkEnrolS: "A one-time step on this device. From now on you sign in with your password, then a quick Face ID or fingerprint check.",
+      pkEnrolGo: "Set up now", pkEnrolHint: "No Face ID or fingerprint on this computer? Choose to use your phone and scan the code.",
+      pkPrivacy: "Your face or fingerprint stays on your device. Mada Care never receives it.", pkBack: "Back to sign in", pkWait: "Please wait…",
+      pkCancel: "The check was cancelled. Tap the button to try again.", pkUnsupported: "This browser can't use Face ID or fingerprint. Use an up-to-date Safari or Chrome.",
+      pkFail: "We couldn't confirm it's you. Try again, or contact IT Support.", pkExists: "This device is already set up. Sign in again and confirm with Face ID / fingerprint."
     },
     ar: {
       otherLang: "English", tagline: "رعاية كالعائلة", welcome: "أهلاً بك في", space: "مساحة رعايتك", secure: "دخول آمن لمساحة عملك الطبية.",
@@ -265,7 +296,14 @@
       cpErrSame: "اختر كلمة مرور غير المؤقتة.", cpErrMatch: "كلمتين المرور مو متطابقة.",
       cpSave: "تحديث كلمة المرور", cpLogout: "تسجيل الخروج",
       doneT: "تم تغيير كلمة المرور بنجاح", doneS: "تغيرت كلمة المرور، وتقدر الحين تدخل البوابة بكلمة المرور الجديدة.", doneGo: "الدخول للبوابة",
-      tipsT: "حافظ على أمان حسابك", tip1: "لا تشارك كلمة المرور مع أحد", tip2: "استخدم كلمة مرور قوية وخاصة فيك", tip3: "تواصل مع الدعم التقني إذا واجهتك مشكلة"
+      tipsT: "حافظ على أمان حسابك", tip1: "لا تشارك كلمة المرور مع أحد", tip2: "استخدم كلمة مرور قوية وخاصة فيك", tip3: "تواصل مع الدعم التقني إذا واجهتك مشكلة",
+      pkVerifyT: "تأكيد هويتك", pkVerifyS: "استخدم بصمة الوجه أو بصمة الإصبع عشان تكمل الدخول.", pkVerifyGo: "متابعة ببصمة الوجه / الإصبع",
+      pkVerifyHint: "إذا كنت على جهاز كمبيوتر جديد، اختر استخدام الجوال وامسح الرمز بالجوال اللي فعّلت عليه البصمة.",
+      pkEnrolT: "فعّل بصمة الوجه / الإصبع", pkEnrolS: "خطوة مرة وحدة على هذا الجهاز. بعدها تدخل بكلمة المرور ثم تأكيد سريع ببصمة الوجه أو الإصبع.",
+      pkEnrolGo: "فعّل الآن", pkEnrolHint: "ما فيه بصمة على هذا الكمبيوتر؟ اختر استخدام الجوال وامسح الرمز.",
+      pkPrivacy: "بصمة وجهك أو إصبعك تبقى في جهازك، ومدى كير ما تستلمها أبداً.", pkBack: "الرجوع لتسجيل الدخول", pkWait: "لحظة…",
+      pkCancel: "انلغى التأكيد. اضغط الزر وجرب مرة ثانية.", pkUnsupported: "هذا المتصفح ما يدعم بصمة الوجه أو الإصبع. استخدم Safari أو Chrome محدّث.",
+      pkFail: "ما قدرنا نتأكد من هويتك. جرب مرة ثانية أو تواصل مع الدعم التقني.", pkExists: "هذا الجهاز مفعّل من قبل. سجّل دخول مرة ثانية وأكد ببصمة الوجه / الإصبع."
     }
   };
   let current = "en";
@@ -284,6 +322,7 @@
     if ($("formError").classList.contains("show")) $("formError").classList.remove("show");
     try { localStorage.setItem("mada-lang", lang); } catch (e) {}
     if (!$("cp").hidden) openChange();
+    if (!$("pk").hidden) paintPk();
   }
   $("langToggle").addEventListener("click", () => setLang(current === "en" ? "ar" : "en"));
   $("forgot").addEventListener("click", e => { e.preventDefault(); showError(i18n[current].forgotMsg); });
@@ -297,13 +336,41 @@
     $("passField").classList.toggle("invalid", !pw.value);
     $("formError").classList.remove("show");
     if (!u.value.trim() || !pw.value) return;
-    // TODO: replace with the real authentication call.
     const res = MadaAuth.login(u.value, pw.value, "doctor");
-    if (res === "wrong-portal") { const nurse = MadaAuth.portalOf(u.value) === "nurse-login.html";
+    if (res === "passkey") { pw.value = ""; openPk(); }
+    else afterLogin(res);
+  });
+  function afterLogin(res) {
+    const pw = $("password");
+    if (res === "wrong-portal") { const nurse = MadaAuth.portalOf($("username").value) === "nurse-login.html";
       showError(i18n[current].notDoctor); }
     else if (res) { if (MadaAuth.currentUser().mustChangePassword) openChange(); else window.location.href = MadaAuth.home(); }
     else { showError(i18n[current].badCreds); pw.value = ""; pw.focus(); }
+  }
+
+  // ---------- Face ID / fingerprint step (after the password) ----------
+  function paintPk() {
+    const t = i18n[current], m = $("pk").dataset.mode === "enrol" ? "Enrol" : "Verify";
+    $("pkTitle").textContent = t["pk" + m + "T"]; $("pkSub").textContent = t["pk" + m + "S"];
+    $("pkGoT").textContent = $("pkGo").disabled ? t.pkWait : t["pk" + m + "Go"]; $("pkHint").textContent = /iPhone|iPad|Android/.test(navigator.userAgent) ? "" : t["pk" + m + "Hint"];
+  }
+  const pkErr = msg => { $("pkError").textContent = msg; $("pkError").classList.toggle("show", !!msg); };
+  const pkBusy = on => { $("pkGo").disabled = on; paintPk(); };
+  async function openPk() {
+    $("loginForm").hidden = true; $("pk").hidden = false; $("pk").dataset.mode = "verify"; pkErr(""); pkBusy(true);
+    const st = await MadaAuth.passkey.status();
+    pkBusy(false);
+    if (!st.ok) { pkErr(i18n[current].pkFail); return; }
+    $("pk").dataset.mode = st.has ? "verify" : "enrol"; paintPk(); $("pkGo").focus();
+  }
+  $("pkGo").addEventListener("click", async () => {
+    const t = i18n[current]; pkErr(""); pkBusy(true);
+    const r = $("pk").dataset.mode === "enrol" ? await MadaAuth.passkey.enrol() : await MadaAuth.passkey.verify();
+    pkBusy(false);
+    if (r.ok) { const res = MadaAuth.finishLogin("doctor"); if (res !== true) { $("pk").hidden = true; $("loginForm").hidden = false; } afterLogin(res); return; }
+    pkErr(r.reason === "cancel" ? t.pkCancel : r.reason === "unsupported" ? t.pkUnsupported : r.reason === "exists" ? t.pkExists : t.pkFail);
   });
+  $("pkBack").addEventListener("click", () => { MadaStore.auth.signOut(); $("pk").hidden = true; $("loginForm").hidden = false; $("username").focus(); });
   ["username", "password"].forEach(id => $(id).addEventListener("input", e => { e.target.closest(".field").classList.remove("invalid"); $("formError").classList.remove("show"); }));
 
   const RULES = { len: v => v.length >= 8, mix: v => /[a-z]/i.test(v) && /\d/.test(v), up: v => /[A-Z]/.test(v), sym: v => /[^A-Za-z0-9]/.test(v) };

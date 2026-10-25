@@ -128,6 +128,12 @@
   .ac-go svg { width: 20px; height: 20px; color: #8a979c; display: block; }
   [dir="rtl"] .ac-go svg { transform: scaleX(-1); }
   .ac-out .ic { background: #fdecec; color: #c0392b; }
+  .ac-pk .ac-row { cursor: default; }
+  .ac-pk .ac-row:hover { border-color: var(--line, #e3e8ee); background: #fff; }
+  .ac-rm { background: none; border: 1px solid #f3c9c9; color: #c0392b; border-radius: 8px; padding: 8px 12px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; flex: none; }
+  .ac-rm:hover { background: #fdecec; }
+  .ac-note { font-size: 13px; color: var(--muted); line-height: 1.55; padding: 0 4px; }
+  .ac-pk-add { justify-self: start; }
   .ac-out b { color: #c0392b; }
   .ac-prof { display: flex; gap: 28px; align-items: flex-start; }
   .ac-photo { display: grid; justify-items: center; gap: 8px; flex: none; }
@@ -291,7 +297,8 @@
     mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>', id: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="11" r="2"/><path d="M5.5 16c.6-1.4 1.7-2 3-2s2.4.6 3 2M14 10h4M14 14h3"/>',
     steth: '<path d="M6 3v6a4 4 0 0 0 8 0V3"/><path d="M10 13v2a5 5 0 0 0 10 0v-2"/><circle cx="20" cy="11" r="2"/>', badge: '<circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 7 5-3 5 3-1.5-7"/>',
     info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>', eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
-    gender: '<circle cx="10" cy="14" r="5"/><path d="M14 10l6-6M15 4h5v5"/>', send: '<path d="M4 12 20 4l-6 16-3-7z"/><path d="m11 13 9-9"/>'
+    gender: '<circle cx="10" cy="14" r="5"/><path d="M14 10l6-6M15 4h5v5"/>',
+    face: '<path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M9 9.5v1M15 9.5v1M12 9.5v3.5h-1M9.5 15.5c1.4 1.2 3.6 1.2 5 0"/>', send: '<path d="M4 12 20 4l-6 16-3-7z"/><path d="m11 13 9-9"/>'
   };
   const svg = (p, w) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 1.8}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
 
@@ -320,7 +327,13 @@
       curPw: "Current Password", newPw: "New Password", confPw: "Confirm New Password", save: "Save Changes", show: "Show password",
       rLen: "At least 8 characters", rMix: "Include a mix of letters and numbers", rUp: "Include at least one uppercase letter", rSym: "Include at least one special character (e.g. ! @ # $)",
       curReq: "Enter your current password.", curBad: "The current password is not correct.", rulesErr: "The new password doesn't meet the requirements.", sameErr: "Choose a password different from your current one.",
-      matchErr: "The passwords don't match.", pwDone: "Password updated. Use your new password next time you log in."
+      matchErr: "The passwords don't match.", pwDone: "Password updated. Use your new password next time you log in.",
+      pkT: "Face ID / Fingerprint", pkS: "The devices you confirm your sign-in with, after your password.", pkLoading: "Loading…",
+      pkAdded: "Added {d}", pkUsed: "Last used {d}", pkNever: "Not used yet", pkRemove: "Remove", pkAdd: "Add this device",
+      pkNone: "No device yet. You will set one up the next time you sign in.", pkErr: "We couldn't load your devices. Try again later.",
+      pkNote: "Your face or fingerprint stays on your device. Mada Care only keeps a security key that can't be used to rebuild it.",
+      pkRmQ: "Remove this device?", pkRmQS: "You won't be able to confirm your sign-in with it. If you remove all devices, you will set up a new one at your next sign-in.",
+      pkRmDone: "Device removed.", pkAddDone: "This device is set up.", pkAddCancel: "The setup was cancelled.", pkAddExists: "This device is already set up.", pkAddFail: "We couldn't set up this device. Try again."
     },
     ar: {
       tagline: "رعاية كالعائلة", otherLang: "English", profile: "حسابي", logout: "تسجيل الخروج", notifications: "الإشعارات", soonMsg: "هذا القسم هو الخطوة الجاية.", noNotes: "ما فيه إشعارات للحين.",
@@ -346,13 +359,21 @@
       curPw: "كلمة المرور الحالية", newPw: "كلمة المرور الجديدة", confPw: "تأكيد كلمة المرور الجديدة", save: "حفظ التغييرات", show: "إظهار كلمة المرور",
       rLen: "8 أحرف على الأقل", rMix: "تحتوي على حروف وأرقام", rUp: "تحتوي على حرف كبير واحد على الأقل", rSym: "تحتوي على رمز خاص واحد على الأقل (مثل ! @ # $)",
       curReq: "اكتب كلمة المرور الحالية.", curBad: "كلمة المرور الحالية غير صحيحة.", rulesErr: "كلمة المرور الجديدة ما تحقق الشروط.", sameErr: "اختر كلمة مرور مختلفة عن الحالية.",
-      matchErr: "كلمتا المرور غير متطابقتين.", pwDone: "تم تحديث كلمة المرور. استخدم الجديدة في الدخول الجاي."
+      matchErr: "كلمتا المرور غير متطابقتين.", pwDone: "تم تحديث كلمة المرور. استخدم الجديدة في الدخول الجاي.",
+      pkT: "بصمة الوجه / الإصبع", pkS: "الأجهزة اللي تأكد فيها دخولك بعد كلمة المرور.", pkLoading: "جاري التحميل…",
+      pkAdded: "أُضيف {d}", pkUsed: "آخر استخدام {d}", pkNever: "ما استُخدم بعد", pkRemove: "إزالة", pkAdd: "أضف هذا الجهاز",
+      pkNone: "ما فيه جهاز للحين. بتفعّل جهاز في الدخول الجاي.", pkErr: "ما قدرنا نحمّل أجهزتك. حاول بعدين.",
+      pkNote: "بصمة وجهك أو إصبعك تبقى في جهازك. مدى كير تحفظ مفتاح أمان فقط، وما يمكن يرجّع البصمة منه.",
+      pkRmQ: "تبي تزيل هذا الجهاز؟", pkRmQS: "ما راح تقدر تأكد دخولك فيه. إذا أزلت كل الأجهزة، بتفعّل جهاز جديد في الدخول الجاي.",
+      pkRmDone: "انشال الجهاز.", pkAddDone: "تفعّل هذا الجهاز.", pkAddCancel: "انلغى التفعيل.", pkAddExists: "هذا الجهاز مفعّل من قبل.", pkAddFail: "ما قدرنا نفعّل هذا الجهاز. حاول مرة ثانية."
     }
   };
   let current = "en";
   const t = () => I18N[current];
   const tx = (k, v) => t()[k].replace(/\{(\w+)\}/g, (_, n) => v[n]);
-  const route = () => { const h = location.hash.slice(1); return PAGES.includes(h) || h === "password" ? h : ""; };
+  const PK = MadaAuth.passkey && MadaAuth.passkey.needed(me.roleKey);
+  const route = () => { const h = location.hash.slice(1); return PAGES.includes(h) || h === "password" || (h === "passkeys" && PK) ? h : ""; };
+  let pks = null; // Face ID / fingerprint devices: null = not loaded, { ok, keys } or { ok: false }
   let page = route(), sup = null, supTried = false, sent = null, pw = null, pwTried = false, pwErr = {};
 
   // ---------- shared ----------
@@ -436,6 +457,7 @@
   function security() {
     return `${head("security", IC.lock)}<div class="ac-list">
       <a class="pt-card ac-row" href="#password"><span class="ic">${svg(IC.key)}</span><span class="ac-tx"><b>${t().changePw}</b><small>${t().changePwS}</small></span><span class="ac-go">${svg(IC.chev, 2)}</span></a>
+      ${PK ? `<a class="pt-card ac-row" href="#passkeys"><span class="ic">${svg(IC.face)}</span><span class="ac-tx"><b>${t().pkT}</b><small>${t().pkS}</small></span><span class="ac-go">${svg(IC.chev, 2)}</span></a>` : ""}
       <button type="button" class="pt-card ac-row ac-out" id="acLogout"><span class="ic">${svg(IC.logout)}</span><span class="ac-tx"><b>${t().logout}</b><small>${t().logoutS}</small></span><span class="ac-go">${svg(IC.chev, 2)}</span></button></div>`;
   }
   const pwField = (id, label, val, err, extra) => `<div class="fq"><div class="pf"><label for="${id}">${label} <span class="req">*</span></label>
@@ -448,6 +470,24 @@
       <section class="pt-card ps-b ac-form ac-narrow">${pwField("pwCur", t().curPw, pw.cur, pwErr.cur)}${pwField("pwNew", t().newPw, pw.next, pwErr.next, rules)}${pwField("pwConf", t().confPw, pw.conf, pwErr.conf)}
         <div class="pfoot"><a class="pb out" href="#security">${t().cancel}</a><button type="button" class="pb dark" id="pwSave">${svg(IC.check, 2.2)}${t().save}</button></div></section>`;
   }
+  // Face ID / fingerprint devices (MadaAuth.passkey, Edge Function mada-passkey).
+  const pkDate = v => v ? new Date(v).toLocaleDateString(current === "ar" ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { day: "numeric", month: "short", year: "numeric" }) : "";
+  function passkeys() {
+    if (!pks) MadaAuth.passkey.list().then(r => { pks = r; if (page === "passkeys") render(); });
+    const rows = !pks ? `<p class="ac-note">${t().pkLoading}</p>` : !pks.ok ? `<p class="ac-note">${t().pkErr}</p>` : !pks.keys.length ? `<p class="ac-note">${t().pkNone}</p>`
+      : pks.keys.map(k => `<div class="pt-card ac-row"><span class="ic">${svg(IC.face)}</span><span class="ac-tx"><b>${esc(k.device || "—")}</b><small>${tx("pkAdded", { d: pkDate(k.createdAt) })} · ${k.lastUsedAt ? tx("pkUsed", { d: pkDate(k.lastUsedAt) }) : t().pkNever}</small></span>
+          <button type="button" class="ac-rm" data-pkrm="${esc(k.id)}">${t().pkRemove}</button></div>`).join("");
+    return `<a class="pt-back" href="#security">${svg(IC.back, 2)}${t().p_security}</a>
+      <section class="pt-card ps-h ac-head"><span class="ic">${svg(IC.face)}</span><div><h1>${t().pkT}</h1><p>${t().pkS}</p></div></section>
+      <div class="ac-list ac-pk">${rows}
+        ${MadaAuth.passkey.supported() ? `<button type="button" class="pb dark ac-pk-add" id="pkAdd">${svg(IC.face, 2)}${t().pkAdd}</button>` : ""}
+        <p class="ac-note">${t().pkNote}</p></div>`;
+  }
+  function pkRmDlg(id) {
+    $("acOv").innerHTML = `<div class="dlg ac-dlg"><span class="vd-ic out">${svg(IC.face, 2)}</span><h3 id="acOvT">${t().pkRmQ}</h3><p>${t().pkRmQS}</p>
+      <div class="pfoot"><button type="button" class="pb out" id="loCancel">${t().cancel}</button><button type="button" class="pb dark" id="pkRmGo" data-id="${esc(id)}">${t().pkRemove}</button></div></div>`;
+    $("acOv").hidden = false; $("loCancel").focus();
+  }
   function logoutDlg() {
     $("acOv").innerHTML = `<div class="dlg ac-dlg"><span class="vd-ic out">${svg(IC.logout, 2)}</span><h3 id="acOvT">${t().logoutQ}</h3><p>${t().logoutQS}</p>
       <div class="pfoot"><button type="button" class="pb out" id="loCancel">${t().cancel}</button><button type="button" class="pb dark" id="loGo">${svg(IC.logout)}${t().logout}</button></div></div>`;
@@ -457,15 +497,15 @@
 
   function render() {
     page = route();
-    const body = page === "profile" ? profile() : page === "terms" ? terms() : page === "privacy" ? privacy() : page === "support" ? support() : page === "security" ? security() : page === "password" ? password() : hub();
+    const body = page === "profile" ? profile() : page === "terms" ? terms() : page === "privacy" ? privacy() : page === "support" ? support() : page === "security" ? security() : page === "password" ? password() : page === "passkeys" ? passkeys() : hub();
     $("vw").innerHTML = `<div class="pt-page ac">${body}</div>`;
-    document.title = (current === "ar" ? "مدى كير | " : "Mada Care | ") + (page === "password" ? t().changePw : page ? t()["p_" + page] : t().accT);
+    document.title = (current === "ar" ? "مدى كير | " : "Mada Care | ") + (page === "password" ? t().changePw : page === "passkeys" ? t().pkT : page ? t()["p_" + page] : t().accT);
   }
   function readInputs() {
     if (sup && $("supSubj")) { sup.subject = $("supSubj").value; sup.desc = $("supDesc").value; }
     if (pw && $("pwCur")) { pw.cur = $("pwCur").value; pw.next = $("pwNew").value; pw.conf = $("pwConf").value; }
   }
-  window.addEventListener("hashchange", () => { readInputs(); const p = route(); if (p !== "support") { sent = null; supTried = false; } if (p !== "password") { pw = null; pwTried = false; pwErr = {}; } render(); window.scrollTo(0, 0); });
+  window.addEventListener("hashchange", () => { readInputs(); const p = route(); if (p !== "support") { sent = null; supTried = false; } if (p !== "password") { pw = null; pwTried = false; pwErr = {}; } if (p !== "passkeys") pks = null; render(); window.scrollTo(0, 0); });
 
   document.addEventListener("click", e => {
     const el = e.target.closest("button, a"); if (!el) return;
@@ -480,6 +520,9 @@
     }
     if (el.id === "supAgain") { sent = null; render(); $("supSubj").focus(); return; }
     if (el.id === "acLogout") return logoutDlg();
+    if (el.dataset.pkrm) return pkRmDlg(el.dataset.pkrm);
+    if (el.id === "pkRmGo") { const id = el.dataset.id; closeDlg(); MadaAuth.passkey.remove(id).then(r => { toast(r.ok ? t().pkRmDone : t().pkErr); pks = null; render(); }); return; }
+    if (el.id === "pkAdd") { el.disabled = true; MadaAuth.passkey.enrol().then(r => { toast(r.ok ? t().pkAddDone : r.reason === "cancel" ? t().pkAddCancel : r.reason === "exists" ? t().pkAddExists : t().pkAddFail); pks = null; render(); }); return; }
     if (el.id === "loCancel") return closeDlg();
     if (el.id === "loGo") return MadaAuth.logout();
     if (el.id === "pwSave") {
