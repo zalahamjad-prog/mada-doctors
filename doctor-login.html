@@ -354,13 +354,15 @@
     $("pkTitle").textContent = t["pk" + m + "T"]; $("pkSub").textContent = t["pk" + m + "S"];
     $("pkGoT").textContent = $("pkGo").disabled ? t.pkWait : t["pk" + m + "Go"]; $("pkHint").textContent = /iPhone|iPad|Android/.test(navigator.userAgent) ? "" : t["pk" + m + "Hint"];
   }
+  // A short code after the message helps support (HTTP status, or "timeout" when the server didn't answer).
+  const pkCode = r => r.status ? ` (${r.status})` : r.error === "offline" ? " (timeout)" : "";
   const pkErr = msg => { $("pkError").textContent = msg; $("pkError").classList.toggle("show", !!msg); };
   const pkBusy = on => { $("pkGo").disabled = on; paintPk(); };
   async function openPk() {
     $("loginForm").hidden = true; $("pk").hidden = false; $("pk").dataset.mode = "verify"; pkErr(""); pkBusy(true);
     const st = await MadaAuth.passkey.status();
     pkBusy(false);
-    if (!st.ok) { pkErr(i18n[current].pkFail); return; }
+    if (!st.ok) { pkErr(i18n[current].pkFail + pkCode(st)); return; }
     $("pk").dataset.mode = st.has ? "verify" : "enrol"; paintPk(); $("pkGo").focus();
   }
   $("pkGo").addEventListener("click", async () => {
@@ -368,7 +370,7 @@
     const r = $("pk").dataset.mode === "enrol" ? await MadaAuth.passkey.enrol() : await MadaAuth.passkey.verify();
     pkBusy(false);
     if (r.ok) { const res = MadaAuth.finishLogin("doctor"); if (res !== true) { $("pk").hidden = true; $("loginForm").hidden = false; } afterLogin(res); return; }
-    pkErr(r.reason === "cancel" ? t.pkCancel : r.reason === "unsupported" ? t.pkUnsupported : r.reason === "exists" ? t.pkExists : t.pkFail);
+    pkErr(r.reason === "cancel" ? t.pkCancel : r.reason === "unsupported" ? t.pkUnsupported : r.reason === "exists" ? t.pkExists : t.pkFail + pkCode(r));
   });
   $("pkBack").addEventListener("click", () => { MadaStore.auth.signOut(); $("pk").hidden = true; $("loginForm").hidden = false; $("username").focus(); });
   ["username", "password"].forEach(id => $(id).addEventListener("input", e => { e.target.closest(".field").classList.remove("invalid"); $("formError").classList.remove("show"); }));

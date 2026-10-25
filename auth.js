@@ -99,8 +99,10 @@ const MadaStore = (() => {
       // Calls a Supabase Edge Function as the logged-in staff member (e.g. mada-admin for staff logins).
       fn(name, body) { const tk = token(); if (!tk) return { ok: false, status: 401, json: { error: "Not logged in" } }; return xsync("POST", base + "/functions/v1/" + name, body, { Authorization: "Bearer " + tk }); },
       // The same, without freezing the page (for slow functions such as the writing assistant). Resolves to { ok, status, json }.
-      async call(name, body) { const tk = token(); if (!tk) return { ok: false, status: 401, json: { error: "Not logged in" } };
-        try { const r = await fetch(base + "/functions/v1/" + name, { method: "POST", headers: { apikey: C.key, "Content-Type": "application/json", Authorization: "Bearer " + tk }, body: JSON.stringify(body) });
+      // ms: give up after this many milliseconds (resolves as offline).
+      async call(name, body, ms) { const tk = token(); if (!tk) return { ok: false, status: 401, json: { error: "Not logged in" } };
+        const ac = ms && typeof AbortController !== "undefined" ? new AbortController() : null, tm = ac ? setTimeout(() => ac.abort(), ms) : null;
+        try { const r = await fetch(base + "/functions/v1/" + name, { method: "POST", headers: { apikey: C.key, "Content-Type": "application/json", Authorization: "Bearer " + tk }, body: JSON.stringify(body), signal: ac ? ac.signal : undefined }); if (tm) clearTimeout(tm);
           let json = null; try { json = await r.json(); } catch (e) {} return { ok: r.ok, status: r.status, json }; } catch (e) { return { ok: false, status: 0, offline: true, json: null }; } },
       // Calls a database function (Supabase RPC) as the logged-in staff member, without freezing the page. Resolves to { ok, status, json }.
       async rpc(name, body) { const tk = token(); if (!tk) return { ok: false, status: 401, json: null };
@@ -526,7 +528,7 @@ const MadaAuth = (() => {
     dec: s => Uint8Array.from(atob(String(s).replace(/-/g, "+").replace(/_/g, "/") + "===".slice((String(s).length + 3) % 4)), c => c.charCodeAt(0)),
     enc: b => { const a = new Uint8Array(b); let t = ""; for (let i = 0; i < a.length; i++) t += String.fromCharCode(a[i]); return btoa(t).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
   };
-  const pkFn = async (action, extra) => { const r = await MadaStore.auth.call("mada-passkey", { action, ...(extra || {}) });
+  const pkFn = async (action, extra) => { const r = await MadaStore.auth.call("mada-passkey", { action, ...(extra || {}) }, 30000);
     return r.ok && r.json && r.json.ok ? r.json : { ok: false, reason: "error", status: r.status, error: (r.json && r.json.error) || (r.offline ? "offline" : "HTTP " + r.status), has: r.json && r.json.has }; };
   const pkFail = e => ({ ok: false, reason: e && (e.name === "NotAllowedError" || e.name === "AbortError") ? "cancel" : e && e.name === "InvalidStateError" ? "exists" : "error", error: String((e && e.message) || e) });
   const deviceName = () => { const ua = navigator.userAgent;
