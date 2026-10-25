@@ -283,7 +283,8 @@
       cpErrSave: "We couldn't save the new password. Try a different one, or contact IT Support.",
       idleOut: "You were logged out after 3 minutes without activity, to protect your patients' privacy. Sign in again to continue.",
       pkCancel: "The check was cancelled. Tap the button to try again.", pkUnsupported: "This browser can't use Face ID. Use an up-to-date Safari or Chrome.",
-      pkFail: "We couldn't confirm it's you. Try again, or contact IT Support.", pkExists: "This device is already set up. Sign in again and confirm with Face ID."
+      pkFail: "We couldn't confirm it's you. Try again.",
+      pkHelp: "Still not working? Call customer service. Once they let you in, tap the button again.", pkExists: "This device is already set up. Sign in again and confirm with Face ID."
     },
     ar: {
       otherLang: "English", tagline: "رعاية كالعائلة", welcome: "أهلاً بك في", space: "مساحة رعايتك", secure: "دخول آمن لمساحة عملك الطبية.",
@@ -311,7 +312,8 @@
       cpErrSave: "ما قدرنا نحفظ كلمة المرور الجديدة. جرب كلمة ثانية أو تواصل مع الدعم التقني.",
       idleOut: "انسجّل خروجك بعد 3 دقائق بدون استخدام، حفاظًا على خصوصية المرضى. سجّل دخولك مرة ثانية عشان تكمل.",
       pkCancel: "انلغى التأكيد. اضغط الزر وجرب مرة ثانية.", pkUnsupported: "هذا المتصفح ما يدعم بصمة الوجه. استخدم Safari أو Chrome محدّث.",
-      pkFail: "ما قدرنا نتأكد من هويتك. جرب مرة ثانية أو تواصل مع الدعم التقني.", pkExists: "هذا الجهاز مفعّل من قبل. سجّل دخول مرة ثانية وأكد ببصمة الوجه."
+      pkFail: "ما قدرنا نتأكد من هويتك. جرب مرة ثانية.",
+      pkHelp: "ما زالت ما تشتغل؟ اتصل بخدمة العملاء، وإذا سمحوا لك اضغط الزر مرة ثانية.", pkExists: "هذا الجهاز مفعّل من قبل. سجّل دخول مرة ثانية وأكد ببصمة الوجه."
     }
   };
   let current = "en";
@@ -367,21 +369,33 @@
   const pkCode = r => r.status ? ` (${r.status})` : r.error === "offline" ? " (timeout)" : "";
   const pkErr = msg => { $("pkError").textContent = msg; $("pkError").classList.toggle("show", !!msg); };
   const pkBusy = on => { $("pkGo").disabled = on; paintPk(); };
+  let pkTried = false; // a Face ID try failed: the next tap first checks for a customer service exception
   async function openPk() {
-    $("loginForm").hidden = true; $("pk").hidden = false; $("pk").dataset.mode = "verify"; pkErr(""); pkBusy(true);
+    pkTried = false; $("loginForm").hidden = true; $("pk").hidden = false; $("pk").dataset.mode = "verify"; pkErr(""); pkBusy(true);
     const st = await MadaAuth.passkey.status();
     pkBusy(false);
     if (st.status === 401) return pkExpired();
-    if (!st.ok) { pkErr(i18n[current].pkFail + pkCode(st)); return; }
+    if (!st.ok) { pkErr(i18n[current].pkFail + pkCode(st) + " " + i18n[current].pkHelp); pkTried = true; return; }
+    if (st.bypass) return pkUseBypass();
     $("pk").dataset.mode = st.has ? "verify" : "enrol"; paintPk(); $("pkGo").focus();
+  }
+  // Customer service allowed this doctor in without Face ID for a short time (dashboard > staff profile).
+  async function pkUseBypass() {
+    pkBusy(true); const r = await MadaAuth.passkey.bypass(); pkBusy(false);
+    if (r.status === 401) return pkExpired();
+    if (!r.ok) { pkErr(i18n[current].pkFail + pkCode(r)); return; }
+    const res = MadaAuth.finishLogin("doctor"); if (res !== true) { $("pk").hidden = true; $("loginForm").hidden = false; } afterLogin(res);
   }
   $("pkGo").addEventListener("click", async () => {
     const t = i18n[current]; pkErr(""); pkBusy(true);
+    // After a failed try, check first whether customer service has let the doctor in meanwhile.
+    if (pkTried) { const st = await MadaAuth.passkey.status(); if (st.ok && st.bypass) return pkUseBypass(); }
     const r = $("pk").dataset.mode === "enrol" ? await MadaAuth.passkey.enrol() : await MadaAuth.passkey.verify();
     pkBusy(false);
     if (r.ok) { const res = MadaAuth.finishLogin("doctor"); if (res !== true) { $("pk").hidden = true; $("loginForm").hidden = false; } afterLogin(res); return; }
     if (r.status === 401) return pkExpired();
-    pkErr(r.reason === "cancel" ? t.pkCancel : r.reason === "unsupported" ? t.pkUnsupported : r.reason === "exists" ? t.pkExists : t.pkFail + pkCode(r));
+    pkTried = true;
+    pkErr((r.reason === "cancel" ? t.pkCancel : r.reason === "unsupported" ? t.pkUnsupported : r.reason === "exists" ? t.pkExists : t.pkFail + pkCode(r)) + " " + t.pkHelp);
   });
   // The login ended before the Face ID step (e.g. logged out on another device): back to the password form.
   function pkExpired() { MadaStore.auth.signOut(); $("pk").hidden = true; $("loginForm").hidden = false; showError(i18n[current].pkExpired); $("password").focus(); }

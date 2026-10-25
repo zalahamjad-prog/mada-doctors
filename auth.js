@@ -578,6 +578,8 @@ const MadaAuth = (() => {
       if (v.ok) MadaStore.auth.setMfa();
       return v;
     },
+    // Sign in without Face ID while customer service allows it (a supervisor's exception from the doctor's profile).
+    async bypass() { const v = await pkFn("bypass"); if (v.ok) MadaStore.auth.setMfa(); return v; },
     list: () => pkFn("list"),
     remove: id => pkFn("remove", { id })
   };
