@@ -89,7 +89,7 @@ const MadaStore = (() => {
         xsync("POST", base + "/auth/v1/logout?scope=local", {}, { Authorization: "Bearer " + r.json.access_token });
         return true;
       },
-      signOut() { const tk = sessGet() && sessGet().access_token; if (tk) xsync("POST", base + "/auth/v1/logout", {}, { Authorization: "Bearer " + tk }); sessSet(null); lset("mada-cloud-mfa", null); },
+      signOut() { const tk = sessGet() && sessGet().access_token; if (tk) xsync("POST", base + "/auth/v1/logout?scope=local", {}, { Authorization: "Bearer " + tk }); /* this device only */ sessSet(null); lset("mada-cloud-mfa", null); },
       // The login session id (from the token) and whether this session passed the passkey step on this device.
       sessionId() { const v = sessGet(); if (!v || !v.access_token) return null;
         try { const p = v.access_token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"); return JSON.parse(decodeURIComponent(escape(atob(p + "===".slice((p.length + 3) % 4))))).session_id || null; } catch (e) { return null; } },

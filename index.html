@@ -279,6 +279,7 @@
       pkEnrolGo: "Set up now", pkEnrolHint: "No Face ID on this computer? Choose to use your phone and scan the code.",
       pkPrivacy: "Your face stays on your device. Mada Care never receives it.", pkBack: "Back to sign in", pkWait: "Please wait…",
       offline: "We couldn't reach the server. Check your internet and try again in a minute.", busy: "Too many sign-in attempts. Wait a few minutes, then try again.",
+      pkExpired: "Your sign-in ended before the Face ID step. Enter your password again.",
       cpErrSave: "We couldn't save the new password. Try a different one, or contact IT Support.",
       idleOut: "You were logged out after 3 minutes without activity, to protect your patients' privacy. Sign in again to continue.",
       pkCancel: "The check was cancelled. Tap the button to try again.", pkUnsupported: "This browser can't use Face ID. Use an up-to-date Safari or Chrome.",
@@ -306,6 +307,7 @@
       pkEnrolGo: "فعّل الآن", pkEnrolHint: "ما فيه بصمة على هذا الكمبيوتر؟ اختر استخدام الجوال وامسح الرمز.",
       pkPrivacy: "بصمة وجهك تبقى في جهازك، ومدى كير ما تستلمها أبداً.", pkBack: "الرجوع لتسجيل الدخول", pkWait: "لحظة…",
       offline: "ما قدرنا نوصل للخادم. تأكد من الإنترنت وجرب بعد دقيقة.", busy: "محاولات دخول كثيرة. انتظر كم دقيقة وجرب مرة ثانية.",
+      pkExpired: "انتهى الدخول قبل خطوة بصمة الوجه. اكتب كلمة المرور مرة ثانية.",
       cpErrSave: "ما قدرنا نحفظ كلمة المرور الجديدة. جرب كلمة ثانية أو تواصل مع الدعم التقني.",
       idleOut: "انسجّل خروجك بعد 3 دقائق بدون استخدام، حفاظًا على خصوصية المرضى. سجّل دخولك مرة ثانية عشان تكمل.",
       pkCancel: "انلغى التأكيد. اضغط الزر وجرب مرة ثانية.", pkUnsupported: "هذا المتصفح ما يدعم بصمة الوجه. استخدم Safari أو Chrome محدّث.",
@@ -369,6 +371,7 @@
     $("loginForm").hidden = true; $("pk").hidden = false; $("pk").dataset.mode = "verify"; pkErr(""); pkBusy(true);
     const st = await MadaAuth.passkey.status();
     pkBusy(false);
+    if (st.status === 401) return pkExpired();
     if (!st.ok) { pkErr(i18n[current].pkFail + pkCode(st)); return; }
     $("pk").dataset.mode = st.has ? "verify" : "enrol"; paintPk(); $("pkGo").focus();
   }
@@ -377,8 +380,11 @@
     const r = $("pk").dataset.mode === "enrol" ? await MadaAuth.passkey.enrol() : await MadaAuth.passkey.verify();
     pkBusy(false);
     if (r.ok) { const res = MadaAuth.finishLogin("doctor"); if (res !== true) { $("pk").hidden = true; $("loginForm").hidden = false; } afterLogin(res); return; }
+    if (r.status === 401) return pkExpired();
     pkErr(r.reason === "cancel" ? t.pkCancel : r.reason === "unsupported" ? t.pkUnsupported : r.reason === "exists" ? t.pkExists : t.pkFail + pkCode(r));
   });
+  // The login ended before the Face ID step (e.g. logged out on another device): back to the password form.
+  function pkExpired() { MadaStore.auth.signOut(); $("pk").hidden = true; $("loginForm").hidden = false; showError(i18n[current].pkExpired); $("password").focus(); }
   $("pkBack").addEventListener("click", () => { MadaStore.auth.signOut(); $("pk").hidden = true; $("loginForm").hidden = false; $("username").focus(); });
   ["username", "password"].forEach(id => $(id).addEventListener("input", e => { e.target.closest(".field").classList.remove("invalid"); $("formError").classList.remove("show"); }));
 
