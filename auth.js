@@ -6,7 +6,8 @@
 // the ANTHROPIC_API_KEY secret in Supabase and the legal review of patient data first.
 // passkey: the roles that confirm their login with Face ID / fingerprint after the password (notes/supabase-passkey.sql and
 // notes/supabase-functions/mada-passkey). Needs auth: true. [] = password only.
-const MADA_CLOUD = { url: "https://mfkiivwcxmqykpobunpn.supabase.co", key: "sb_publishable_jExWWxO-hv5PcALjkBn6RA_vZuico0F", auth: true, ai: true, passkey: ["doctor"] };
+// Turned off 2026-10-25 at Amjad's request ("شيل بصمه"); the "doctor passkey" lock was dropped first.
+const MADA_CLOUD = { url: "https://mfkiivwcxmqykpobunpn.supabase.co", key: "sb_publishable_jExWWxO-hv5PcALjkBn6RA_vZuico0F", auth: true, ai: true, passkey: [] };
 
 // Mada Care storage. Every page reads and writes through MadaStore.
 // Locally it uses localStorage, and also mirrors values into window.name because some previews block
