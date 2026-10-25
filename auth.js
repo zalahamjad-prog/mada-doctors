@@ -80,7 +80,7 @@ const MadaStore = (() => {
       signIn(email, password) {
         const r = xsync("POST", base + "/auth/v1/token?grant_type=password", { email, password });
         if (r.ok && r.json && r.json.access_token) { keep(r.json); return { ok: true }; }
-        return { ok: false, offline: !!r.offline || r.status >= 500, error: r.json && (r.json.error_description || r.json.msg || r.json.error) };
+        return { ok: false, status: r.status, offline: !!r.offline || r.status >= 500, error: r.json && (r.json.error_description || r.json.msg || r.json.error) };
       },
       // Checks a password without replacing this device's login (the passkey step stays done); the extra session is closed.
       checkPassword(email, password) {
@@ -95,7 +95,12 @@ const MadaStore = (() => {
         try { const p = v.access_token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"); return JSON.parse(decodeURIComponent(escape(atob(p + "===".slice((p.length + 3) % 4))))).session_id || null; } catch (e) { return null; } },
       mfaOk() { const id = this.sessionId(); return !!id && lget("mada-cloud-mfa") === id; },
       setMfa() { lset("mada-cloud-mfa", this.sessionId()); },
-      setPassword(password) { const tk = token(); if (!tk) return false; return xsync("PUT", base + "/auth/v1/user", { password }, { Authorization: "Bearer " + tk }).ok; },
+      // The reason Supabase gave for the last failed password change (shown on the login pages), or null.
+      lastError: null,
+      setPassword(password) { const tk = token(); if (!tk) { auth.lastError = "Not logged in"; return false; }
+        const r = xsync("PUT", base + "/auth/v1/user", { password }, { Authorization: "Bearer " + tk });
+        auth.lastError = r.ok ? null : (r.json && (r.json.msg || r.json.error_description || r.json.message || r.json.error)) || (r.offline ? "offline" : "HTTP " + r.status);
+        return r.ok; },
       // Calls a Supabase Edge Function as the logged-in staff member (e.g. mada-admin for staff logins).
       fn(name, body) { const tk = token(); if (!tk) return { ok: false, status: 401, json: { error: "Not logged in" } }; return xsync("POST", base + "/functions/v1/" + name, body, { Authorization: "Bearer " + tk }); },
       // The same, without freezing the page (for slow functions such as the writing assistant). Resolves to { ok, status, json }.
@@ -428,9 +433,12 @@ const MadaAuth = (() => {
 
   // Returns true, false (wrong details or Supabase not reachable), "wrong-portal" or "passkey" (the password is right;
   // the login page now runs the Face ID / fingerprint step, MadaAuth.passkey, then finishLogin).
+  // Why the last login returned false: "bad" (wrong details), "offline" (Supabase not reachable), "busy" (too many tries).
+  let loginError = null;
   function cloudLogin(username, password, portal) {
     const id = normalize(username), r = MadaStore.auth.signIn(emailOf(id), password);
-    if (!r.ok) return false;
+    loginError = null;
+    if (!r.ok) { loginError = r.offline ? "offline" : r.status === 429 ? "busy" : "bad"; return false; }
     const meta = (MadaStore.auth.session() || { user: {} }).user.app_metadata || {};
     if (!meta.role) { MadaStore.auth.signOut(); return false; }
     lastKind = PORTAL[meta.role] ? meta.role : "agent";
@@ -574,7 +582,8 @@ const MadaAuth = (() => {
     remove: id => pkFn("remove", { id })
   };
 
-  return { login, finishLogin, passkey, portalOf, currentUser, requireAuth, changePassword, updatePassword, logout, home };
+  const lastLoginError = () => loginError;
+  return { login, finishLogin, lastLoginError, passkey, portalOf, currentUser, requireAuth, changePassword, updatePassword, logout, home };
 })();
 
 // Permissions of the operating system (dashboard pages), per staff member.

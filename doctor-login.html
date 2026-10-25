@@ -278,6 +278,8 @@
       pkEnrolT: "Set up Face ID", pkEnrolS: "A one-time step on this device. From now on you sign in with your password, then a quick Face ID check.",
       pkEnrolGo: "Set up now", pkEnrolHint: "No Face ID on this computer? Choose to use your phone and scan the code.",
       pkPrivacy: "Your face stays on your device. Mada Care never receives it.", pkBack: "Back to sign in", pkWait: "Please wait…",
+      offline: "We couldn't reach the server. Check your internet and try again in a minute.", busy: "Too many sign-in attempts. Wait a few minutes, then try again.",
+      cpErrSave: "We couldn't save the new password. Try a different one, or contact IT Support.",
       idleOut: "You were logged out after 3 minutes without activity, to protect your patients' privacy. Sign in again to continue.",
       pkCancel: "The check was cancelled. Tap the button to try again.", pkUnsupported: "This browser can't use Face ID. Use an up-to-date Safari or Chrome.",
       pkFail: "We couldn't confirm it's you. Try again, or contact IT Support.", pkExists: "This device is already set up. Sign in again and confirm with Face ID."
@@ -303,6 +305,8 @@
       pkEnrolT: "فعّل بصمة الوجه", pkEnrolS: "خطوة مرة وحدة على هذا الجهاز. بعدها تدخل بكلمة المرور ثم تأكيد سريع ببصمة الوجه.",
       pkEnrolGo: "فعّل الآن", pkEnrolHint: "ما فيه بصمة على هذا الكمبيوتر؟ اختر استخدام الجوال وامسح الرمز.",
       pkPrivacy: "بصمة وجهك تبقى في جهازك، ومدى كير ما تستلمها أبداً.", pkBack: "الرجوع لتسجيل الدخول", pkWait: "لحظة…",
+      offline: "ما قدرنا نوصل للخادم. تأكد من الإنترنت وجرب بعد دقيقة.", busy: "محاولات دخول كثيرة. انتظر كم دقيقة وجرب مرة ثانية.",
+      cpErrSave: "ما قدرنا نحفظ كلمة المرور الجديدة. جرب كلمة ثانية أو تواصل مع الدعم التقني.",
       idleOut: "انسجّل خروجك بعد 3 دقائق بدون استخدام، حفاظًا على خصوصية المرضى. سجّل دخولك مرة ثانية عشان تكمل.",
       pkCancel: "انلغى التأكيد. اضغط الزر وجرب مرة ثانية.", pkUnsupported: "هذا المتصفح ما يدعم بصمة الوجه. استخدم Safari أو Chrome محدّث.",
       pkFail: "ما قدرنا نتأكد من هويتك. جرب مرة ثانية أو تواصل مع الدعم التقني.", pkExists: "هذا الجهاز مفعّل من قبل. سجّل دخول مرة ثانية وأكد ببصمة الوجه."
@@ -347,7 +351,8 @@
     if (res === "wrong-portal") { const nurse = MadaAuth.portalOf($("username").value) === "nurse-login.html";
       showError(i18n[current].notDoctor); }
     else if (res) { if (MadaAuth.currentUser().mustChangePassword) openChange(); else window.location.href = MadaAuth.home(); }
-    else { showError(i18n[current].badCreds); pw.value = ""; pw.focus(); }
+    else { const why = MadaAuth.lastLoginError && MadaAuth.lastLoginError();
+      showError(why === "offline" ? i18n[current].offline : why === "busy" ? i18n[current].busy : i18n[current].badCreds); pw.value = ""; pw.focus(); }
   }
 
   // ---------- Face ID / fingerprint step (after the password) ----------
@@ -402,7 +407,12 @@
     document.getElementById("cpNewF").classList.toggle("invalid", same);
     document.getElementById("cpConfF").classList.toggle("invalid", ruleOk && !same && n !== c);
     if (!ruleOk || same || n !== c) return;
-    MadaAuth.changePassword(n);
+    // The new password only counts once Supabase saved it; otherwise say why and stay on this screen.
+    if (!MadaAuth.changePassword(n)) {
+      const why = (MadaStore.auth && MadaStore.auth.lastError) || "";
+      document.getElementById("cpNewErr").textContent = t.cpErrSave + (why ? ` (${why})` : "");
+      document.getElementById("cpNewF").classList.add("invalid"); return;
+    }
     document.getElementById("cpForm").hidden = true;
     document.getElementById("cpDone").hidden = false;
     document.getElementById("cpGo").focus();
