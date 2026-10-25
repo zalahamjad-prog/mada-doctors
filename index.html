@@ -278,6 +278,7 @@
       pkEnrolT: "Set up Face ID", pkEnrolS: "A one-time step on this device. From now on you sign in with your password, then a quick Face ID check.",
       pkEnrolGo: "Set up now", pkEnrolHint: "No Face ID on this computer? Choose to use your phone and scan the code.",
       pkPrivacy: "Your face stays on your device. Mada Care never receives it.", pkBack: "Back to sign in", pkWait: "Please wait…",
+      idleOut: "You were logged out after 3 minutes without activity, to protect your patients' privacy. Sign in again to continue.",
       pkCancel: "The check was cancelled. Tap the button to try again.", pkUnsupported: "This browser can't use Face ID. Use an up-to-date Safari or Chrome.",
       pkFail: "We couldn't confirm it's you. Try again, or contact IT Support.", pkExists: "This device is already set up. Sign in again and confirm with Face ID."
     },
@@ -302,6 +303,7 @@
       pkEnrolT: "فعّل بصمة الوجه", pkEnrolS: "خطوة مرة وحدة على هذا الجهاز. بعدها تدخل بكلمة المرور ثم تأكيد سريع ببصمة الوجه.",
       pkEnrolGo: "فعّل الآن", pkEnrolHint: "ما فيه بصمة على هذا الكمبيوتر؟ اختر استخدام الجوال وامسح الرمز.",
       pkPrivacy: "بصمة وجهك تبقى في جهازك، ومدى كير ما تستلمها أبداً.", pkBack: "الرجوع لتسجيل الدخول", pkWait: "لحظة…",
+      idleOut: "انسجّل خروجك بعد 3 دقائق بدون استخدام، حفاظًا على خصوصية المرضى. سجّل دخولك مرة ثانية عشان تكمل.",
       pkCancel: "انلغى التأكيد. اضغط الزر وجرب مرة ثانية.", pkUnsupported: "هذا المتصفح ما يدعم بصمة الوجه. استخدم Safari أو Chrome محدّث.",
       pkFail: "ما قدرنا نتأكد من هويتك. جرب مرة ثانية أو تواصل مع الدعم التقني.", pkExists: "هذا الجهاز مفعّل من قبل. سجّل دخول مرة ثانية وأكد ببصمة الوجه."
     }
@@ -419,6 +421,8 @@
   let saved = "en";
   try { saved = localStorage.getItem("mada-lang") || "en"; } catch (e) {}
   setLang(saved);
+  // Logged out by the idle timer (doctor-portal.js): say why, once.
+  try { if (sessionStorage.getItem("mada-idle-out")) { sessionStorage.removeItem("mada-idle-out"); showError(i18n[current].idleOut); } } catch (e) {}
   const me0 = MadaAuth.currentUser();
   if (me0 && me0.kind === "doctor") { if (me0.mustChangePassword) openChange(); else window.location.replace(MadaAuth.home()); }
 </script>

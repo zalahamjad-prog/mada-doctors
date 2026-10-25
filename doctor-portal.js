@@ -70,6 +70,7 @@ const DrPortal = (() => {
     document.getElementById("userSpec").textContent = me.specialty ? me.specialty[lang] : me.role[lang];
     document.getElementById("avatar").innerHTML = me.photo ? `<img src="${esc(me.photo)}" alt="">` : esc(me.initials[lang]);
     bell(me, lang);
+    if (me.kind === "doctor") idle(lang);
     if (isNurse(me) && typeof MadaSamples !== "undefined") MadaSamples.watch(me, lang, () => bell(bellMe, bellLang));
   }
 
@@ -194,6 +195,72 @@ const DrPortal = (() => {
       e.preventDefault(); if (typeof MadaAuth !== "undefined") MadaAuth.logout(); else location.href = e.target.closest("[data-dp-logout]").getAttribute("href");
     });
   }
+  // ---------- Idle logout (doctors) ----------
+  // After IDLE_MS without any touch, click, key, scroll or typing (dictation counts: it fires "input"), a notice asks
+  // the doctor to stay or log out; with no answer within WARN_S seconds the doctor is logged out. The last activity is
+  // shared by every open portal tab (localStorage "mada-dr-idle-at"), so working in one tab keeps the others open.
+  // The login page then says why (sessionStorage "mada-idle-out").
+  const IDLE_MS = 2 * 60 * 1000, WARN_S = 60, IKEY = "mada-dr-idle-at";
+  const IL = {
+    en: { t: "Are you still there?", s: "You haven't used the portal for 2 minutes. To protect your patients' privacy, you will be logged out in {s} seconds.", stay: "Stay signed in", out: "Log out", tab: "Still there?" },
+    ar: { t: "لسه موجود؟", s: "ما استخدمت البوابة من دقيقتين. حفاظًا على خصوصية المرضى، بيتم تسجيل خروجك بعد {s} ثانية.", stay: "أكمل في الصفحة", out: "تسجيل الخروج", tab: "لسه موجود؟" }
+  };
+  let idleOn = false, idleLang = "en", idleDlg = null, idleTitle = null, lastWrite = 0;
+  const idleAt = () => { try { return Number(localStorage.getItem(IKEY)) || 0; } catch (e) { return 0; } };
+  function touch(force) {
+    const now = Date.now(); if (!force && now - lastWrite < 3000) return;
+    lastWrite = now; try { localStorage.setItem(IKEY, String(now)); } catch (e) {}
+  }
+  function idle(lang) {
+    idleLang = lang;
+    if (idleDlg) paintIdle(); if (idleOn) return;
+    idleOn = true; touch(true);
+    ["pointerdown", "keydown", "wheel", "touchstart", "input", "scroll", "mousemove"].forEach(ev =>
+      document.addEventListener(ev, () => { if (!idleDlg) touch(); }, { passive: true, capture: true }));
+    setInterval(tick, 1000);
+    document.addEventListener("visibilitychange", tick);
+  }
+  function tick() {
+    const gone = Date.now() - Math.max(idleAt(), lastWrite);
+    if (gone >= IDLE_MS + WARN_S * 1000) {
+      if (idleOn === "out") return; idleOn = "out";
+      try { sessionStorage.setItem("mada-idle-out", "1"); } catch (e) {}
+      if (typeof MadaAuth !== "undefined") MadaAuth.logout(); return;
+    }
+    if (gone >= IDLE_MS) { if (!idleDlg) openIdle(); paintIdle(Math.ceil((IDLE_MS + WARN_S * 1000 - gone) / 1000)); }
+    else if (idleDlg) closeIdle(); // active in another tab
+  }
+  function openIdle() {
+    idleCss(); idleTitle = document.title;
+    idleDlg = document.createElement("div"); idleDlg.className = "dp-idle"; idleDlg.setAttribute("role", "alertdialog"); idleDlg.setAttribute("aria-modal", "true"); idleDlg.setAttribute("aria-labelledby", "dpIdleT");
+    idleDlg.innerHTML = `<div class="dp-idle-box"><span class="dp-idle-ic">${svg('<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/>')}</span><h3 id="dpIdleT"></h3><p id="dpIdleS"></p>
+      <div class="dp-idle-btns"><button type="button" class="dp-idle-out" id="dpIdleOut"></button><button type="button" class="dp-idle-stay" id="dpIdleStay"></button></div></div>`;
+    document.body.appendChild(idleDlg);
+    idleDlg.querySelector("#dpIdleStay").addEventListener("click", () => { touch(true); closeIdle(); });
+    idleDlg.querySelector("#dpIdleOut").addEventListener("click", () => { if (typeof MadaAuth !== "undefined") MadaAuth.logout(); });
+    idleDlg.querySelector("#dpIdleStay").focus();
+  }
+  function paintIdle(sec) {
+    if (!idleDlg) return; const t = IL[idleLang] || IL.en;
+    if (sec != null) idleDlg.dataset.s = sec;
+    idleDlg.querySelector("#dpIdleT").textContent = t.t;
+    idleDlg.querySelector("#dpIdleS").textContent = t.s.replace("{s}", idleDlg.dataset.s || WARN_S);
+    idleDlg.querySelector("#dpIdleStay").textContent = t.stay; idleDlg.querySelector("#dpIdleOut").textContent = t.out;
+    document.title = (Number(idleDlg.dataset.s) % 2 ? "⚠ " : "") + t.tab;
+  }
+  function closeIdle() { if (idleDlg) idleDlg.remove(); idleDlg = null; if (idleTitle != null) document.title = idleTitle; idleTitle = null; }
+  function idleCss() {
+    if (document.getElementById("dp-idle-css")) return;
+    const st = document.createElement("style"); st.id = "dp-idle-css";
+    st.textContent = `.dp-idle{position:fixed;inset:0;z-index:9999;background:rgba(16,35,43,.45);display:grid;place-items:center;padding:16px}
+.dp-idle-box{width:100%;max-width:400px;background:#fff;border-radius:18px;padding:28px 24px 22px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.2)}
+.dp-idle-ic{width:72px;height:72px;border-radius:50%;background:#fff4e5;color:#b45309;display:grid;place-items:center;margin:0 auto 14px;box-shadow:0 0 0 10px #fffaf2}
+.dp-idle-ic svg{width:34px;height:34px}.dp-idle-box h3{font-size:20px;color:#15304a}.dp-idle-box p{font-size:14px;color:#44545a;line-height:1.6;margin-top:8px}
+.dp-idle-btns{display:flex;gap:10px;margin-top:20px}.dp-idle-btns button{flex:1;height:46px;border-radius:10px;font:inherit;font-size:14.5px;font-weight:600;cursor:pointer}
+.dp-idle-stay{background:#0b3a55;color:#fff;border:0}.dp-idle-stay:hover{background:#082d42}.dp-idle-out{background:#fff;color:#b42318;border:1px solid #f3c9c9}.dp-idle-out:hover{background:#fdf1f0}`;
+    document.head.appendChild(st);
+  }
+
   // Saudi mobile shown as 050 123 4567.
   const phone = m => /^05\d{8}$/.test(m || "") ? m.replace(/^(\d{3})(\d{3})(\d{4})$/, "$1 $2 $3") : m;
   return { render, esc, phone };
