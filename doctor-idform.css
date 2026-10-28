@@ -35,6 +35,8 @@
 .idf-num { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; }
 .idf-by { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 14px; font-weight: 600; color: #0f6b52; }
 .idf-by svg { width: 17px; height: 17px; }
+.idf-prior { align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: #eef6fb; color: #1d4f73; font-weight: 500; line-height: 1.6; }
+.idf-prior svg { flex: none; margin-top: 3px; }
 .idf-edit { margin-top: 16px; height: 46px; }
 @media (max-width: 900px) {
   .idf-paper { padding: 16px; }

@@ -2,6 +2,8 @@
 // and the patient (or the person signing for them) confirms with a signature under the declaration.
 // Saved in order.doctorVisit.steps.idform: { name, nationality, idType: "national"|"iqama", idNumber, dob, idExpiry, birthPlace, employer,
 //   marital: "single"|"married"|"divorced"|"widowed", mobile, signerName, signature (PNG data URL), at, by }.
+// The form is the first step of every visit (doctor, nurse, physio); the other steps open once it is saved. A form signed in an
+// earlier visit of the same patient is copied in (prior(), with reusedFrom = that order) and shows as done.
 // Values start from the arrival step, the patient file and the booking; saving also fills empty fields in the patient file.
 // The saved form downloads as a branded A4 PDF (download button on the saved form), drawn with html2pdf like the Medical Report.
 // TODO: legal review of the declaration wording; keep the signed form on the server.
@@ -28,7 +30,7 @@ const DrIdForm = (() => {
       e_req: "Required.", e_id: "Enter 10 digits.", e_idNat: "A National ID starts with 1.", e_idIq: "An Iqama number starts with 2.", e_dob: "Date of birth can't be in the future.",
       e_mob: "Enter a mobile like 05XXXXXXXX.", e_sig: "The signature is required.", expired: "This ID expired on {d}. Ask the patient for a valid ID if possible.",
       prev: "Previous", cont: "Save & Continue", saved: "Identity form saved.", fixErr: "Complete the required fields and the signature.", storeErr: "Couldn't save. Try again.",
-      signedBy: "Signed by {n} · {t}", edit: "Edit Form", sigAlt: "Signature of {n}", download: "Download PDF", making: "Preparing the PDF…", dlDone: "Downloaded {f}", dlFail: "Couldn't make the PDF here. The form opened for printing; choose Save as PDF.",
+      signedBy: "Signed by {n} · {t}", priorT: "Confirmed in an earlier visit ({o}) by {b} · {t}. Update it if anything has changed.", edit: "Edit Form", sigAlt: "Signature of {n}", download: "Download PDF", making: "Preparing the PDF…", dlDone: "Downloaded {f}", dlFail: "Couldn't make the PDF here. The form opened for printing; choose Save as PDF.",
       doctor: "Doctor", signedAt: "Signed on", fromFile: "Filled from the patient file and arrival check. Correct anything that is different on the ID."
     },
     ar: {
@@ -43,7 +45,7 @@ const DrIdForm = (() => {
       e_req: "مطلوب.", e_id: "أدخل 10 أرقام.", e_idNat: "رقم الهوية الوطنية يبدأ بـ 1.", e_idIq: "رقم الإقامة يبدأ بـ 2.", e_dob: "تاريخ الميلاد ما يصير في المستقبل.",
       e_mob: "أدخل جوال مثل 05XXXXXXXX.", e_sig: "التوقيع مطلوب.", expired: "الهوية منتهية بتاريخ {d}. اطلب من المريض هوية سارية إذا أمكن.",
       prev: "السابق", cont: "حفظ ومتابعة", saved: "انحفظ نموذج الهوية.", fixErr: "عبّ الحقول المطلوبة والتوقيع.", storeErr: "ما قدرنا نحفظ. حاول مرة ثانية.",
-      signedBy: "وقّع {n} · {t}", edit: "تعديل النموذج", sigAlt: "توقيع {n}", download: "تحميل PDF", making: "جاري تجهيز الملف…", dlDone: "تم تحميل {f}", dlFail: "ما قدرنا نجهز الملف هنا. فتحنا النموذج للطباعة، اختر حفظ كـ PDF.",
+      signedBy: "وقّع {n} · {t}", priorT: "تم التأكيد في زيارة سابقة ({o}) بواسطة {b} · {t}. حدّثه إذا تغيّر شي.", edit: "تعديل النموذج", sigAlt: "توقيع {n}", download: "تحميل PDF", making: "جاري تجهيز الملف…", dlDone: "تم تحميل {f}", dlFail: "ما قدرنا نجهز الملف هنا. فتحنا النموذج للطباعة، اختر حفظ كـ PDF.",
       doctor: "الطبيب", signedAt: "تاريخ التوقيع", fromFile: "تعبّت من ملف المريض وتأكيد الوصول. صحّح أي شي يختلف عن الهوية."
     }
   };
@@ -97,6 +99,7 @@ const DrIdForm = (() => {
       <div class="idf-decl"><b>${t().declT}</b><p class="cs-bi">${bi(DECL)}</p></div>
       <figure class="cs-sigimg"><img src="${E(sv.signature)}" alt="${E(tx("sigAlt", { n: sv.signerName }))}"><figcaption>${E(sv.signerName)}</figcaption></figure>
       <p class="idf-by">${S(I.check, 2.4)}${E(tx("signedBy", { n: sv.signerName, t: when }))}</p>
+      ${sv.reusedFrom ? `<p class="idf-by idf-prior">${S(I.id, 2)}${E(tx("priorT", { o: sv.reusedFrom, b: nameOf(sv.by) || "—", t: when }))}</p>` : ""}
       <div class="idf-acts"><button type="button" class="hx-btn dark idf-edit" id="idDl">${S(I.dl)}${t().download}</button>
         ${done ? "" : `<button type="button" class="hx-btn out idf-edit" id="idEdit">${S(I.edit)}${t().edit}</button>`}</div></div>`;
   }
@@ -264,5 +267,19 @@ const DrIdForm = (() => {
     } finally { wrap.remove(); window.scrollTo(0, sy); }
   }
 
-  return { view, bind, reset, download, fileName, L, nameOf };
+  // The latest identity form already signed for this patient (same medical file) in any visit: doctor, nurse or physio
+  // (order.doctorVisit / nurseVisit / physioVisit). The visit pages copy it into a new visit, keeping who confirmed it and when.
+  function prior(o) {
+    if (!o || !o.mrn) return null;
+    let best = null;
+    MadaOrders.all().forEach(x => {
+      if (x.mrn !== o.mrn) return;
+      ["doctorVisit", "nurseVisit", "physioVisit"].forEach(k => {
+        const f = x[k] && x[k].steps && x[k].steps.idform;
+        if (f && f.at && !f.reusedFrom && (!best || f.at > best.f.at)) best = { f, id: x.id };
+      });
+    });
+    return best ? { ...best.f, reusedFrom: best.id } : null;
+  }
+  return { view, bind, reset, download, fileName, L, nameOf, prior };
 })();

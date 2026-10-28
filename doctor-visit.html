@@ -972,7 +972,7 @@
     });
   }, true);
   function render() {
-    const o = order();
+    const o = adoptPriorId(order());
     $("pfTop").innerHTML = o ? pfTop(o) : "";
     if (!$("pfOv").hidden && o) $("pfOv").innerHTML = pfDrawer(o);
     if (!$("doneOv").hidden) openDone();
@@ -1021,6 +1021,14 @@
   };
   // A new visit opens on the patient identity form; nothing else opens until it is saved (not for read-only, follow-up or completed visits).
   const idLocked = o => !VIEW && !FU && !!o && !stepsOf(o).idform && !(o.doctorVisit && o.doctorVisit.status === "done");
+  // A form already signed for this patient in an earlier visit (doctor, nurse or physio) is copied in and counts as done (DrIdForm.prior).
+  function adoptPriorId(o) {
+    if (!idLocked(o)) return o;
+    const pr = DrIdForm.prior(o); if (!pr) return o;
+    const dv = o.doctorVisit || { status: "ongoing", startedAt: new Date().toISOString() };
+    try { putVisit({ ...dv, steps: { ...(dv.steps || {}), idform: pr } }); } catch (e) { return o; }
+    return MadaOrders.get(id) || o;
+  }
   function goStep(k) { if (FU && !FU_STEPS.includes(k)) k = "orders"; if (k !== "idform" && idLocked(MadaOrders.get(id))) { toast(t().idFirst); k = "idform"; } active = k; DrHistory.reset(); DrExam.reset(); DrAllergy.reset(); DrDiagnosis.reset(); DrPlan.reset(); DrOrders.reset(); DrNurse.reset(); DrEdu.reset(); DrIdForm.reset(); DrConsent.reset(); editing = false; tried = false; render(); window.scrollTo(0, 0); }
   // What the examination module needs from this page. Saving throws when browser storage is full (photos).
   function putVisit(patch) {
