@@ -550,11 +550,13 @@
   if (me && me.doctorId) MadaOrders.seedDoctorDemo(me.doctorId); // SAMPLE DATA ONLY
   const $ = id => document.getElementById(id), esc = DrPortal.esc;
   // The doctor's visit workspace (doctor-visit.html?id=ORD-...). Seven steps; each one is saved in order.doctorVisit.steps.
-  // Step 1 (arrival) checks the patient's identity; what it confirms is also saved to the patient file when the file has no value yet.
+  // Step 1 is the patient identity form (doctor-idform.js); nothing else opens until it is saved. Step 2 (arrival) checks the patient's identity; what it confirms is also saved to the patient file when the file has no value yet.
   // Step 2 (case history) lives in doctor-history.js. Step 3 (vitals) saves doctorVisit.steps.vitals = { temp, bp, hr, sugar, spo2, rr, at, by };
   // "Save as Draft" keeps the entries in doctorVisit.vitalsDraft. Step 4 (examination) lives in doctor-exam.js, step 5 (allergies) in doctor-allergy.js, step 6 (diagnosis) in doctor-diagnosis.js, step 7 (treatment plan) in doctor-plan.js, step 8 (orders & services) in doctor-orders.js, step 9 (nurse note) in doctor-nurse.js, step 10 (family education) in doctor-edu.js, step 11 (patient identity confirmation) in doctor-idform.js, step 12 (patient consent, completes the visit) in doctor-consent.js.
   const id = new URLSearchParams(location.search).get("id");
+  // Identity confirmation comes first (Amjad): the other steps stay locked until it is saved (idLocked).
   const STEPS = [
+    { k: "idform", icon: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.6-1.5 1.7-2.2 3-2.2s2.4.7 3 2.2M14 10h4M14 13h3"/>' },
     { k: "arrival", icon: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>' },
     { k: "history", icon: '<path d="M12 8v4l3 2"/><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3 4v4h4"/>' },
     { k: "vitals", icon: '<path d="M3 12h4l2-5 4 10 2-5h6"/>' },
@@ -565,7 +567,6 @@
     { k: "orders", icon: '<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 3.5h3l2.4 11.2a1.5 1.5 0 0 0 1.5 1.2h8.5a1.5 1.5 0 0 0 1.5-1.1L21 7.5H6.4"/>' },
     { k: "nurse", icon: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M9 12h6M9 16h4"/>' },
     { k: "edu", icon: '<path d="M3 8.5 12 4l9 4.5-9 4.5z"/><path d="M7 10.5V15c0 1.5 2.2 3 5 3s5-1.5 5-3v-4.5"/><path d="M21 8.5V14"/>' },
-    { k: "idform", icon: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.6-1.5 1.7-2.2 3-2.2s2.4.7 3 2.2M14 10h4M14 13h3"/>' },
     { k: "consent", icon: '<path d="M4 20h16"/><path d="M5 16c3-6 5-9 6.5-9S12 12 9 16s4-5 6-5 0 5 2 5 2-2 3-3"/>' }
   ];
   const IC = {
@@ -622,7 +623,7 @@
       sv_doctor: "Doctor Visit", sv_nursing: "Nursing", sv_blood: "Lab Tests", sv_iv: "IV Therapy", sv_physio: "Physiotherapy", st_completed: "Completed", st_cancelled: "Cancelled", st_other: "Open",
       s_arrival: "Arrival Confirmation", s_history: "Case History", s_vitals: "Vital Signs", s_exam: "Clinical Examination", s_allergy: "Allergy History", s_assess: "Diagnosis", s_plan: "Treatment Plan", s_orders: "Orders & Services", s_nurse: "Nurse Note", s_edu: "Family Education", s_idform: "Identity Confirmation", s_consent: "Patient Consent", allergyT: "Allergy:", draftB: "Draft", missT: "Finish these steps before completing the visit:",
       payBar: "Payment open: {n} still to collect. You can carry on with the visit.", payBarRef: "Refund due: {n} to return to the patient.", payGo: "Collect payment", payView: "Review payment",
-      lockedMsg: "Finish the steps before this one first.",
+      lockedMsg: "Finish the steps before this one first.", idFirst: "Confirm the patient's identity first. The other steps open after you save the form.",
       arrSub: "Verify patient identity and confirm arrival at the correct location.",
       arrInfo: "Please confirm the patient details by entering the National ID number and date of birth.",
       pName: "Patient Name", nid: "National ID Number", nidPh: "Enter National ID number — e.g. 1023456789", dob: "Date of Birth", editName: "Edit name",
@@ -652,7 +653,7 @@
       sv_doctor: "زيارة طبيب", sv_nursing: "تمريض", sv_blood: "تحاليل", sv_iv: "علاج وريدي", sv_physio: "العلاج الطبيعي", st_completed: "مكتملة", st_cancelled: "ملغاة", st_other: "مفتوحة",
       s_arrival: "تأكيد الوصول", s_history: "التاريخ المرضي", s_vitals: "العلامات الحيوية", s_exam: "الفحص السريري", s_allergy: "تاريخ الحساسية", s_assess: "التشخيص", s_plan: "الخطة العلاجية", s_orders: "الطلبات والخدمات", s_nurse: "ملاحظة الممرضة", s_edu: "تثقيف الأسرة", s_idform: "تأكيد هوية المريض", s_consent: "موافقة المريض", allergyT: "حساسية:", draftB: "مسودة", missT: "كمّل هذه الخطوات قبل إنهاء الزيارة:",
       payBar: "الدفع مفتوح: باقي {n} للتحصيل. تقدر تكمل الزيارة عادي.", payBarRef: "استرجاع مستحق: {n} يرجع للمريض.", payGo: "تحصيل الدفع", payView: "مراجعة الدفع",
-      lockedMsg: "خلّص الخطوات اللي قبلها أول.",
+      lockedMsg: "خلّص الخطوات اللي قبلها أول.", idFirst: "أكّد هوية المريض أول. باقي الخطوات تنفتح بعد ما تحفظ النموذج.",
       arrSub: "تحقق من هوية المريض وأكد الوصول للموقع الصحيح.",
       arrInfo: "أكد بيانات المريض بإدخال رقم الهوية الوطنية وتاريخ الميلاد.",
       pName: "اسم المريض", nid: "رقم الهوية الوطنية", nidPh: "أدخل رقم الهوية — مثال: 1023456789", dob: "تاريخ الميلاد", editName: "تعديل الاسم",
@@ -857,7 +858,8 @@
         <div class="bar"><i style="width:${Math.round(n / STEPS.length * 100)}%"></i></div><div class="ft"><span>${H.stepsDone}</span><span class="num">${n} / ${STEPS.length}</span></div></div>
       <ol>${STEPS.map((x, i) => {
       const done = !!s[x.k] && !MadaVoid.pending(o.doctorVisit, x.k), badges = (hasDraft(o, x.k) ? `<span class="st-draft">${svg('<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/>', 2)}${t().draftB}</span>` : "") + (x.k === "orders" ? payBadge(o) : "");
-      return `<li><button type="button" class="step ${done ? "done" : ""}" data-step="${x.k}" ${x.k === active ? 'aria-current="step"' : ""}>
+      const lk = x.k !== "idform" && idLocked(o);
+      return `<li><button type="button" class="step ${done ? "done" : ""} ${lk ? "locked" : ""}" data-step="${x.k}" ${lk ? `aria-disabled="true" title="${esc(t().idFirst)}"` : ""} ${x.k === active ? 'aria-current="step"' : ""}>
         <span class="n">${done ? svg(IC.check, 2.6) : String(i + 1).padStart(2, "0")}</span>${badges ? `<span class="st-t">${t()["s_" + x.k]}<span class="st-bs">${badges}</span></span>` : t()["s_" + x.k]}</button></li>`;
     }).join("")}</ol></nav>`;
   }
@@ -875,7 +877,7 @@
   }
   function arrivalCard(o) {
     const arr = stepsOf(o).arrival;
-    const head = `<div class="sec-h"><span class="sec-ic">${svg(STEPS[0].icon)}</span><div><h1>${t().s_arrival}</h1><p>${t().arrSub}</p></div></div>`;
+    const head = `<div class="sec-h"><span class="sec-ic">${svg(STEPS.find(x => x.k === "arrival").icon)}</span><div><h1>${t().s_arrival}</h1><p>${t().arrSub}</p></div></div>`;
     if (arr && !editing) {
       const when = new Date(arr.at).toLocaleString(loc(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
       return `${head}<div class="info ok">${svg(IC.check, 2.4)}<span>${t().okInfo}</span></div>
@@ -883,7 +885,7 @@
         <div><span>${t().dob}</span><b>${esc(fmtDate(arr.dob))}</b></div><div><span>${tx("savedAt", { t: esc(when) })}</span><button type="button" class="link-btn" id="arrEdit">${t().edit}</button></div></div>
         <button type="button" class="save" id="toNext">${t().toNext}${svg(IC.arrow, 2)}</button>`;
     }
-    const v = arr || {};
+    const idf = stepsOf(o).idform, v = arr || (idf ? { name: idf.name, idNumber: idf.idNumber, dob: idf.dob } : {}); // filled from the identity form
     return `${head}<div class="info">${svg(IC.info, 2)}<span>${t().arrInfo}</span></div>
       <form id="arrForm" novalidate>
         <div class="fld" id="fName"><label for="aName">${t().pName} <span class="req">*</span></label>
@@ -901,7 +903,7 @@
   }
   function vitalsCard(o) {
     const dv = o.doctorVisit || {}, saved = stepsOf(o).vitals;
-    const head = `<div class="vt-h"><span class="vt-n">03</span><div><h1>${t().s_vitals}</h1><p>${t().vitSub}</p></div></div>`;
+    const head = `<div class="vt-h"><span class="vt-n">${stepNav("vitals").stepOf.n}</span><div><h1>${t().s_vitals}</h1><p>${t().vitSub}</p></div></div>`;
     if (saved && !editing) {
       const when = new Date(saved.at).toLocaleString(loc(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
       return `${head}<div class="info ok">${svg(IC.check, 2.4)}<span>${tx("vitDone", { t: esc(when) })}</span></div>
@@ -977,6 +979,7 @@
     if (!o) { $("vw").innerHTML = `<div class="card missing"><h1 style="font-size:22px;color:#15304a">${t().missingT}</h1><p style="margin:8px 0 18px;color:var(--muted)">${t().missingS}</p><a class="back" href="doctor-visits.html">${svg(IC.back, 2)}${t().back}</a></div>`; return; }
     if (FU && !FU_STEPS.includes(active)) active = FU_STEPS.includes(new URLSearchParams(location.search).get("step")) ? new URLSearchParams(location.search).get("step") : "orders";
     if (!active) active = STEPS[Math.min(doneCount(o), STEPS.length - 1)].k;
+    if (idLocked(o)) active = "idform";
     if (!VIEW && !FU) markOpen(o, active);
     const hx = active === "history";
     let body = active === "arrival" ? arrivalCard(o) : hx ? DrHistory.view(o, hxCtx) : active === "vitals" ? vitalsCard(o) : active === "exam" ? DrExam.view(o, exCtx) : active === "allergy" ? DrAllergy.view(o, alCtx) : active === "assess" ? DrDiagnosis.view(o, dxCtx) : active === "plan" ? DrPlan.view(o, planCtx) : active === "orders" ? DrOrders.view(o, orCtx) : active === "nurse" ? DrNurse.view(o, nuCtx) : active === "edu" ? DrEdu.view(o, edCtx) : active === "idform" ? DrIdForm.view(o, idCtx) : active === "consent" ? DrConsent.view(o, csCtx) : soonCard(active);
@@ -1014,9 +1017,11 @@
     const pad = n => String(n).padStart(2, "0");
     if (FU && FU_STEPS.includes(k)) { const j = FU_STEPS.indexOf(k); return { get stepOf() { return { n: pad(j + 1), m: pad(FU_STEPS.length) }; }, prevKey: FU_STEPS[Math.max(j - 1, 0)], nextKey: FU_STEPS[Math.min(j + 1, FU_STEPS.length - 1)] }; }
     const i = STEPS.findIndex(x => x.k === k);
-    return { get stepOf() { return { n: pad(i + 1), m: pad(STEPS.length) }; }, prevKey: STEPS[Math.max(i - 1, 0)].k, nextKey: STEPS[Math.min(i + 1, STEPS.length - 1)].k };
+    return { get stepOf() { return { n: pad(i + 1), m: pad(STEPS.length) }; }, prevKey: i > 0 ? STEPS[i - 1].k : null, nextKey: STEPS[Math.min(i + 1, STEPS.length - 1)].k };
   };
-  function goStep(k) { if (FU && !FU_STEPS.includes(k)) k = "orders"; active = k; DrHistory.reset(); DrExam.reset(); DrAllergy.reset(); DrDiagnosis.reset(); DrPlan.reset(); DrOrders.reset(); DrNurse.reset(); DrEdu.reset(); DrIdForm.reset(); DrConsent.reset(); editing = false; tried = false; render(); window.scrollTo(0, 0); }
+  // A new visit opens on the patient identity form; nothing else opens until it is saved (not for read-only, follow-up or completed visits).
+  const idLocked = o => !VIEW && !FU && !!o && !stepsOf(o).idform && !(o.doctorVisit && o.doctorVisit.status === "done");
+  function goStep(k) { if (FU && !FU_STEPS.includes(k)) k = "orders"; if (k !== "idform" && idLocked(MadaOrders.get(id))) { toast(t().idFirst); k = "idform"; } active = k; DrHistory.reset(); DrExam.reset(); DrAllergy.reset(); DrDiagnosis.reset(); DrPlan.reset(); DrOrders.reset(); DrNurse.reset(); DrEdu.reset(); DrIdForm.reset(); DrConsent.reset(); editing = false; tried = false; render(); window.scrollTo(0, 0); }
   // What the examination module needs from this page. Saving throws when browser storage is full (photos).
   function putVisit(patch) {
     const o = MadaOrders.get(id), dv = { ...o.doctorVisit, ...patch };

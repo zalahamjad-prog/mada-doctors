@@ -104,7 +104,7 @@ const DrIdForm = (() => {
   function view(o, c) {
     ctx = c; lang = c.lang; load(o);
     const sv = savedOf(o), showForm = editing || !sv;
-    const foot = `<div class="ex-foot"><button type="button" class="hx-btn out pl-prevb" id="idPrev"><span class="flip">${S(I.back)}</span><span><b>${t().prev}</b><small>${E(c.prevName || "")}</small></span></button><span class="hx-sp"></span>
+    const foot = `<div class="ex-foot">${c.prevKey ? `<button type="button" class="hx-btn out pl-prevb" id="idPrev"><span class="flip">${S(I.back)}</span><span><b>${t().prev}</b><small>${E(c.prevName || "")}</small></span></button>` : ""}<span class="hx-sp"></span>
       <button type="button" class="hx-btn dark" id="idCont">${t().cont}${S(I.arrow)}</button></div>`;
     if (!showForm) return `<div class="cs idf">${head(c)}${readView(o, sv, c)}${foot}</div>`;
     const e = tried ? errs() : {};
@@ -172,7 +172,7 @@ const DrIdForm = (() => {
     if ($("#idClr")) $("#idClr").addEventListener("click", () => { st.strokes = []; st.sigData = null; re(); });
     if ($("#idDl")) $("#idDl").addEventListener("click", async e => { const b = e.currentTarget; b.disabled = true; try { await download(MadaOrders.get(o.id)); } finally { b.disabled = false; } });
     if ($("#idEdit")) $("#idEdit").addEventListener("click", () => { editing = true; st = null; forId = null; load(MadaOrders.get(o.id)); re(); });
-    $("#idPrev").addEventListener("click", () => ctx.go(ctx.prevKey));
+    if ($("#idPrev")) $("#idPrev").addEventListener("click", () => ctx.go(ctx.prevKey));
     $("#idCont").addEventListener("click", () => {
       const sv = savedOf(MadaOrders.get(o.id));
       if (sv && !editing) { reset(); return ctx.go(ctx.nextKey); }
